@@ -1,6 +1,6 @@
 "use client";
 import { useMemo } from 'react';
-import type { PlayerSnapshot } from './useGameSocket';
+import type { PlayerSnapshot } from '../game/types';
 
 export type GameStateView = {
   me: PlayerSnapshot | null;
@@ -8,11 +8,10 @@ export type GameStateView = {
   all: PlayerSnapshot[];
 };
 
-export default function useGameState(players: Map<string, PlayerSnapshot>, myId: string | null): GameStateView {
+export default function useGameState(players: PlayerSnapshot[], myId: string | null): GameStateView {
   return useMemo(() => {
-    const list = Array.from(players.values());
-    const me = myId ? players.get(myId) ?? null : null;
-    const others = me ? list.filter((p) => p.id !== me.id) : list;
-    return { me, others, all: list };
+    const me = myId ? players.find((p) => p.id === myId) ?? null : null;
+    const others = me ? players.filter((p) => p.id !== me.id) : players;
+    return { me, others, all: players };
   }, [players, myId]);
 }

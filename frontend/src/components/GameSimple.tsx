@@ -3,12 +3,11 @@ import { useEffect, useMemo, useRef } from 'react';
 import useGameSocket from '../hooks/useGameSocket';
 import useGameState from '../hooks/useGameState';
 import useGameRenderer from '../hooks/useGameRenderer';
+import type { Direction } from '../game/types';
 
 type Props = {
   playerName: string;
 };
-
-type Direction = 'up' | 'down' | 'left' | 'right' | 'stop';
 
 const MOVEMENT_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright']);
 
@@ -30,12 +29,20 @@ export default function GameSimple({ playerName }: Props) {
   useEffect(() => {
     const pressed = new Set<string>();
     let lastDirection: Direction = 'stop';
+    let lastSentAt = 0;
 
-    const updateDirection = () => {
+    const emitDirection = (direction: Direction) => {
+      sendDirection(direction);
+      lastDirection = direction;
+      lastSentAt = performance.now();
+    };
+
+    const updateDirection = (force = false) => {
       const direction = computeDirection(pressed);
-      if (direction !== lastDirection) {
-        sendDirection(direction);
-        lastDirection = direction;
+      const now = performance.now();
+      const resendWindowExceeded = direction !== 'stop' && now - lastSentAt > 250;
+      if (force || direction !== lastDirection || resendWindowExceeded) {
+        emitDirection(direction);
       }
     };
 
@@ -45,7 +52,7 @@ export default function GameSimple({ playerName }: Props) {
       if (document.activeElement && (document.activeElement as HTMLElement).tagName === 'INPUT') return;
       event.preventDefault();
       pressed.add(key);
-      updateDirection();
+      updateDirection(true);
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
@@ -53,15 +60,28 @@ export default function GameSimple({ playerName }: Props) {
       if (!MOVEMENT_KEYS.has(key)) return;
       event.preventDefault();
       pressed.delete(key);
-      updateDirection();
+      updateDirection(true);
     };
+
+    const handleBlur = () => {
+      if (pressed.size === 0) return;
+      pressed.clear();
+      emitDirection('stop');
+    };
+
+    const resendTimer = window.setInterval(() => {
+      updateDirection();
+    }, 200);
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
 
     return () => {
+      window.clearInterval(resendTimer);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
       sendDirection('stop');
     };
   }, [sendDirection]);

@@ -1,17 +1,8 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from 'react';
-
-export type PlayerSnapshot = {
-  id: string;
-  name: string;
-  x: number;
-  y: number;
-  color: string;
-  vx: number;
-  vy: number;
-};
-
-export type ConnectionStatus = 'idle' | 'connecting' | 'open' | 'closed' | 'error';
+import { useCallback, useEffect, useRef } from 'react';
+import type { PlayerSnapshot } from '../game/types';
+import { useGameStore } from '../stores/gameStore';
+import type { Direction } from '../game/types';
 
 const WS_URL = 'ws://localhost:3001/ws';
 const STORAGE_KEY = 'garama_client_id';
@@ -38,10 +29,14 @@ export default function useGameSocket(playerName: string) {
   const wsRef = useRef<WebSocket | null>(null);
   const connectionAttempt = useRef(0);
 
-  const [status, setStatus] = useState<ConnectionStatus>('idle');
-  const [players, setPlayers] = useState<Map<string, PlayerSnapshot>>(new Map());
-  const [myId, setMyId] = useState<string | null>(null);
-  const [lastError, setLastError] = useState<string | null>(null);
+  const status = useGameStore((state) => state.status);
+  const players = useGameStore((state) => state.players);
+  const myId = useGameStore((state) => state.myId);
+  const lastError = useGameStore((state) => state.lastError);
+  const setStatus = useGameStore((state) => state.setStatus);
+  const setError = useGameStore((state) => state.setError);
+  const setMyId = useGameStore((state) => state.setMyId);
+  const setPlayers = useGameStore((state) => state.setPlayers);
 
   useEffect(() => {
     const name = playerName.trim() || 'Anonymous';
@@ -49,7 +44,7 @@ export default function useGameSocket(playerName: string) {
     wsRef.current = ws;
     connectionAttempt.current += 1;
     setStatus('connecting');
-    setLastError(null);
+    setError(null);
 
     const clientId = readStoredClientId();
 
@@ -75,10 +70,10 @@ export default function useGameSocket(playerName: string) {
             break;
           case 'gameState':
             if (Array.isArray(msg.players)) {
-              const next = new Map<string, PlayerSnapshot>();
+              const next: PlayerSnapshot[] = [];
               for (const p of msg.players) {
                 if (!p || typeof p.id !== 'string') continue;
-                next.set(p.id, {
+                next.push({
                   id: p.id,
                   name: typeof p.name === 'string' ? p.name : 'Anonymous',
                   x: Number(p.x) || 0,
@@ -95,18 +90,20 @@ export default function useGameSocket(playerName: string) {
             break;
         }
       } catch (error) {
-        setLastError('Failed to parse server message');
+        setError('Failed to parse server message');
         console.error('Failed to parse websocket message', error);
       }
     };
 
     ws.onerror = () => {
       setStatus('error');
-      setLastError('WebSocket encountered an error');
+      setError('WebSocket encountered an error');
     };
 
     ws.onclose = () => {
       setStatus('closed');
+      setMyId(null);
+      setPlayers([]);
       wsRef.current = null;
     };
 
@@ -114,9 +111,9 @@ export default function useGameSocket(playerName: string) {
       ws.close();
       wsRef.current = null;
     };
-  }, [playerName]);
+  }, [playerName, setError, setMyId, setPlayers, setStatus]);
 
-  const sendDirection = useCallback((direction: 'up' | 'down' | 'left' | 'right' | 'stop') => {
+  const sendDirection = useCallback((direction: Direction) => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     const payload = {
@@ -126,10 +123,10 @@ export default function useGameSocket(playerName: string) {
     try {
       ws.send(JSON.stringify(payload));
     } catch (error) {
-      setLastError('Failed to send input');
+      setError('Failed to send input');
       console.error('Failed to send direction', error);
     }
-  }, []);
+  }, [setError]);
 
   return {
     players,
