@@ -8,6 +8,7 @@
     "start": "bun index.ts"
   },
   "dependencies": {
+    "@garama/shared": "workspace:*",
     "dotenv": "^16.0.0",
     "hono": "^4.10.1"
   },

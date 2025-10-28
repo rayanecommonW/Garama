@@ -1,2 +1,1 @@
-export const WORLD_WIDTH = 1600;
-export const WORLD_HEIGHT = 900;
+export { WORLD_WIDTH, WORLD_HEIGHT } from '@garama/shared';

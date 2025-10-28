@@ -3,31 +3,20 @@
 
 import { Hono } from 'hono';
 import type { ServerWebSocket } from 'bun';
-
-interface PlayerState {
-  id: string;
-  name: string;
-  x: number;
-  y: number;
-  color: string;
-  vx: number;
-  vy: number;
-  lastSeen: number;
-}
-
-type Direction = 'up' | 'down' | 'left' | 'right' | 'stop';
-
-type ClientMessage =
-  | { type: 'join'; name?: unknown; clientId?: unknown }
-  | { type: 'input'; direction?: unknown };
+import type {
+  PlayerState,
+  Direction,
+  ClientMessage
+} from '@garama/shared';
+import {
+  WORLD_WIDTH,
+  WORLD_HEIGHT,
+  TICK_RATE,
+  PLAYER_SPEED,
+  INACTIVITY_TIMEOUT
+} from '@garama/shared';
 
 type GameSocket = ServerWebSocket<undefined>;
-
-const WORLD_WIDTH = 1600;
-const WORLD_HEIGHT = 900;
-const TICK_RATE = 20; // Hz
-const PLAYER_SPEED = 280 / TICK_RATE; // ~280 world units per second
-const INACTIVITY_TIMEOUT = 60_000; // 60 seconds
 
 const players = new Map<string, PlayerState>();
 const sockets = new Map<string, GameSocket>();
