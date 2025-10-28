@@ -1,106 +1,80 @@
 "use client";
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import useGameSocket from '../hooks/useGameSocket';
 import useGameState from '../hooks/useGameState';
 import useGameRenderer from '../hooks/useGameRenderer';
-import type { Direction } from '../game/types';
 
 type Props = {
   playerName: string;
 };
 
-const MOVEMENT_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright']);
-
-function computeDirection(keys: Set<string>): Direction {
-  if (keys.has('w') || keys.has('arrowup')) return 'up';
-  if (keys.has('s') || keys.has('arrowdown')) return 'down';
-  if (keys.has('a') || keys.has('arrowleft')) return 'left';
-  if (keys.has('d') || keys.has('arrowright')) return 'right';
-  return 'stop';
-}
-
 export default function GameSimple({ playerName }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { players, myId, status, lastError, sendDirection } = useGameSocket(playerName);
-  const { me, others, all } = useGameState(players, myId);
+  const { me, all } = useGameState(players, myId);
 
   useGameRenderer(canvasRef, { players: all, myId });
 
   useEffect(() => {
-    const pressed = new Set<string>();
-    let lastDirection: Direction = 'stop';
-    let lastSentAt = 0;
-
-    const emitDirection = (direction: Direction) => {
-      sendDirection(direction);
-      lastDirection = direction;
-      lastSentAt = performance.now();
-    };
-
-    const updateDirection = (force = false) => {
-      const direction = computeDirection(pressed);
-      const now = performance.now();
-      const resendWindowExceeded = direction !== 'stop' && now - lastSentAt > 250;
-      if (force || direction !== lastDirection || resendWindowExceeded) {
-        emitDirection(direction);
-      }
-    };
-
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Prevent default only for game keys
       const key = event.key.toLowerCase();
-      if (!MOVEMENT_KEYS.has(key)) return;
-      if (document.activeElement && (document.activeElement as HTMLElement).tagName === 'INPUT') return;
+
+      // Ignore if typing in an input
+      if (document.activeElement?.tagName === 'INPUT') return;
+
+      let direction: 'up' | 'down' | 'left' | 'right' | null = null;
+
+      switch (key) {
+        case 'w':
+        case 'arrowup':
+          direction = 'up';
+          break;
+        case 's':
+        case 'arrowdown':
+          direction = 'down';
+          break;
+        case 'a':
+        case 'arrowleft':
+          direction = 'left';
+          break;
+        case 'd':
+        case 'arrowright':
+          direction = 'right';
+          break;
+        default:
+          return; // Not a movement key
+      }
+
       event.preventDefault();
-      pressed.add(key);
-      updateDirection(true);
+      sendDirection(direction);
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
-      if (!MOVEMENT_KEYS.has(key)) return;
-      event.preventDefault();
-      pressed.delete(key);
-      updateDirection(true);
-    };
 
-    const handleBlur = () => {
-      if (pressed.size === 0) return;
-      pressed.clear();
-      emitDirection('stop');
+      // If releasing a movement key, send stop
+      if (['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'].includes(key)) {
+        sendDirection('stop');
+      }
     };
-
-    const resendTimer = window.setInterval(() => {
-      updateDirection();
-    }, 200);
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('blur', handleBlur);
 
     return () => {
-      window.clearInterval(resendTimer);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      window.removeEventListener('blur', handleBlur);
-      sendDirection('stop');
     };
   }, [sendDirection]);
-
-  const info = useMemo(() => ({
-    status,
-    playerName,
-    id: myId ?? '—',
-    players: all.length,
-    others: others.length,
-  }), [status, playerName, myId, all.length, others.length]);
 
   return (
     <div className="relative w-full max-w-[960px]">
       <div className="mb-2 flex items-center justify-between text-sm text-slate-200">
         <span>Player: <strong>{playerName}</strong></span>
         <span>Status: {status}</span>
-        <span>ID: {info.id}</span>
-        <span>Players online: {info.players}</span>
+        <span>ID: {myId ?? '—'}</span>
+        <span>Players: {all.length}</span>
       </div>
 
       <div className="relative rounded-lg border border-slate-700 bg-slate-900">
@@ -119,7 +93,7 @@ export default function GameSimple({ playerName }: Props) {
 
       {me && (
         <div className="mt-3 text-sm text-slate-300">
-          <p>Your position: x={me.x.toFixed(1)} y={me.y.toFixed(1)}</p>
+          <p>Position: x={me.x.toFixed(1)} y={me.y.toFixed(1)}</p>
         </div>
       )}
     </div>
