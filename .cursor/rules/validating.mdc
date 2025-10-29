@@ -1,0 +1,15 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+## Final Validations
+
+Always add validation steps to the TODO list before finishing an agent session. 
+
+ALWAYS respect the <rules> before finishing an agent session.
+
+<rules>
+- no validation steps yet
+</rules>

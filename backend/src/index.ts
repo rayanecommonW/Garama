@@ -92,9 +92,7 @@ function broadcastGameState() {
   for (const ws of sockets.values()) {
     try {
       ws.send(payload);
-    } catch {
-      // Socket cleanup happens on close
-    }
+    } catch { }
   }
 }
 
@@ -123,7 +121,6 @@ const server = Bun.serve({
           console.log('📨 Join message received');
           handleJoin(ws, msg);
         } else if (msg.type === 'input') {
-          // Don't log every input to avoid spam, handleInput will log important ones
           handleInput(ws, msg);
         } else {
           console.log('⚠️ Unknown message type:', msg as never);
@@ -159,7 +156,6 @@ function handleJoin(ws: GameSocket, msg: ClientMessage & { type: 'join' }) {
     console.log(`♻️ Player reconnected: ${playerId} (${playerName})`);
   }
 
-  // Handle socket replacement
   const existingSocket = sockets.get(playerId);
   if (existingSocket && existingSocket !== ws) {
     socketOwners.delete(existingSocket);
@@ -170,7 +166,6 @@ function handleJoin(ws: GameSocket, msg: ClientMessage & { type: 'join' }) {
   sockets.set(playerId, ws);
   socketOwners.set(ws, playerId);
 
-  // Send welcome message and initial state
   ws.send(JSON.stringify({
     type: 'welcome',
     myId: playerId,
@@ -219,16 +214,13 @@ function handleDisconnect(ws: GameSocket) {
   }
 }
 
-// Game loop - runs at TICK_RATE Hz
 setInterval(() => {
   if (players.size === 0) return;
 
   const now = Date.now();
   let movedPlayers = 0;
 
-  // Update player positions and handle inactive players
   for (const [playerId, player] of players) {
-    // Remove inactive players
     if (now - player.lastSeen > INACTIVITY_TIMEOUT) {
       players.delete(playerId);
       const socket = sockets.get(playerId);
@@ -241,19 +233,16 @@ setInterval(() => {
       continue;
     }
 
-    // Update position based on velocity
     const oldX = player.x;
     const oldY = player.y;
     player.x = clamp(player.x + player.vx, 0, WORLD_WIDTH);
     player.y = clamp(player.y + player.vy, 0, WORLD_HEIGHT);
 
-    // Log if player actually moved
     if (player.x !== oldX || player.y !== oldY) {
       movedPlayers++;
     }
   }
 
-  // Broadcast updated game state to all connected players
   if (movedPlayers > 0) {
     console.log(`📡 Broadcasting game state (${movedPlayers} players moved, ${players.size} total players)`);
   }

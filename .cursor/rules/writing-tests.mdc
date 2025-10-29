@@ -1,0 +1,21 @@
+---
+globs: src/**/*.test.ts
+alwaysApply: false
+---
+
+## General Rules for Writing Tests
+
+You must follow the rules in <writing-tests> when you write a new test.
+
+<writing-tests>
+- **Doc-style tests**: Treat tests as documentation of behavior.
+- **Happy path first**: One main success test with a clear behavior sentence; aggregate similar success via table-driven `test.each`.
+- **Failures after**: Put failure/validation tests immediately after the happy path; one reason per test with explicit wording.
+- **Fixtures via spreads**: Define canonical defaults once (e.g., `defaultInput`); build cases with `{ ...defaultInput, override }`; show only changed fields.
+- **Table-driven variations**: Use `test.each` for repetitive inputs and edge cases: `undefined`, `null`, `''`, `0`, `[]`, `{}`.
+- **Use Vitest only**:
+- **Vitest globals only**: Use global `describe`, `test`/`it`, `expect`, `beforeEach`/`afterEach`, `vi`; do NOT import from `vitest`.
+- **Titles as docs**: "functionName — does/returns/throws …"; failures: "throws/returns error when …".
+- **Structure**: [Happy path] → [Failures] → [Other behaviors]; keep minimal, avoid duplicate assertions.
+- **Group tests with test.each**: For variations of the same test, use `test.each` to group them together, avoid code duplication and improve readability.
+</writing-tests>

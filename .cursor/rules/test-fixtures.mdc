@@ -1,0 +1,15 @@
+---
+globs: **/*.test.ts,**/*.fixture.ts
+alwaysApply: false
+---
+
+## General rules
+
+- Mininal data needed by the test
+- Fixtures should live in a separate file and follow the collocation rules
+- Use the `.fixture.ts` file extension
+
+## Regarding typescript
+
+- Use types at the top level – (Note: this is useful for developers editing fixtures)
+- Allow use of any for nested objects (prefer keeping the data minimal)

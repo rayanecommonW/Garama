@@ -1,10 +1,9 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { PlayerSnapshot } from '../game/types';
-import type { Direction } from '../game/types';
+import type { PlayerSnapshot, Direction } from '@garama/shared';
 
 const WS_URL = 'ws://localhost:3001/ws';
-const WS_OPEN = 1; // WebSocket readyState for OPEN
+const WS_OPEN = 1;
 const MOVEMENT_KEYS = new Set(['w','a','s','d','arrowup','arrowleft','arrowdown','arrowright']);
 const normalizeKey = (key: string) => key.toLowerCase();
 const STORAGE_KEY = 'garama_client_id';
@@ -23,7 +22,6 @@ function storeClientId(id: string) {
   try {
     window.sessionStorage.setItem(STORAGE_KEY, id);
   } catch {
-    // ignore storage errors (private mode, etc.)
   }
 }
 
@@ -124,7 +122,6 @@ export default function useGameSocket(playerName: string) {
     };
   }, [playerName]);
 
-  // Send direction to server
   const sendDirection = useCallback((direction: Direction) => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WS_OPEN) {
@@ -142,11 +139,9 @@ export default function useGameSocket(playerName: string) {
         wsReadyState: ws.readyState
       }));
     } catch {
-      // ignore transient errors
     }
   }, []);
 
-  // Resolve a direction from keys and last pressed (last-pressed wins)
   const resolveDirection = useCallback((): Direction | null => {
     const keys = keysDownRef.current;
     const last = lastPressedKeyRef.current;
@@ -167,19 +162,16 @@ export default function useGameSocket(playerName: string) {
     return null;
   }, []);
 
-  // Interval-based send loop: send on direction change only
   useEffect(() => {
     let mounted = true;
     const id = setInterval(() => {
       if (!mounted) return;
       const ws = wsRef.current;
       const ready = ws ? ws.readyState : undefined;
-      // keep ws ready state visible
       setDebugInfo(prev => ({ ...prev, wsReadyState: ready }));
       if (!ws || ready !== WS_OPEN) return;
       const dir = resolveDirection();
       const next: Direction = dir ?? 'stop';
-      // Always send on each tick for reliability during debugging
       lastSentDirectionRef.current = next;
       sendDirection(next);
     }, 100);
@@ -189,30 +181,25 @@ export default function useGameSocket(playerName: string) {
     };
   }, [status, resolveDirection, sendDirection]);
 
-  // Set up keyboard event listeners (always active when component is mounted)
   useEffect(() => {
-    const keysDown = keysDownRef.current; // Capture ref for cleanup
+    const keysDown = keysDownRef.current;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const key = normalizeKey(event.key);
 
-      // Ignore if typing in an input or textarea
       if (document.activeElement?.tagName === 'INPUT' ||
           document.activeElement?.tagName === 'TEXTAREA') {
         return;
       }
 
-      // Only handle movement keys
       const isMovementKey = MOVEMENT_KEYS.has(key);
       if (!isMovementKey) return;
 
       event.preventDefault();
 
-      // Add to keys down and remember last pressed
       keysDownRef.current.add(key);
       lastPressedKeyRef.current = key;
 
-      // Update debug info
       setDebugInfo(prev => ({
         ...prev,
         lastKeyPressed: key,
@@ -220,7 +207,6 @@ export default function useGameSocket(playerName: string) {
         keysDown: Array.from(keysDownRef.current)
       }));
 
-      // Immediate send to avoid relying solely on loop
       const dir = resolveDirection();
       const next: Direction = dir ?? 'stop';
       if (lastSentDirectionRef.current !== next) {
@@ -232,22 +218,18 @@ export default function useGameSocket(playerName: string) {
     const handleKeyUp = (event: KeyboardEvent) => {
       const key = normalizeKey(event.key);
 
-      // Only handle movement keys
       const isMovementKey = MOVEMENT_KEYS.has(key);
       if (!isMovementKey) return;
 
       event.preventDefault();
 
-      // Remove from keys down
       keysDownRef.current.delete(key);
 
-      // Update debug info
       setDebugInfo(prev => ({
         ...prev,
         keysDown: Array.from(keysDownRef.current)
       }));
 
-      // Immediate send to reflect released key promptly
       const dir = resolveDirection();
       const next: Direction = dir ?? 'stop';
       if (lastSentDirectionRef.current !== next) {
@@ -256,14 +238,12 @@ export default function useGameSocket(playerName: string) {
       }
     };
 
-    // Handle window focus/blur to clear keys when tab is switched
     const handleBlur = () => {
       keysDownRef.current.clear();
       setDebugInfo(prev => ({
         ...prev,
         keysDown: []
       }));
-      // Ensure a single stop is sent promptly
       if (lastSentDirectionRef.current !== 'stop') {
         lastSentDirectionRef.current = 'stop';
         sendDirection('stop');
@@ -274,14 +254,12 @@ export default function useGameSocket(playerName: string) {
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('blur', handleBlur);
 
-    // Mark keyboard as active
     setDebugInfo(prev => ({ ...prev, keyboardActive: true }));
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('blur', handleBlur);
-      // Clear keys and update debug info
       keysDown.clear();
       setDebugInfo(prev => ({ ...prev, keyboardActive: false, keysDown: [] }));
     };
