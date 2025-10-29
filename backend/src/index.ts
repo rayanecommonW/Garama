@@ -21,7 +21,6 @@ app.get('/api/info', (c) =>
   })
 );
 
-// Utility functions
 function randomColor(): string {
   return `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`;
 }
@@ -50,12 +49,19 @@ function createPlayer(id: string, name: string): PlayerState {
 }
 
 function updatePlayerMovement(player: PlayerState, direction: Direction) {
+  const oldVx = player.vx;
+  const oldVy = player.vy;
+
   switch (direction) {
     case 'up': player.vx = 0; player.vy = -PLAYER_SPEED; break;
     case 'down': player.vx = 0; player.vy = PLAYER_SPEED; break;
     case 'left': player.vx = -PLAYER_SPEED; player.vy = 0; break;
     case 'right': player.vx = PLAYER_SPEED; player.vy = 0; break;
     case 'stop': player.vx = 0; player.vy = 0; break;
+  }
+
+  if (oldVx !== player.vx || oldVy !== player.vy) {
+    console.log(`⚡ ${player.id} velocity changed: (${oldVx.toFixed(1)}, ${oldVy.toFixed(1)}) → (${player.vx.toFixed(1)}, ${player.vy.toFixed(1)})`);
   }
 }
 
@@ -114,9 +120,13 @@ const server = Bun.serve({
         const msg: ClientMessage = JSON.parse(raw.toString());
 
         if (msg.type === 'join') {
+          console.log('📨 Join message received');
           handleJoin(ws, msg);
         } else if (msg.type === 'input') {
+          // Don't log every input to avoid spam, handleInput will log important ones
           handleInput(ws, msg);
+        } else {
+          console.log('⚠️ Unknown message type:', msg as never);
         }
       } catch (err) {
         console.error('⚠️ Invalid message:', err);
@@ -175,14 +185,23 @@ function handleJoin(ws: GameSocket, msg: ClientMessage & { type: 'join' }) {
 
 function handleInput(ws: GameSocket, msg: ClientMessage & { type: 'input' }) {
   const playerId = socketOwners.get(ws);
-  if (!playerId) return;
+  if (!playerId) {
+    console.log('⚠️ Input received from unknown socket');
+    return;
+  }
 
   const player = players.get(playerId);
-  if (!player) return;
+  if (!player) {
+    console.log(`⚠️ Input received for non-existent player: ${playerId}`);
+    return;
+  }
 
   if (msg.direction && typeof msg.direction === 'string') {
+    console.log(`🎮 Player ${playerId} (${player.name}) moving: ${msg.direction}`);
     updatePlayerMovement(player, msg.direction as Direction);
     player.lastSeen = Date.now();
+  } else {
+    console.log(`⚠️ Invalid direction received from ${playerId}:`, msg.direction);
   }
 }
 
@@ -205,6 +224,7 @@ setInterval(() => {
   if (players.size === 0) return;
 
   const now = Date.now();
+  let movedPlayers = 0;
 
   // Update player positions and handle inactive players
   for (const [playerId, player] of players) {
@@ -222,11 +242,21 @@ setInterval(() => {
     }
 
     // Update position based on velocity
+    const oldX = player.x;
+    const oldY = player.y;
     player.x = clamp(player.x + player.vx, 0, WORLD_WIDTH);
     player.y = clamp(player.y + player.vy, 0, WORLD_HEIGHT);
+
+    // Log if player actually moved
+    if (player.x !== oldX || player.y !== oldY) {
+      movedPlayers++;
+    }
   }
 
   // Broadcast updated game state to all connected players
+  if (movedPlayers > 0) {
+    console.log(`📡 Broadcasting game state (${movedPlayers} players moved, ${players.size} total players)`);
+  }
   broadcastGameState();
 }, 1000 / TICK_RATE);
 

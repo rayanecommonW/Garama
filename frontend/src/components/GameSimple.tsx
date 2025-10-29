@@ -1,7 +1,6 @@
 "use client";
-import { useEffect, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import useGameSocket from '../hooks/useGameSocket';
-import useGameState from '../hooks/useGameState';
 import useGameRenderer from '../hooks/useGameRenderer';
 
 type Props = {
@@ -10,63 +9,11 @@ type Props = {
 
 export default function GameSimple({ playerName }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const { players, myId, status, lastError, sendDirection } = useGameSocket(playerName);
-  const { me, all } = useGameState(players, myId);
+  const { players, myId, status, lastError, debugInfo } = useGameSocket(playerName);
 
-  useGameRenderer(canvasRef, { players: all, myId });
+  const me = useMemo(() => (myId ? players.find(p => p.id === myId) ?? null : null), [players, myId]);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Prevent default only for game keys
-      const key = event.key.toLowerCase();
-
-      // Ignore if typing in an input
-      if (document.activeElement?.tagName === 'INPUT') return;
-
-      let direction: 'up' | 'down' | 'left' | 'right' | null = null;
-
-      switch (key) {
-        case 'w':
-        case 'arrowup':
-          direction = 'up';
-          break;
-        case 's':
-        case 'arrowdown':
-          direction = 'down';
-          break;
-        case 'a':
-        case 'arrowleft':
-          direction = 'left';
-          break;
-        case 'd':
-        case 'arrowright':
-          direction = 'right';
-          break;
-        default:
-          return; // Not a movement key
-      }
-
-      event.preventDefault();
-      sendDirection(direction);
-    };
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      const key = event.key.toLowerCase();
-
-      // If releasing a movement key, send stop
-      if (['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'].includes(key)) {
-        sendDirection('stop');
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [sendDirection]);
+  useGameRenderer(canvasRef, { players, myId });
 
   return (
     <div className="relative w-full max-w-[960px]">
@@ -74,7 +21,7 @@ export default function GameSimple({ playerName }: Props) {
         <span>Player: <strong>{playerName}</strong></span>
         <span>Status: {status}</span>
         <span>ID: {myId ?? '—'}</span>
-        <span>Players: {all.length}</span>
+        <span>Players: {players.length}</span>
       </div>
 
       <div className="relative rounded-lg border border-slate-700 bg-slate-900">
@@ -96,6 +43,18 @@ export default function GameSimple({ playerName }: Props) {
           <p>Position: x={me.x.toFixed(1)} y={me.y.toFixed(1)}</p>
         </div>
       )}
+
+      <div className="mt-3 text-xs text-slate-400 border-t border-slate-700 pt-2">
+        <div className="grid grid-cols-2 gap-2">
+          <div>WS: {debugInfo.wsState || status}</div>
+          <div>WS ready: {debugInfo.wsReadyState ?? '—'}</div>
+          <div>Kbd: {debugInfo.keyboardActive ? '✓' : '✗'}</div>
+          <div>Key: {debugInfo.lastKeyPressed || '—'}</div>
+          <div>Dir: {debugInfo.lastDirectionSent || '—'}</div>
+          <div>Keys: [{Array.from(debugInfo.keysDown || []).join(', ') || 'none'}]</div>
+          <div>Msgs: ↑{debugInfo.messagesSent || 0} ↓{debugInfo.messagesReceived || 0}</div>
+        </div>
+      </div>
     </div>
   );
 }

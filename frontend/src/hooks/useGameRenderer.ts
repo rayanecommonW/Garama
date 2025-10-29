@@ -8,29 +8,6 @@ export type RendererOptions = {
   myId: string | null;
 };
 
-type ExtendedRenderingContext2D = CanvasRenderingContext2D & { dispose?: () => void; __garamaPixelRatio?: number };
-
-function configureCanvas(canvas: HTMLCanvasElement): ExtendedRenderingContext2D | null {
-  const context = canvas.getContext('2d');
-  if (!context) return null;
-
-  const resize = () => {
-    const pixelRatio = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * pixelRatio;
-    canvas.height = rect.height * pixelRatio;
-    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    (context as ExtendedRenderingContext2D).__garamaPixelRatio = pixelRatio;
-  };
-
-  resize();
-  window.addEventListener('resize', resize);
-
-  return Object.assign(context, {
-    dispose: () => window.removeEventListener('resize', resize),
-  });
-}
-
 export default function useGameRenderer(canvasRef: RefObject<HTMLCanvasElement | null>, { players, myId }: RendererOptions) {
   const playersRef = useRef<PlayerSnapshot[]>(players);
   const myIdRef = useRef<string | null>(myId);
@@ -47,47 +24,58 @@ export default function useGameRenderer(canvasRef: RefObject<HTMLCanvasElement |
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = configureCanvas(canvas);
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let frameId: number;
-    let running = true;
+    // Simple canvas setup
+    const resizeCanvas = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let animationId: number;
+    let isRunning = true;
 
     const render = () => {
-      if (!running) return;
+      if (!isRunning) return;
 
-      const pixelRatio = ctx.__garamaPixelRatio ?? window.devicePixelRatio ?? 1;
-      const cssWidth = canvas.width / pixelRatio;
-      const cssHeight = canvas.height / pixelRatio;
+      const { width: canvasWidth, height: canvasHeight } = canvas;
 
-      ctx.clearRect(0, 0, cssWidth, cssHeight);
+      // Clear canvas
       ctx.fillStyle = '#020617';
-      ctx.fillRect(0, 0, cssWidth, cssHeight);
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-      const scale = Math.min(cssWidth / WORLD_WIDTH, cssHeight / WORLD_HEIGHT);
-      const offsetX = (cssWidth - WORLD_WIDTH * scale) / 2;
-      const offsetY = (cssHeight - WORLD_HEIGHT * scale) / 2;
+      // Calculate scaling to fit world in canvas
+      const scale = Math.min(canvasWidth / WORLD_WIDTH, canvasHeight / WORLD_HEIGHT);
+      const offsetX = (canvasWidth - WORLD_WIDTH * scale) / 2;
+      const offsetY = (canvasHeight - WORLD_HEIGHT * scale) / 2;
 
+      // Draw world border
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(offsetX, offsetY, WORLD_WIDTH * scale, WORLD_HEIGHT * scale);
+
+      // Draw players
       const currentPlayers = playersRef.current;
       const selfId = myIdRef.current;
 
-      ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
-      ctx.lineWidth = Math.max(1.5 * scale, 1);
-      ctx.strokeRect(offsetX, offsetY, WORLD_WIDTH * scale, WORLD_HEIGHT * scale);
-
       for (const player of currentPlayers) {
         const isSelf = player.id === selfId;
-
         const px = offsetX + player.x * scale;
         const py = offsetY + player.y * scale;
-        const baseRadius = isSelf ? 14 : 10;
-        const radius = Math.max(baseRadius * scale, 6);
+        const radius = isSelf ? 12 : 8;
 
+        // Draw player circle
         ctx.beginPath();
         ctx.fillStyle = player.color ?? '#ffffff';
         ctx.arc(px, py, radius, 0, Math.PI * 2);
         ctx.fill();
 
+        // Draw player name
         ctx.fillStyle = isSelf ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.7)';
         ctx.font = isSelf ? 'bold 14px sans-serif' : '12px sans-serif';
         ctx.textAlign = 'left';
@@ -95,15 +83,15 @@ export default function useGameRenderer(canvasRef: RefObject<HTMLCanvasElement |
         ctx.fillText(player.name ?? player.id, px + radius + 6, py);
       }
 
-      frameId = requestAnimationFrame(render);
+      animationId = requestAnimationFrame(render);
     };
 
     render();
 
     return () => {
-      running = false;
-      cancelAnimationFrame(frameId);
-      ctx.dispose?.();
+      isRunning = false;
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', resizeCanvas);
     };
   }, [canvasRef]);
 }

@@ -32,5 +32,5 @@ export declare const WORLD_WIDTH = 1600;
 export declare const WORLD_HEIGHT = 900;
 export declare const TICK_RATE = 20;
 export declare const PLAYER_SPEED: number;
-export declare const INACTIVITY_TIMEOUT = 60000;
+export declare const INACTIVITY_TIMEOUT = 6000000;
 //# sourceMappingURL=index.d.ts.map
