@@ -1,72 +1,122 @@
 "use client";
-import { useMemo, useRef, useState } from 'react';
-import useGameSocket from '../hooks/useGameSocket';
-import useGameRenderer from '../hooks/useGameRenderer';
-import useKeyboard from '../hooks/useKeyboard';
+import { useEffect, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
+import type { ServerMessage } from '@garama/shared';
+import DebugInfo from './DebugInfo';
+import Chat from './Chat';
+import FloatingMessage from './FloatingMessage';
+
+const SERVER_URL = 'http://localhost:3001';
 
 type Props = {
   playerName: string;
 };
 
 export default function GameSimple({ playerName }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [debugMode, setDebugMode] = useState(false);
-  const { currentDirection, debugInfo: kbDebug } = useKeyboard();
-  const { players, myId, status, lastError, debugInfo: wsDebug } = useGameSocket(playerName, currentDirection);
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [lastTick, setLastTick] = useState<number | null>(null);
+  const [messagesReceived, setMessagesReceived] = useState(0);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [floatingMessage, setFloatingMessage] = useState<string | null>(null);
 
-  const me = useMemo(() => (myId ? players.find(p => p.id === myId) ?? null : null), [players, myId]);
+  useEffect(() => {
+    const socketInstance = io(SERVER_URL);
 
-  useGameRenderer(canvasRef, { players, myId });
+    socketInstance.on('connect', () => {
+      console.log('Connected to server');
+      setIsConnected(true);
+    });
+
+    socketInstance.on('disconnect', () => {
+      console.log('Disconnected from server');
+      setIsConnected(false);
+    });
+
+    socketInstance.on('tick', (msg: ServerMessage & { type: 'tick' }) => {
+      setLastTick(msg.timestamp);
+      setMessagesReceived(prev => prev + 1);
+    });
+
+    setSocket(socketInstance);
+
+    // Cleanup on unmount
+    return () => {
+      socketInstance.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Only handle Enter if chat is not open
+      if (event.key === 'Enter' && !isChatOpen) {
+        event.preventDefault();
+        setIsChatOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [socket, isConnected, isChatOpen]);
 
   return (
     <div className="relative w-full max-w-[960px]">
       <div className="mb-2 flex items-center justify-between text-sm text-slate-200">
         <span>Player: <strong>{playerName}</strong></span>
         <div className="flex items-center gap-4">
-          <span>Status: {status}</span>
-          <span>Players: {players.length}</span>
-          <button
-            onClick={() => setDebugMode(!debugMode)}
-            className="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 rounded"
-          >
-            {debugMode ? 'Hide' : 'Show'} Debug
-          </button>
+          <span>Status: {isConnected ? 'Connected' : 'Disconnected'}</span>
+          <span>Chat: {isChatOpen ? 'Open' : 'Closed'}</span>
         </div>
       </div>
 
-      <div className="relative rounded-lg border border-slate-700 bg-slate-900">
-        <canvas ref={canvasRef} className="block h-[600px] w-full rounded-lg" />
-
-        {status !== 'open' && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-slate-900/80 text-slate-200">
-            <div className="text-center">
-              <p className="text-lg font-semibold">Connecting to game server…</p>
-              <p className="text-sm text-slate-300">Status: {status}</p>
-              {lastError && <p className="mt-2 text-xs text-red-300">{lastError}</p>}
-            </div>
+      <div className="relative rounded-lg border border-slate-700 bg-slate-900 p-8">
+        <div className="text-center text-slate-200">
+          <h2 className="text-xl font-semibold mb-4">Socket.IO Connection</h2>
+          <div className="space-y-2">
+            <p>Status: <span className={isConnected ? 'text-green-400' : 'text-red-400'}>
+              {isConnected ? 'Connected' : 'Disconnected'}
+            </span></p>
+            <p>Server URL: {SERVER_URL}</p>
+            <p>Last tick: {lastTick ? new Date(lastTick).toLocaleTimeString() : 'None'}</p>
+            <p>Chat: {isChatOpen ? 'Open' : 'Closed'}</p>
+            <p className="text-sm text-slate-400 mt-4">
+              Press <kbd className="px-2 py-1 bg-slate-700 rounded text-xs">Enter</kbd> to open chat
+            </p>
           </div>
-        )}
+        </div>
+
       </div>
 
-      {me && (
-        <div className="mt-3 text-sm text-slate-300">
-          <p>Position: x={me.x.toFixed(1)} y={me.y.toFixed(1)}</p>
-        </div>
+      <DebugInfo
+        title="Connection Details"
+        items={[
+          { label: 'Socket ID', value: socket?.id?.slice(0, 8) + '...' },
+          { label: 'Connected At', value: socket?.connected ? new Date().toLocaleTimeString() : 'N/A' },
+          { label: 'Messages Received', value: messagesReceived },
+          { label: 'Chat Status', value: isChatOpen ? 'Open' : 'Closed', color: isChatOpen ? 'success' : 'default' },
+          { label: 'Tick Rate', value: '20Hz' },
+        ]}
+      />
+
+      {isChatOpen && (
+        <Chat
+          socket={socket}
+          isConnected={isConnected}
+          onClose={() => setIsChatOpen(false)}
+          onMessageSent={(message) => setFloatingMessage(message)}
+        />
       )}
 
-      {debugMode && (
-        <div className="mt-3 text-xs text-slate-400 border-t border-slate-700 pt-2">
-          <div className="grid grid-cols-2 gap-2">
-            <div>WS: {wsDebug.wsState || status}</div>
-            <div>WS ready: {wsDebug.wsReadyState ?? '—'}</div>
-            <div>Kbd: {kbDebug.keyboardActive ? '✓' : '✗'}</div>
-            <div>Key: {kbDebug.lastKeyPressed || '—'}</div>
-            <div>Dir: {kbDebug.lastDirectionSent || '—'}</div>
-            <div>Keys: [{kbDebug.keysDown.join(', ') || 'none'}]</div>
-            <div>Msgs: ↑{wsDebug.messagesSent || 0} ↓{wsDebug.messagesReceived || 0}</div>
-            <div>ID: {myId ?? '—'}</div>
-          </div>
-        </div>
+      {floatingMessage && (
+        <FloatingMessage
+          message={floatingMessage}
+          onDisappear={() => setFloatingMessage(null)}
+        />
       )}
     </div>
   );

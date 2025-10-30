@@ -9,8 +9,10 @@
   },
   "dependencies": {
     "@garama/shared": "workspace:*",
+    "@socket.io/bun-engine": "^0.0.3",
     "dotenv": "^16.0.0",
-    "hono": "^4.10.1"
+    "hono": "^4.10.1",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "@types/bun": "latest",

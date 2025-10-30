@@ -1,70 +1,55 @@
-import { Hono } from 'hono';
-import type { ServerWebSocket } from 'bun';
-import type { ClientMessage } from '@garama/shared';
-import { TICK_RATE, INACTIVITY_TIMEOUT } from '@garama/shared';
-import { WebSocketHandler } from './websocket.js';
+import { Server } from 'socket.io';
+import type { ClientMessage, ServerMessage } from '@garama/shared';
+import { TICK_RATE } from '@garama/shared';
 
 export const createServer = () => {
-  const app = new Hono();
-  const wsHandler = new WebSocketHandler();
+  const port = Number(process.env.PORT) || 3001;
 
-  app.get('/health', (c) => c.json({ ok: true }));
-  app.get('/', (c) => c.text('Garama backend. Connect via WebSocket on /ws'));
-  app.get('/api/info', (c) =>
-    c.json({
-      players: wsHandler.gameInstance.getPlayerCount(),
-      sockets: 0, // TODO: expose from handler
-      tickRate: TICK_RATE,
-    })
-  );
-
-  const server = Bun.serve({
-    port: Number(process.env.PORT) || 3001,
-
-    async fetch(request, server) {
-      const { pathname } = new URL(request.url);
-      if (pathname === '/ws') {
-        if (server.upgrade(request)) return;
-        return new Response('WebSocket upgrade failed', { status: 426 });
-      }
-      return app.fetch(request);
-    },
-
-    websocket: {
-      open() {},
-
-      message(ws, raw) {
-        try {
-          const msg: ClientMessage = JSON.parse(raw.toString());
-
-          if (msg.type === 'join') {
-            wsHandler.handleJoin(ws, msg);
-          } else if (msg.type === 'input') {
-            wsHandler.handleInput(ws, msg);
-          }
-        } catch {}
-      },
-
-      close(ws) {
-        wsHandler.handleDisconnect(ws);
-      },
-    },
+  // Create Socket.IO server
+  const io = new Server(port, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"]
+    }
   });
 
-  // Game loop
-  setInterval(() => {
-    if (wsHandler.gameInstance.getPlayerCount() === 0) return;
+  // Handle client connections
+  io.on('connection', (socket) => {
+    console.log(`Client connected: ${socket.id}`);
 
-    wsHandler.gameInstance.removeInactivePlayers(INACTIVITY_TIMEOUT);
-    wsHandler.cleanupInactiveSockets(INACTIVITY_TIMEOUT);
+    // Handle 'ok' messages from clients
+    socket.on('ok', (msg: ClientMessage) => {
+      // Simply acknowledge receipt of 'ok' message
+      console.log(`Received 'ok' from client ${socket.id}`);
+    });
 
-    const movedPlayers = wsHandler.gameInstance.updatePositions();
-    if (movedPlayers > 0) {
-      wsHandler.broadcastGameState();
-    }
+    // Handle chat messages from clients
+    socket.on('chat', (msg: ClientMessage & { type: 'chat' }) => {
+      console.log(`Chat from client ${socket.id}: "${msg.message}"`);
+      // Only log on server, no broadcasting to other clients
+    });
+
+    socket.on('disconnect', () => {
+      console.log(`Client disconnected: ${socket.id}`);
+    });
+  });
+
+  // Server tick at 20hz
+  const tickInterval = setInterval(() => {
+    const tickMessage: ServerMessage = {
+      type: 'tick',
+      timestamp: Date.now(),
+    };
+
+    // Broadcast tick to all connected clients
+    io.emit('tick', tickMessage);
   }, 1000 / TICK_RATE);
 
-  console.log(`Garama backend listening on http://localhost:${server.port}`);
+  console.log(`Socket.IO server listening on http://localhost:${port}`);
 
-  return server;
+  return {
+    io,
+    tickInterval,
+    port,
+  };
 };
