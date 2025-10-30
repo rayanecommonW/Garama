@@ -1,7 +1,8 @@
 "use client";
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import useGameSocket from '../hooks/useGameSocket';
 import useGameRenderer from '../hooks/useGameRenderer';
+import useKeyboard from '../hooks/useKeyboard';
 
 type Props = {
   playerName: string;
@@ -9,7 +10,9 @@ type Props = {
 
 export default function GameSimple({ playerName }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const { players, myId, status, lastError, debugInfo } = useGameSocket(playerName);
+  const [debugMode, setDebugMode] = useState(false);
+  const { currentDirection, debugInfo: kbDebug } = useKeyboard();
+  const { players, myId, status, lastError, debugInfo: wsDebug } = useGameSocket(playerName, currentDirection);
 
   const me = useMemo(() => (myId ? players.find(p => p.id === myId) ?? null : null), [players, myId]);
 
@@ -19,9 +22,16 @@ export default function GameSimple({ playerName }: Props) {
     <div className="relative w-full max-w-[960px]">
       <div className="mb-2 flex items-center justify-between text-sm text-slate-200">
         <span>Player: <strong>{playerName}</strong></span>
-        <span>Status: {status}</span>
-        <span>ID: {myId ?? '—'}</span>
-        <span>Players: {players.length}</span>
+        <div className="flex items-center gap-4">
+          <span>Status: {status}</span>
+          <span>Players: {players.length}</span>
+          <button
+            onClick={() => setDebugMode(!debugMode)}
+            className="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 rounded"
+          >
+            {debugMode ? 'Hide' : 'Show'} Debug
+          </button>
+        </div>
       </div>
 
       <div className="relative rounded-lg border border-slate-700 bg-slate-900">
@@ -44,17 +54,20 @@ export default function GameSimple({ playerName }: Props) {
         </div>
       )}
 
-      <div className="mt-3 text-xs text-slate-400 border-t border-slate-700 pt-2">
-        <div className="grid grid-cols-2 gap-2">
-          <div>WS: {debugInfo.wsState || status}</div>
-          <div>WS ready: {debugInfo.wsReadyState ?? '—'}</div>
-          <div>Kbd: {debugInfo.keyboardActive ? '✓' : '✗'}</div>
-          <div>Key: {debugInfo.lastKeyPressed || '—'}</div>
-          <div>Dir: {debugInfo.lastDirectionSent || '—'}</div>
-          <div>Keys: [{Array.from(debugInfo.keysDown || []).join(', ') || 'none'}]</div>
-          <div>Msgs: ↑{debugInfo.messagesSent || 0} ↓{debugInfo.messagesReceived || 0}</div>
+      {debugMode && (
+        <div className="mt-3 text-xs text-slate-400 border-t border-slate-700 pt-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div>WS: {wsDebug.wsState || status}</div>
+            <div>WS ready: {wsDebug.wsReadyState ?? '—'}</div>
+            <div>Kbd: {kbDebug.keyboardActive ? '✓' : '✗'}</div>
+            <div>Key: {kbDebug.lastKeyPressed || '—'}</div>
+            <div>Dir: {kbDebug.lastDirectionSent || '—'}</div>
+            <div>Keys: [{kbDebug.keysDown.join(', ') || 'none'}]</div>
+            <div>Msgs: ↑{wsDebug.messagesSent || 0} ↓{wsDebug.messagesReceived || 0}</div>
+            <div>ID: {myId ?? '—'}</div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
