@@ -76,7 +76,6 @@ export default function Chat({ isOpen, isFloating, socket, isConnected, onClose,
 
     socket.emit('chat', chatMessage);
 
-    // Add to floating messages
     const newMessage: FloatingMessage = {
       id: messageIdCounter.current++,
       message: message.trim(),
@@ -86,8 +85,7 @@ export default function Chat({ isOpen, isFloating, socket, isConnected, onClose,
     setFloatingMessages(prev => [...prev, newMessage]);
     setMessage('');
 
-    // Update parent about floating state
-    onStateChange(isOpen, true);
+    onStateChange(false, true);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
