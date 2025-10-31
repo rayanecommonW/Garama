@@ -4,7 +4,6 @@ import { io, Socket } from 'socket.io-client';
 import type { ServerMessage } from '@garama/shared';
 import DebugInfo from './DebugInfo';
 import Chat from './Chat';
-import FloatingMessage from './FloatingMessage';
 
 const SERVER_URL = 'http://localhost:3001';
 
@@ -18,7 +17,7 @@ export default function GameSimple({ playerName }: Props) {
   const [lastTick, setLastTick] = useState<number | null>(null);
   const [messagesReceived, setMessagesReceived] = useState(0);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [floatingMessage, setFloatingMessage] = useState<string | null>(null);
+  const [isChatFloating, setIsChatFloating] = useState(false);
 
   useEffect(() => {
     const socketInstance = io(SERVER_URL);
@@ -40,7 +39,6 @@ export default function GameSimple({ playerName }: Props) {
 
     setSocket(socketInstance);
 
-    // Cleanup on unmount
     return () => {
       socketInstance.disconnect();
     };
@@ -50,10 +48,21 @@ export default function GameSimple({ playerName }: Props) {
     if (!socket || !isConnected) return;
 
     const handleKeyPress = (event: KeyboardEvent) => {
-      // Only handle Enter if chat is not open
-      if (event.key === 'Enter' && !isChatOpen) {
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if (event.key === 'Enter') {
         event.preventDefault();
-        setIsChatOpen(true);
+
+        // Condition: if it's open then close it, if it close we open it, if we're in the fade phase you can open it
+        if (isChatOpen) {
+          // If it's open, close it
+          setIsChatOpen(false);
+        } else {
+          // If it's closed or in fade phase, open it
+          setIsChatOpen(true);
+        }
       }
     };
 
@@ -103,19 +112,17 @@ export default function GameSimple({ playerName }: Props) {
         ]}
       />
 
-      {isChatOpen && (
+      {(isChatOpen || isChatFloating) && (
         <Chat
+          isOpen={isChatOpen}
+          isFloating={isChatFloating}
           socket={socket}
           isConnected={isConnected}
           onClose={() => setIsChatOpen(false)}
-          onMessageSent={(message) => setFloatingMessage(message)}
-        />
-      )}
-
-      {floatingMessage && (
-        <FloatingMessage
-          message={floatingMessage}
-          onDisappear={() => setFloatingMessage(null)}
+          onStateChange={(newIsOpen, newIsFloating) => {
+            setIsChatOpen(newIsOpen);
+            setIsChatFloating(newIsFloating);
+          }}
         />
       )}
     </div>

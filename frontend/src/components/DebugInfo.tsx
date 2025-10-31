@@ -22,7 +22,6 @@ const colorClasses = {
 };
 
 export default function DebugInfo({ title = 'Debug Info', items, className = '', compact = false }: DebugInfoProps) {
-  // Convert items to array if it's an object
   const debugItems: DebugItem[] = Array.isArray(items)
     ? items
     : Object.entries(items).map(([key, value]) => ({
@@ -56,7 +55,6 @@ export default function DebugInfo({ title = 'Debug Info', items, className = '',
   );
 }
 
-// Additional utility components for common debug patterns
 export function ConnectionStatus({ isConnected, url }: { isConnected: boolean; url: string }) {
   return (
     <DebugInfo
