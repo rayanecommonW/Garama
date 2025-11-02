@@ -34,7 +34,7 @@ export default function DebugInfo({ title = 'Debug Info', items, className = '',
     : 'text-sm text-slate-300 border-t border-slate-700 pt-3';
 
   return (
-    <div className={`${containerClasses} ${className}`}>
+    <div className={`bg-black p-4 rounded ${containerClasses} ${className}`}>
       {title && !compact && (
         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
           {title}

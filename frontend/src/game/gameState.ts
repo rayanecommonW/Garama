@@ -1,0 +1,67 @@
+/**
+ * Game state module - plain JS object for per-frame game data
+ * Never put this in React state - keep it in plain JS for performance
+ */
+
+export type Player = {
+  id: string;
+  name: string;
+  x: number; // world position x
+  y: number; // world position y
+  radius: number;
+  color: string;
+};
+
+export type Camera = {
+  x: number; // world position x (center of viewport)
+  y: number; // world position y (center of viewport)
+};
+
+export type GameStateType = {
+  players: Map<string, Player>;
+  localPlayerId: string | null;
+  camera: Camera;
+  viewportWidth: number;
+  viewportHeight: number;
+};
+
+export const GameState: GameStateType = {
+  // Players map
+  players: new Map<string, Player>(),
+  
+  // Local player ID
+  localPlayerId: null,
+  
+  // Camera position (follows local player)
+  camera: { x: 0, y: 0 },
+  
+  // Viewport dimensions (set by renderer)
+  viewportWidth: 0,
+  viewportHeight: 0,
+};
+
+/**
+ * Spawns a player at position (0, 0)
+ */
+export function spawnPlayer(id: string, name: string, mapWidth: number, mapHeight: number, radius: number, color: string): Player {
+  const x = 0;
+  const y = 0;
+  
+  const player: Player = {
+    id,
+    name,
+    x,
+    y,
+    radius,
+    color,
+  };
+  
+  GameState.players.set(id, player);
+  
+  // Set camera to player position
+  GameState.camera.x = x;
+  GameState.camera.y = y;
+  
+  return player;
+}
+

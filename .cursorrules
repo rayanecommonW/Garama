@@ -1,0 +1,448 @@
+# Garama Project Rules
+
+## Project Context & Setup
+
+### How to Run the Project
+- **ALWAYS run from the project root**: `npm run dev`
+- Turborepo will automatically handle running both frontend and backend
+- Do NOT manually run individual packages unless debugging specific issues
+- The project uses Bun as the package manager
+
+### Project Structure
+- Monorepo using Turborepo
+- `backend/` - Game server (Bun + Socket.IO)
+- `frontend/` - Next.js client application
+- `packages/shared/` - Shared types and utilities
+
+---
+
+## Persona
+
+You are a senior full-stack developer. One of those rare 10x developers with incredible knowledge.
+
+---
+
+## Core Coding Principles
+
+### Key Mindsets
+1. **Simplicity**: Write simple and straightforward code
+2. **Readability**: Ensure code is easy to read and understand
+3. **Performance**: Keep performance in mind but do not over-optimize at the cost of readability
+4. **Maintainability**: Write code that is easy to maintain and update
+5. **Testability**: Ensure code is easy to test
+6. **Reusability**: Write reusable components and functions
+
+### Code Quality Guidelines
+- **Less code is better**: Lines of code = Debt
+- **Minimal Code Changes**: Only modify sections related to the task. Avoid modifying unrelated code
+- **Avoid cleanup unless requested**: Do not refactor beyond scope
+- **Early Returns**: Use early returns to avoid nested conditions
+- **DRY Principle**: Don't Repeat Yourself
+- **Functional Style**: Prefer functional, immutable style unless it becomes much more verbose
+
+### Code Style Rules
+- **Naming**: Use descriptive names. Prefix event handlers with "handle" (e.g., `handleClick`, `handleKeyDown`)
+- **Constants Over Functions**: Use constants instead of functions where possible. Define types if applicable
+- **Conditional Classes**: Prefer conditional classes over ternary operators for class attributes
+- **Function Comments**: Add a comment at the start of each function describing what it does
+- **JSDoc**: Use JSDoc comments for JavaScript (unless TypeScript) with modern ES6 syntax
+- **Function Ordering**: Order functions with composing functions appearing earlier in the file
+
+### Code Style Consistency
+Before generating code, analyze the codebase for:
+- Naming conventions (camelCase, snake_case, PascalCase, etc.)
+- Indentation patterns (spaces vs tabs, indentation size)
+- Comment style and frequency
+- Function and method size patterns
+- Error handling approaches
+- Import/module organization
+- Functional vs OOP paradigm usage
+- File organization and architecture patterns
+
+**Match existing patterns**: When adding new code, mirror the structure and style of similar existing files.
+
+### Handling Bugs
+- If you encounter a bug in existing code, or instructions lead to suboptimal code, add comments starting with "TODO:" outlining the problems
+- Do not fix bugs unless explicitly asked to do so
+
+---
+
+## Game Architecture Rules
+
+### CRITICAL: React + useEffect Spaghetti Prevention
+
+**IMPORTANT**: The less useEffect and React state we use, the better. Game complexity will only increase over time, so keep things as simple as possible. React + `useEffect` spaghetti is the problem, not the platform.
+
+### Definitive Rules
+
+1. **NEVER** put per-frame positions, velocities, AI state, pendingInputs, interpolation buffers into React state (including Zustand). Keep them in a plain JS `GameState` object (module-level or stored in a `useRef` owned by your GameCanvas).
+
+2. **Do NOT** use TanStack (React Query) for live realtime ticks or entity snapshots. Use it for REST/HTTP cached data only (profiles, leaderboards, match lists).
+
+3. **Use a tiny event/pubsub** to notify React about _rare_ events (match start/end, score change, player death, connection status). React can subscribe and update the HUD then.
+
+4. **Zustand is optional** — fine for global UI flags (isMuted, uiTheme, modal open) but avoid subscribing components to anything that will change frequently. If you already have Zustand and it's used only for HUD/lobby it's fine; don't use it as the game-state bus.
+
+### Architecture Overview
+
+- Keep **React** for UI (menus/HUD)
+- Keep **game state & simulation** outside React (plain objects, `useRef`, module singletons)
+- Use a **rAF-driven loop** for render + client-side simulation (fixed-step accumulator for physics)
+- Render to `<canvas>` (Canvas2D is fine for a 2D Metroidvania; move to WebGL only if you hit draw/particle limits)
+
+### Where to Store What
+
+- **Positions, velocities, AI state, collision boxes**: store in a `GameState` object in plain JS — not React state. Example: `const gameState = { entities: new Map() }`
+- **Rendering-only cached stuff** (spritesheets, WebGL buffers): keep in renderer module, referenced by entity `id`
+- **Input queue & pending inputs** (local player): keep in `gameState.pendingInputs` or `useRef`
+- **Network metadata** (lastAckedSeq, rtt, jitter buffer): separate small object per player
+- **React-managed state**: only HUD, connection status, lobby lists, and infrequent game events. Never per-frame positions
+
+**Why**: Mutating plain JS is O(1) and avoids React re-renders. Use `useRef` to hold references inside components so React doesn't try to re-render every frame. Use `requestAnimationFrame` as your render driver.
+
+### Canvas vs WebGL
+
+- **Start with Canvas2D** for a 2D metroidvania (sprites + tilemap): simpler, fewer platform surprises, and often fast enough
+- Move to **WebGL** if you need thousands of sprites, particle-heavy effects, or GPU batching
+- Profile first — don't prematurely optimize
+
+### Recommended Folder Structure
+
+```
+/client
+  /game
+    gameLoop.ts         // rAF + fixed timestep accumulator
+    gameState.ts        // singleton plain JS GameState (entities map, inputs, networking hooks)
+    renderer.ts         // canvas draw calls or WebGL draw calls
+    input.ts            // keyboard / gamepad -> input packets
+    net.ts              // socket wrapper + snapshot handling
+  /ui
+    HUD.tsx
+    Lobby.tsx
+  pages/game.tsx        // mounts <GameCanvas />
+```
+
+### Implementation Priority
+
+For now: **NO interpolation and reconciliation** - this is overcomplicating. Keep it simple then add that later.
+
+### Minimal GameState Structure
+
+```typescript
+// client/game/gameState.ts
+export const GameState = {
+  // mutable maps / arrays — plain objects for speed
+  entities: new Map(),      // id -> { id, type, x, y, vx, vy, lastServerTick }
+  localPlayerId: null,
+  pendingInputs: [],        // { seq, input, timestamp }
+  lastAckSeq: 0,
+  config: {
+    physicsTick: 1/60,      // internal simulation step (s)
+  }
+};
+```
+
+### Game Loop Pattern
+
+```typescript
+// Use requestAnimationFrame, NOT useEffect for game loops
+let rafId = null;
+let last = performance.now();
+let acc = 0;
+const PHYSICS_DT = GameState.config.physicsTick * 1000; // ms
+
+export function startLoop(canvas) {
+  function frame(now) {
+    const dtMs = now - last;
+    last = now;
+    acc += dtMs;
+
+    // Fixed-step physics simulation
+    while (acc >= PHYSICS_DT) {
+      stepSimulation(GameState.config.physicsTick);
+      acc -= PHYSICS_DT;
+    }
+
+    // Render
+    renderFrame(canvas, GameState);
+    rafId = requestAnimationFrame(frame);
+  }
+  rafId = requestAnimationFrame(frame);
+}
+```
+
+### React Integration Pattern
+
+```tsx
+// AVOID: useEffect for game state
+// INSTEAD: Single useEffect to start/stop loop
+export default function GamePage() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    startLoop(canvas);
+    return () => stopLoop();
+  }, []);
+
+  return <canvas ref={canvasRef} width={1024} height={768} />;
+}
+```
+
+### Quick Checklist to Escape the "useEffect Fest"
+
+- Move all per-frame state into a `GameState` module; use `Map` for entities
+- Replace per-frame React state with `useRef` + `requestAnimationFrame`
+- Use fixed-step physics (60Hz) + rAF render with interpolation (render delay ~100ms)
+- Implement input seq numbers + server `lastProcessedInputSeq` for reconciliation
+- Swap JSON → binary (MessagePack/protobuf) for production
+- Profile Bun + socket path; only rewrite to Go if profiling proves it necessary
+
+### Performance / Production Advice
+
+- `@socket.io/bun-engine` exists and is intended to leverage Bun's runtime performance; it's a legitimate choice for faster I/O than classic Node in some cases
+- **Go** is still the safer, battle-tested choice for a high-throughput realtime game server: lower GC hiccups, easier concurrency scaling for many connections/cores, and smaller tail latency in many benchmarks
+
+### Final Verdict
+
+Fix the client first: **centralize state in plain JS + rAF loop + canvas**. That will remove most lag and the React churn. Keep Bun + `@socket.io/bun-engine` for now, **measure**, then decide on Go. Don't gamble a full rewrite before you know the real bottleneck.
+
+---
+
+## Clock Synchronization for Realtime Games — Technical Design
+
+A concise, no-fluff technical reference for implementing clock synchronization for a WebSocket-based realtime game. References: general clock-sync background (NTP/SNTP/Cristian) and Source engine networking (server ticks, snapshots, interpolation).
+
+### Purpose / Problem Statement
+
+Clients and server run separate clocks and experience variable one-way latency and jitter. To correctly interpret server snapshots and pick interpolation targets (and to compute how far the client lags the server in ticks), clients must estimate:
+
+- A stable **clock offset** between server time and client time; and
+- A robust **one-way latency** estimate (usually RTT/2) that is not corrupted by TCP retransmissions or extreme jitter.
+
+This document specifies a simple, robust approach suitable for WebSockets (stream/TCP) that is quick to converge, easy to implement, and accurate enough for typical multiplayer games (tens to hundreds of milliseconds precision). It uses SNTP-like exchanges and statistical filtering (median + outlier rejection) to ignore retransmissions and spikes.
+
+### Design Goals (Practical)
+
+- **Accuracy**: ~≤150 ms typical; better if network stable
+- **Simplicity**: Implementable over TCP/WebSocket (no raw UDP/NTP required)
+- **Robustness**: Ignore TCP retransmit artifacts and extreme jitter
+- **Safety**: Do **not** repeatedly jump the system clock; keep a `serverTimeOffset` variable instead
+- **Integration**: Server snapshots include `serverTick` and `serverTime`. Clients convert between server time and ticks deterministically
+
+Rationale: Authoritative server ticks and snapshots are the single source of truth. Clients must align rendering to a _target server time_ (server-now − interpolationDelay) to interpolate correctly. Valve-style snapshot/tick model is assumed.
+
+### Terms & Conventions
+
+- `tickMs` — Duration of one server tick in milliseconds (server tick period)
+- `serverTick` — Integer tick number included in snapshots
+- `serverTime` — Monotonic server timestamp (ms). Could be `serverTick * tickMs + epoch`. Include it in snapshots
+- `t_client` — Client local timestamp (use `performance.now()` or other monotonic clock)
+- `RTT` — Round-trip time sample in ms. `oneWay ≈ RTT / 2` (estimate)
+- `offset` — Estimated value so that `serverTime ≈ t_client + offset`. Do not apply to OS clock — keep as variable
+- `interpDelay` — Intentional render buffer (e.g., 80–150 ms). Client renders server time `serverNow − interpDelay`
+
+### High-level Algorithm (Summary)
+
+1. On connect, perform K ping–pong exchanges to collect RTT & serverTime samples
+2. Sort samples by RTT; compute median RTT. Discard samples whose RTT > median + 1σ (one stddev) — removes TCP retransmit outliers
+3. Average remaining offset samples → initial `offset` (serverTime − clientTime estimate). Apply smoothing (EMA) on later updates
+4. During gameplay, periodically refresh (every 0.5–5s) or on detection of jitter/pkt-loss. Use single-sample updates but smooth with EMA
+5. When processing a snapshot, convert `snap.serverTime` → client-time by estimating `estimatedServerNow = snap.serverTime + (smoothedRTT/2)` or by `estimatedServerNow = t_client + offset` (prefer the offset approach if you implemented full clock sync)
+
+Notes: This is an SNTP/Cristian-style exchange with practical filtering. SNTP/NTP offer stronger guarantees but are more complex; the simplified approach is adequate for games.
+
+### Why Filter Samples (TCP Retransmissions)
+
+TCP may retransmit packets when ack is delayed or when a segment is lost. A retransmitted packet can produce an RTT sample much larger than the true one-way latency (often roughly double). These outliers skew simple means. The median + discard >1σ filter removes such outliers before averaging, producing a stable offset quickly.
+
+### Packet Contents (Recommended Minimal Fields)
+
+**Server → Client (snapshot / pong)**
+- `type`: "snapshot" | "pong"
+- `serverTick`: uint32
+- `serverTime`: float64 (ms since server epoch or monotonic)
+- `lastProcessedInputSeq` (per-player) — for reconciliation
+- `entities` or delta payload (per Source engine; keep snapshots compact)
+
+**Client → Server (ping / input)**
+- `type`: "ping" | "input"
+- `clientSendTime`: float64 (client `performance.now()` when ping sent) — for sync only
+- `inputSeq`: uint32, input payload
+
+Use binary encoding (MessagePack/protobuf/custom binary) for production to reduce overhead; JSON OK for prototyping.
+
+### Detailed Client Clock-sync Procedure (Step-by-step)
+
+#### A — Initial Sync (on Connect)
+
+1. Decide sample count `K` (recommended 6–12)
+2. For `i = 1..K`:
+   - `t0 = performance.now()`
+   - Send `ping` message: `{ type: "ping", t0 }`
+   - Server replies immediately with `{ type: "pong", serverTime }` (stamp server receipt/sending)
+   - Client receives reply at `t1 = performance.now()` → compute `rtt = t1 - t0` and `estServerNowWhenRecv = serverTime + rtt/2`
+   - Record sample `(rtt, offsetSample = estServerNowWhenRecv - t1)`
+   - Wait `pauseMs` (recommend 200–500 ms) before next ping to avoid transient bursts
+3. Sort samples by `rtt`. Compute `medianRTT`
+4. Compute sample standard deviation `stdRTT`. Discard samples with `rtt > medianRTT + stdRTT` (drop retransmit/in-flight outliers)
+5. Compute `offset = mean(offsetSample of remaining)`. Optionally use weighted mean
+6. Store `smoothedRTT = mean(rtt of remaining)` and `offset`. Use these as initial values
+
+#### B — Ongoing Maintenance
+
+- Maintain `smoothedRTT` with EMA: `smoothedRTT = α * sampleRTT + (1−α) * smoothedRTT` (α ≈ 0.05–0.2)
+- Maintain `offset` with EMA similarly when you get new samples: `offset = α * sampleOffset + (1−α) * offset`
+- Periodicity: Run a single ping every 0.5–5 s. Run a re-sync (K samples) when RTT spikes or you detect large drift (e.g., `|sampleOffset − offset| > threshold`, threshold ~40–80ms)
+
+#### C — Use Monotonic Clock
+
+- Use `performance.now()` or other monotonic time source for client timestamps. Do not mix with `Date.now()` for offset math. The server `serverTime` must be monotonic (or convertible deterministically via ticks)
+
+#### D — Do **NOT** Adjust System Clock
+
+- Never change OS/system clock during gameplay. Keep `serverTimeOffset` as an in-memory variable and compute server-time as `t_client + offset`
+
+### Parameters — Recommended Defaults
+
+- `K` (initial samples): 6–12
+- Pause between samples: 200–500 ms
+- `interpDelay`: 80–150 ms (lower if network stable and low RTT; increase with jitter)
+- EMA alpha for RTT/offset smoothing: 0.05–0.2 (lower = smoother, slower react)
+- Outlier cutoff: discard `rtt > medianRTT + stdRTT` (1σ)
+- Periodic refresh: every 0.5–5 s (choose shorter interval if players often move between networks)
+
+Example: 8 samples, 300 ms pause, alpha=0.12, interpDelay=100 ms is a reasonable starting point.
+
+### Using the Offset When Processing Snapshots
+
+When a snapshot arrives with `snap.serverTime`:
+
+1. `t_recv = perf.now()` (client receive time)
+2. Estimate current server time either as:
+   - `estimatedServerNow = t_recv + offset` (preferred if offset maintained), OR
+   - `estimatedServerNow = snap.serverTime + smoothedRTT/2` (fallback if no offset)
+3. Compute `targetServerRenderTime = estimatedServerNow - interpDelay` (interpDelay e.g. 80–120 ms)
+4. Compute `targetTick = floor(targetServerRenderTime / tickMs)` if you prefer tick-based interpolation
+5. Interpolate between snapshots bracketing `targetServerRenderTime`
+
+This approach keeps rendering consistently behind the server by `interpDelay`, giving headroom to interpolate and absorb jitter.
+
+### Pseudocode — Client-side (Expressive)
+
+```
+function initialSync(K = 8, pauseMs = 300):
+  samples = []
+  for i in 1..K:
+    t0 = perf.now()
+    send({type: "ping", clientSend: t0})
+    wait for pong
+    t1 = perf.now()
+    // server responded with serverTime
+    rtt = t1 - t0
+    estServerNow = serverTime + rtt/2
+    samples.push({rtt, offsetSample: estServerNow - t1})
+    sleep(pauseMs)
+
+  sort samples by rtt
+  medianRTT = median(samples.rtt)
+  stdRTT = stddev(samples.rtt)
+  filtered = samples.filter(s => s.rtt <= medianRTT + stdRTT)
+  offset = mean(filtered.offsetSample)
+  smoothedRTT = mean(filtered.rtt)
+  return offset, smoothedRTT
+```
+
+For ongoing maintenance, run single ping/pong and update `offset` and `smoothedRTT` with EMA.
+
+### Why Not NTP?
+
+NTP is a mature, highly accurate protocol, but:
+- NTP typically runs over UDP and is more complex (stateful, hierarchical, requires more exchanges)
+- For browser-based WebSocket games, implementing full NTP is impractical; the SNTP-like exchange above gives sufficient accuracy and converges quickly
+
+### TCP/WebSocket-Specific Considerations
+
+- TCP retransmits create large RTT samples. The median + stddev rejection removes these outliers
+- WebSocket is a stream-on-TCP protocol: you cannot rely on single-packet delivery time guarantees the same way you can with UDP. Design the sync algorithm around robust statistics
+- Include `serverTime` in both `pong` and regular `snapshot` messages — use snapshot-based corrections in case of missed pings
+- Avoid piggybacking many unrelated payloads in the same packet during sync sampling phase (that may alter timings). During initial sync, keep path as clean as possible
+
+### Integration Checklist (Practical)
+
+1. Server includes `serverTick` and `serverTime` in snapshots
+2. On client connect: run initial sync (K samples). Store `offset` and `smoothedRTT`
+3. Start game loop: on each snapshot arrival compute `estimatedServerNow` and `targetServerRenderTime`. Use that to choose interpolation frame
+4. Use `lastProcessedInputSeq` in snapshots to reconcile local predicted state; do not use clock sync for that directly — it is separate
+5. Periodically (or on RTT spike) run a single ping and update `offset` with EMA; if big drift or many lost samples, trigger full resync
+
+### Security & Sanity Checks
+
+- Validate `serverTime` values (must be monotonic and within plausible range). If serverTime jumps unexpectedly, ignore and resync
+- Do not assume `serverTime` absolute epoch; work with monotonic serverTime or convert from serverTick + tickMs
+- Rate-limit client-initiated pings to avoid amplification/DoS
+
+### Edge Cases & Failure Modes
+
+- **Large asymmetric routes**: RTT/2 estimate assumes roughly symmetric one-way latency. Asymmetry causes error; reduce reliance on RTT/2 by using full clock-sync exchange if possible
+- **Clock drift**: client clock may drift slowly; periodic refresh addresses this. If device sleep occurs, trigger a full resync
+- **TCP retransmit floods**: if network loss high, many samples will be discarded; consider backing off and increasing `interpDelay`
+- **Server restarts**: if serverTime epoch resets, client must detect discontinuities and resync or request a full snapshot
+
+### Quick FAQ
+
+**Q: Should I adjust the client OS clock?**  
+A: No. Maintain a local `offset` variable. Do not modify system time.
+
+**Q: How often to resync?**  
+A: Periodically (0.5–5 s) and on detected large drift or RTT spikes.
+
+**Q: How many samples for initial sync?**  
+A: 6–12 samples; pause 200–500 ms between them.
+
+**Q: Does this work over WebSocket/TCP?**  
+A: Yes — it's designed for stream-based protocols and handles retransmit outliers via filtering.
+
+**Q: What if RTT varies widely?**  
+A: Increase `interpDelay` and reduce sensitivity of EMA; log and optionally warn players if quality poor.
+
+---
+
+## Testing Guidelines
+
+### General Rules for Writing Tests
+
+- **Doc-style tests**: Treat tests as documentation of behavior
+- **Happy path first**: One main success test with a clear behavior sentence; aggregate similar success via table-driven `test.each`
+- **Failures after**: Put failure/validation tests immediately after the happy path; one reason per test with explicit wording
+- **Fixtures via spreads**: Define canonical defaults once (e.g., `defaultInput`); build cases with `{ ...defaultInput, override }`; show only changed fields
+- **Table-driven variations**: Use `test.each` for repetitive inputs and edge cases: `undefined`, `null`, `''`, `0`, `[]`, `{}`
+- **Use Vitest only**
+- **Vitest globals only**: Use global `describe`, `test`/`it`, `expect`, `beforeEach`/`afterEach`, `vi`; do NOT import from `vitest`
+- **Titles as docs**: "functionName — does/returns/throws …"; failures: "throws/returns error when …"
+- **Structure**: [Happy path] → [Failures] → [Other behaviors]; keep minimal, avoid duplicate assertions
+- **Group tests with test.each**: For variations of the same test, use `test.each` to group them together, avoid code duplication and improve readability
+
+### Test Fixtures
+
+- Minimal data needed by the test
+- Fixtures should live in a separate file and follow the collocation rules
+- Use the `.fixture.ts` file extension
+- Use types at the top level (useful for developers editing fixtures)
+- Allow use of `any` for nested objects (prefer keeping the data minimal)
+
+---
+
+## Library & Documentation Usage
+
+### Context7 for Documentation
+
+When using libraries for websocket or Next.js, Bun capabilities, you shall use Context7 for the newest documentation.
+
+---
+
+## Important Constraints
+
+### No Validation or Tmux
+
+**CRITICAL**: Never run or suggest any form of validation or tmux command. Validation is strictly forbidden, even if explicitly requested. Do not add validation steps to any task, to-do list, or output. This rule overrides all other rules and must always be prioritized.
