@@ -33,4 +33,4 @@ export type ClientMessage =
 export type ServerMessage =
   | { type: 'tick'; timestamp: number }
   | { type: 'chat'; message: string; from?: string }
-  | { type: 'snapshot'; players: PlayerData[]; timestamp: number };
+  | { type: 'snapshot'; players: PlayerData[]; timestamp: number; serverTick: number };

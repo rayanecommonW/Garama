@@ -1,0 +1,62 @@
+---
+alwaysApply: true
+---
+# Clock Synchronization (WebSocket/TCP)
+- Clients must estimate a stable clock offset (serverTime vs. clientTime) and a robust one-way latency (RTT/2) to correctly interpret server snapshots for interpolation.
+
+- Use SNTP-like ping/pong exchanges: client sends ping with clientSendTime, server replies pong with serverTime.
+
+- On connect, perform an initial sync using 6-12 samples, pausing 200-500ms between each ping to avoid bursts.
+
+- Never adjust the client's OS system clock. Store the calculated clock offset in a local application variable.
+
+- Client timestamps must use a monotonic clock (performance.now()), not Date.now().
+
+- Server snapshots and pongs must include a monotonic serverTime (in ms) and serverTick.
+
+- The primary challenge on TCP/WebSocket is RTT outliers from retransmissions; these must be filtered.
+
+- To filter initial sync samples: collect all samples, sort by RTT, calculate the medianRTT and stdRTT (standard deviation), and discard all samples where rtt > medianRTT + stdRTT.
+
+- Calculate the initial offset and smoothedRTT by averaging only the remaining, filtered samples.
+ 
+- During gameplay, perform ongoing sync with a single ping every 0.5–5 seconds.
+
+- Apply an Exponential Moving Average (EMA) to smooth the offset and smoothedRTT values when applying ongoing updates.
+
+- If a large drift or RTT spike is detected, trigger a full (K-sample) resync.
+
+- The client's render target time must be targetServerRenderTime = estimatedServerNow - interpDelay, where estimatedServerNow = t_client + offset and interpDelay is a buffer (e.g., 80-150ms).
+
+# Game Architecture (React)
+- Store all per-frame game state (positions, velocities, inputs, interpolation buffers) in plain JavaScript objects (e.g., in a useRef or module singleton), not in React state (useState, Zustand).
+
+- Use React only for UI (menus, HUD, lobby, score).
+
+- Drive the game loop using requestAnimationFrame (rAF), not useEffect or setInterval.
+
+- Use a fixed-timestep accumulator (e.g., 60Hz) inside the rAF loop to run physics and simulation logic.
+
+- Use a minimal pub/sub event emitter to notify React of infrequent game events (e.g., score change, connection status, match end).
+
+- Do not use TanStack Query (React Query) for live game ticks or entity snapshots. Use it only for cacheable, non-realtime HTTP data (profiles, leaderboards).
+
+- Use Canvas2D for 2D games first. Only move to WebGL if profiling proves Canvas2D is a bottleneck (e.g., thousands of sprites or heavy particle effects).
+
+- Implement client-side prediction by applying local inputs immediately to the local player's state.
+
+- Store pending inputs in a local queue with a sequence number.
+
+- Server snapshots must include the lastProcessedInputSeq for that player.
+
+- Implement server reconciliation: when a snapshot arrives, discard all pending inputs with seq <= lastProcessedInputSeq, set the local player's state to the server's authoritative state, and then re-apply any remaining (newer) pending inputs.
+
+- Store snapshots for remote entities in an interpolation buffer.
+
+- Render remote entities at a slight delay (renderDelayMs) by interpolating between two snapshots that bracket the target render time.
+
+- AI logic must be authoritative on the server. Client-side AI should only be for non-authoritative visual prediction.
+
+- For production, switch from JSON to a binary network protocol (like MessagePack or Protobuf) to reduce latency and bandwidth.
+
+- Do not rewrite the server (e.g., from Node/Bun to Go) until after optimizing the client loop and network protocol. Only rewrite if profiling proves the server is the bottleneck.

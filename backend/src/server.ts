@@ -4,6 +4,7 @@ import { TICK_RATE, PLAYER_COLOR, PLAYER_RADIUS, MAP_WIDTH, MAP_HEIGHT } from '@
 
 // Server authoritative game state
 const players = new Map<string, PlayerData>();
+let serverTick = 0; // Server tick counter, increments at 20Hz
 
 export const createServer = () => {
   const port = Number(process.env.PORT) || 3001;
@@ -65,10 +66,14 @@ export const createServer = () => {
       type: 'snapshot',
       players: Array.from(players.values()),
       timestamp: Date.now(),
+      serverTick: serverTick,
     };
 
     // Broadcast snapshot to all connected clients
     io.emit('snapshot', snapshot);
+    
+    // Increment server tick counter
+    serverTick++;
   }, 1000 / TICK_RATE);
 
   console.log(`Socket.IO server listening on http://localhost:${port}`);

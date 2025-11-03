@@ -42,5 +42,6 @@ export type ServerMessage = {
     type: 'snapshot';
     players: PlayerData[];
     timestamp: number;
+    serverTick: number;
 };
 //# sourceMappingURL=index.d.ts.map

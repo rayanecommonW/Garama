@@ -19,6 +19,7 @@ export default function GameSimple({ playerName }: Props) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [lastTick, setLastTick] = useState<number | null>(null);
+  const [serverTick, setServerTick] = useState<number>(0);
   const [messagesReceived, setMessagesReceived] = useState(0);
   const [messagesSent, setMessagesSent] = useState(0);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -67,6 +68,7 @@ export default function GameSimple({ playerName }: Props) {
 
     socketInstance.on('snapshot', (msg: ServerMessage & { type: 'snapshot' }) => {
       setLastTick(msg.timestamp);
+      setServerTick(msg.serverTick);
       setMessagesReceived(prev => prev + 1);
       
       // Update all players from snapshot
@@ -189,6 +191,7 @@ export default function GameSimple({ playerName }: Props) {
           title="Connection Details"
           items={[
             { label: 'Socket ID', value: socket?.id?.slice(0, 8) + '...' },
+            { label: 'Server Tick', value: serverTick, color: 'info' },
             { label: 'Connected At', value: socket?.connected ? new Date().toLocaleTimeString() : 'N/A' },
             { label: 'Messages Received', value: messagesReceived },
             { label: 'Messages Sent', value: messagesSent },
