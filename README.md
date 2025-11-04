@@ -1,8 +1,11 @@
+# Work still in Progress
+
+
 # 🕹️ Garama - Multiplayer .io Game
 
 A real-time multiplayer game built with modern web technologies, featuring smooth movement, WebSocket communication, and a scalable monorepo architecture.
 
-![Game Preview](https://via.placeholder.com/800x400/1a1a2e/ffffff?text=Garama+.io+Game)
+Preview : Is Coming Soon
 
 ## 🌟 Features
 
@@ -39,8 +42,9 @@ UI Updates ← Game State ← Broadcast ← 20Hz Game Loop
 
 ### Prerequisites
 
-- **Bun** (recommended) or Node.js
+- **Bun**
 - **Git**
+- **Turbo Repo**
 
 ### Installation & Running
 
@@ -52,7 +56,11 @@ UI Updates ← Game State ← Broadcast ← 20Hz Game Loop
 
 2. **Install dependencies**
    ```bash
-   bun install  # or npm install
+   cd backend
+   bun i
+
+   cd frontend
+   npm i
    ```
 
 3. **Start development servers**
@@ -85,6 +93,7 @@ npm run build
 4. **Smooth Experience**: 60fps rendering with 20Hz authoritative server updates
 
 ## 🛠️ Technology Stack
+Will move either to Go or native Websocket soon
 
 ### Core Technologies
 
@@ -92,7 +101,7 @@ npm run build
 |-----------|------------|---------|
 | **Frontend** | Next.js 15 + React 19 | UI framework with App Router |
 | **Backend** | Bun + Hono | Fast runtime + lightweight web framework |
-| **WebSocket** | Bun WebSocket API | Real-time bidirectional communication |
+| **WebSocket** | Socket.io| Real-time bidirectional communication |
 | **Monorepo** | Turborepo | Build system and task orchestration |
 | **Language** | TypeScript | Type safety across entire stack |
 | **Styling** | Tailwind CSS | Utility-first CSS framework |
@@ -105,70 +114,19 @@ npm run build
 
 ## 📁 Project Structure Details
 
-### Frontend (`/frontend`)
-
-```
-frontend/
-├── src/
-│   ├── app/              # Next.js App Router
-│   │   ├── layout.tsx    # Root layout
-│   │   ├── page.tsx      # Game page
-│   │   └── globals.css   # Global styles
-│   ├── components/       # React components
-│   │   ├── GameSimple.tsx # Main game component
-│   │   └── Home.tsx      # Landing component
-│   ├── hooks/            # Custom React hooks
-│   │   ├── useGameSocket.ts # WebSocket connection
-│   │   ├── useGameState.ts  # Game state management
-│   │   └── useGameRenderer.ts # Canvas rendering
-│   ├── stores/           # State management
-│   │   └── gameStore.ts  # Zustand store
-│   └── game/             # Game-specific code
-│       ├── types.ts      # Local type exports
-│       └── constants.ts  # Game constants
-```
-
-### Backend (`/backend`)
-
-```
-backend/
-├── src/
-│   ├── index.ts          # Main server file
-│   └── config.ts         # Server configuration
-├── package.json          # Dependencies
-└── tsconfig.json         # TypeScript config
-```
-
-### Shared Package (`/packages/shared`)
-
-```typescript
-// Key exports
-export type Direction = 'up' | 'down' | 'left' | 'right' | 'stop';
-export type PlayerSnapshot = { id: string; name: string; x: number; y: number; /* ... */ };
-export type ClientMessage = { type: 'join' | 'input'; /* ... */ };
-export const WORLD_WIDTH = 1600;
-export const WORLD_HEIGHT = 900;
-export const TICK_RATE = 20;
-```
+TO-DO
 
 ## 🔧 Development
 
 ### Code Quality
 
-- **ESLint**: Code linting and formatting
-- **TypeScript**: Strict type checking
-- **Prettier**: Code formatting (via ESLint)
+TO-DO : ESLint, Prettier
 
 ### Game Mechanics
 
-- **Movement**: WASD/Arrow keys with immediate response
-- **Physics**: Authoritative server with client-side prediction
-- **Networking**: WebSocket with automatic reconnection
-- **State Sync**: 20Hz server broadcasts with delta compression
+TO-DO
 
-## 🚀 Recommended Enhancements
-
-### Immediate Additions
+### Road-Map
 
 #### 1. **Database Integration**
 ```bash
@@ -177,21 +135,11 @@ bun add prisma @prisma/client
 bun add -D prisma
 ```
 
-**Benefits:**
-- Persistent player stats
-- Game history/replays
-- User accounts & authentication
-
 #### 2. **Authentication System**
 ```bash
 # Add NextAuth.js
 bun add next-auth
 ```
-
-**Features:**
-- Social login (Google, GitHub)
-- Session management
-- Player profiles
 
 #### 3. **State Management Enhancement**
 ```bash
@@ -201,46 +149,12 @@ bun add @reduxjs/toolkit
 bun add immer
 ```
 
-**Benefits:**
-- Complex game state management
-- Undo/redo functionality
-- State persistence
-
-### Advanced Features
-
-#### 4. **Real-time Chat**
-```bash
-# Add Socket.io or custom WebSocket rooms
-bun add socket.io
-```
-
-**Features:**
-- Player communication
-- Team coordination
-- Moderation tools
-
 #### 5. **Game Analytics**
 ```bash
 # Add monitoring & analytics
 bun add @vercel/analytics
 bun add winston # Logging
 ```
-
-**Metrics:**
-- Player retention
-- Session duration
-- Popular game modes
-
-#### 6. **Mobile Optimization**
-```bash
-# Add touch controls
-bun add react-use-gesture
-```
-
-**Features:**
-- Virtual joystick
-- Touch gestures
-- Mobile-specific UI
 
 #### 7. **Performance Monitoring**
 ```bash
@@ -249,36 +163,9 @@ bun add @sentry/nextjs
 bun add web-vitals
 ```
 
-**Monitoring:**
-- Core Web Vitals
-- Error tracking
-- Performance bottlenecks
-
 ### Infrastructure & Deployment
 
-#### 8. **Containerization**
-```dockerfile
-# Add Docker support
-FROM oven/bun:latest
-COPY . .
-RUN bun install
-EXPOSE 3000 3001
-CMD ["bun", "run", "dev"]
-```
-
-#### 9. **Cloud Deployment**
-```bash
-# Deploy to Vercel + Railway
-# Frontend: vercel.com
-# Backend: railway.app
-```
-
-#### 10. **CDN & Asset Optimization**
-```bash
-# Add image optimization
-bun add next/image
-bun add sharp
-```
+TO-DO : Front in vercel, Backend in Docker
 
 ## 📈 Scaling Considerations
 
@@ -297,35 +184,11 @@ bun add sharp
 - **System Metrics**: CPU, memory, network usage
 - **Business Metrics**: DAU, retention, engagement
 
-## 🤝 Contributing
-
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Commit** your changes: `git commit -m 'Add amazing feature'`
-4. **Push** to the branch: `git push origin feature/amazing-feature`
-5. **Open** a Pull Request
-
-### Development Guidelines
-
-- Use TypeScript for all new code
-- Follow existing code style and patterns
-- Add tests for new features
-- Update documentation as needed
-- Ensure type safety across shared interfaces
 
 ## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Bun**: For the incredible runtime performance
-- **Next.js**: For the excellent React framework
-- **Hono**: For the lightweight web framework
-- **Turborepo**: For seamless monorepo management
+TO-DO
 
 ---
 
-**Built with ❤️ using modern web technologies**
 
-*Have questions? Open an issue or start a discussion!* 🚀
+*Have questions or want to help me? Please open a discussion !* 
