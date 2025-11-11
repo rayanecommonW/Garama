@@ -13,3 +13,11 @@ export const MAP_HEIGHT = 10000; // world map height in pixels
 export const PLAYER_RADIUS = 16; // player circle radius in pixels
 export const PLAYER_COLOR = '#3b82f6'; // player color (blue)
 export const PLAYER_SPEED = 200; // pixels per second
+// Collision debug colors
+export const DEBUG_HITBOX_COLOR = '#ff0000'; // red for polygon hitboxes
+export const DEBUG_PLAYER_HITBOX_COLOR = '#ffff00'; // yellow for player hitbox
+// Import and export static objects from JSON
+import objectsData from '../objects.json';
+export const STATIC_OBJECTS = objectsData.objects;
+// Export collision functions
+export { pointInPolygon, circlePolygonCollision, resolveCirclePolygonCollision, checkCircleMovementCollision, } from './collision';

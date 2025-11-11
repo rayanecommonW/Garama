@@ -1,0 +1,25 @@
+{
+  "objects": [
+    {
+      "id": "wall-1",
+      "polygon": [[200, 100], [400, 100], [400, 150], [200, 150]],
+      "renderStyle": "stone-wall"
+    },
+    {
+      "id": "barrier-1",
+      "polygon": [[600, 200], [650, 200], [650, 400], [600, 400]],
+      "renderStyle": "wooden-barrier"
+    },
+    {
+      "id": "wall-2",
+      "polygon": [[100, 300], [300, 300], [300, 350], [100, 350]],
+      "renderStyle": "stone-wall"
+    },
+    {
+      "id": "box-1",
+      "polygon": [[450, 250], [550, 250], [550, 350], [450, 350]],
+      "renderStyle": "metal"
+    }
+  ]
+}
+

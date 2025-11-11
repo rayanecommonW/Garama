@@ -11,6 +11,8 @@ type DebugInfoProps = {
   items: DebugItem[] | Record<string, string | number | boolean | null | undefined>;
   className?: string;
   compact?: boolean;
+  onToggleCollisions?: () => void;
+  collisionsEnabled?: boolean;
 };
 
 const colorClasses = {
@@ -21,7 +23,7 @@ const colorClasses = {
   info: 'text-blue-400',
 };
 
-export default function DebugInfo({ title = 'Debug Info', items, className = '', compact = false }: DebugInfoProps) {
+export default function DebugInfo({ title = 'Debug Info', items, className = '', compact = false, onToggleCollisions, collisionsEnabled }: DebugInfoProps) {
   const debugItems: DebugItem[] = Array.isArray(items)
     ? items
     : Object.entries(items).map(([key, value]) => ({
@@ -51,6 +53,21 @@ export default function DebugInfo({ title = 'Debug Info', items, className = '',
           </div>
         ))}
       </div>
+
+      {onToggleCollisions && (
+        <div className="mt-3 pt-3 border-t border-slate-700">
+          <button
+            onClick={onToggleCollisions}
+            className={`w-full px-3 py-2 rounded text-sm font-medium transition-colors ${
+              collisionsEnabled
+                ? 'bg-red-600 hover:bg-red-700 text-white'
+                : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+            }`}
+          >
+            {collisionsEnabled ? 'Hide Hitboxes' : 'Show Hitboxes'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

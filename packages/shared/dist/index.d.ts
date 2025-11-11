@@ -11,6 +11,15 @@ export declare const MAP_HEIGHT = 10000;
 export declare const PLAYER_RADIUS = 16;
 export declare const PLAYER_COLOR = "#3b82f6";
 export declare const PLAYER_SPEED = 200;
+export declare const DEBUG_HITBOX_COLOR = "#ff0000";
+export declare const DEBUG_PLAYER_HITBOX_COLOR = "#ffff00";
+export type Point = [number, number];
+export type RenderStyle = 'stone-wall' | 'wooden-barrier' | 'metal';
+export type StaticObject = {
+    id: string;
+    polygon: Point[];
+    renderStyle: RenderStyle;
+};
 export type PlayerData = {
     id: string;
     name: string;
@@ -44,4 +53,6 @@ export type ServerMessage = {
     timestamp: number;
     serverTick: number;
 };
+export declare const STATIC_OBJECTS: StaticObject[];
+export { pointInPolygon, circlePolygonCollision, resolveCirclePolygonCollision, checkCircleMovementCollision, } from './collision';
 //# sourceMappingURL=index.d.ts.map

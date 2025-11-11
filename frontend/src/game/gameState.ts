@@ -3,6 +3,9 @@
  * Never put this in React state - keep it in plain JS for performance
  */
 
+import type { StaticObject } from '@garama/shared';
+import { STATIC_OBJECTS } from '@garama/shared';
+
 export type Player = {
   id: string;
   name: string;
@@ -23,6 +26,8 @@ export type GameStateType = {
   camera: Camera;
   viewportWidth: number;
   viewportHeight: number;
+  objects: StaticObject[];
+  debugCollisions: boolean;
 };
 
 export const GameState: GameStateType = {
@@ -38,6 +43,12 @@ export const GameState: GameStateType = {
   // Viewport dimensions (set by renderer)
   viewportWidth: 0,
   viewportHeight: 0,
+  
+  // Static objects loaded from shared
+  objects: STATIC_OBJECTS,
+  
+  // Debug mode flag
+  debugCollisions: false,
 };
 
 /**

@@ -199,6 +199,10 @@ export default function GameSimple({ playerName }: Props) {
             { label: 'Tick Rate', value: '20Hz' },
             { label: 'Player Position', value: playerCoords ? `(${playerCoords.x}, ${playerCoords.y})` : 'N/A' },
           ]}
+          onToggleCollisions={() => {
+            GameState.debugCollisions = !GameState.debugCollisions;
+          }}
+          collisionsEnabled={GameState.debugCollisions}
         />
       </div>
 
