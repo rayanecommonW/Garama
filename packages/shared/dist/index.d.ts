@@ -11,6 +11,14 @@ export declare const MAP_HEIGHT = 10000;
 export declare const PLAYER_RADIUS = 16;
 export declare const PLAYER_COLOR = "#3b82f6";
 export declare const PLAYER_SPEED = 200;
+/**
+ * Gravity and jump tuning (pixels, seconds)
+ */
+export declare const GRAVITY = 2000;
+export declare const JUMP_INITIAL_SPEED = 700;
+export declare const JUMP_HOLD_ACCEL = 1200;
+export declare const JUMP_MAX_HOLD_MS = 180;
+export declare const MAX_FALL_SPEED = 1400;
 export declare const DEBUG_HITBOX_COLOR = "#ff0000";
 export declare const DEBUG_PLAYER_HITBOX_COLOR = "#ffff00";
 export type Point = [number, number];

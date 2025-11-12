@@ -28,18 +28,42 @@ export function initInput() {
     }
 
     const key = event.key.toLowerCase();
-    if (key === 'z') Input.z = true;
-    if (key === 'q') Input.q = true;
-    if (key === 's') Input.s = true;
-    if (key === 'd') Input.d = true;
+    if (key === 'z') {
+      Input.z = true;
+      event.preventDefault();
+    }
+    if (key === 'q') {
+      Input.q = true;
+      event.preventDefault();
+    }
+    if (key === 's') {
+      Input.s = true;
+      event.preventDefault();
+    }
+    if (key === 'd') {
+      Input.d = true;
+      event.preventDefault();
+    }
   };
 
   const handleKeyUp = (event: KeyboardEvent) => {
     const key = event.key.toLowerCase();
-    if (key === 'z') Input.z = false;
-    if (key === 'q') Input.q = false;
-    if (key === 's') Input.s = false;
-    if (key === 'd') Input.d = false;
+    if (key === 'z') {
+      Input.z = false;
+      event.preventDefault();
+    }
+    if (key === 'q') {
+      Input.q = false;
+      event.preventDefault();
+    }
+    if (key === 's') {
+      Input.s = false;
+      event.preventDefault();
+    }
+    if (key === 'd') {
+      Input.d = false;
+      event.preventDefault();
+    }
   };
 
   window.addEventListener('keydown', handleKeyDown);

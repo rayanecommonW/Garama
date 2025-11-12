@@ -11,6 +11,10 @@ export type Player = {
   name: string;
   x: number; // world position x
   y: number; // world position y
+  vx: number; // horizontal velocity (px/s)
+  vy: number; // vertical velocity (px/s)
+  onGround: boolean; // true when standing on ground
+  jumpHoldMs: number; // how long jump has been held in current jump (ms)
   radius: number;
   color: string;
 };
@@ -56,13 +60,17 @@ export const GameState: GameStateType = {
  */
 export function spawnPlayer(id: string, name: string, mapWidth: number, mapHeight: number, radius: number, color: string): Player {
   const x = 0;
-  const y = 0;
+  const y = radius; // spawn on ground level
   
   const player: Player = {
     id,
     name,
     x,
     y,
+    vx: 0,
+    vy: 0,
+    onGround: true,
+    jumpHoldMs: 0,
     radius,
     color,
   };

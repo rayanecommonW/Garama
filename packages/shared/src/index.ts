@@ -14,6 +14,14 @@ export const MAP_HEIGHT = 10000; // world map height in pixels
 export const PLAYER_RADIUS = 16; // player circle radius in pixels
 export const PLAYER_COLOR = '#3b82f6'; // player color (blue)
 export const PLAYER_SPEED = 200; // pixels per second
+/**
+ * Gravity and jump tuning (pixels, seconds)
+ */
+export const GRAVITY = 2000; // px/s^2 - downward acceleration
+export const JUMP_INITIAL_SPEED = 700; // px/s - initial upward velocity on jump
+export const JUMP_HOLD_ACCEL = 1200; // px/s^2 - extra upward accel while holding jump
+export const JUMP_MAX_HOLD_MS = 180; // ms - max duration for variable jump hold
+export const MAX_FALL_SPEED = 1400; // px/s - terminal downward velocity
 
 // Collision debug colors
 export const DEBUG_HITBOX_COLOR = '#ff0000'; // red for polygon hitboxes

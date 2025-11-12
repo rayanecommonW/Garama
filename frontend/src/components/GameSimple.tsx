@@ -85,6 +85,10 @@ export default function GameSimple({ playerName }: Props) {
               name: playerData.name,
               x: playerData.x,
               y: playerData.y,
+              vx: 0,
+              vy: 0,
+              onGround: false,
+              jumpHoldMs: 0,
               radius: PLAYER_RADIUS,
               color: playerData.color,
             });
@@ -97,6 +101,10 @@ export default function GameSimple({ playerName }: Props) {
             name: playerData.name,
             x: playerData.x,
             y: playerData.y,
+            vx: 0,
+            vy: 0,
+            onGround: false,
+            jumpHoldMs: 0,
             radius: PLAYER_RADIUS,
             color: playerData.color,
           });
