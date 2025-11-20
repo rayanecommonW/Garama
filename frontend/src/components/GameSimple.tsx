@@ -30,7 +30,6 @@ export default function GameSimple({ playerName }: Props) {
   useEffect(() => {
     const socketInstance = io(SERVER_URL);
     
-    // Set socket and message callback for game loop
     setGameLoopSocket(socketInstance);
     setOnMessageSent(() => setMessagesSent(prev => prev + 1));
 
@@ -38,14 +37,12 @@ export default function GameSimple({ playerName }: Props) {
       console.log('Connected to server');
       setIsConnected(true);
       
-      // Send join message to server
       socketInstance.emit('join', {
         type: 'join',
         name: playerName,
       });
       setMessagesSent(prev => prev + 1);
       
-      // Spawn player locally when connected
       if (!hasSpawnedRef.current && socketInstance.id) {
         const player = spawnPlayer(
           socketInstance.id,
@@ -71,14 +68,12 @@ export default function GameSimple({ playerName }: Props) {
       setServerTick(msg.serverTick);
       setMessagesReceived(prev => prev + 1);
       
-      // Update all players from snapshot
       const currentPlayers = new Set<string>();
       
       msg.players.forEach((playerData: PlayerData) => {
         currentPlayers.add(playerData.id);
         
         if (playerData.id === GameState.localPlayerId) {
-          // For local player, only update if not spawned yet
           if (!GameState.players.has(playerData.id)) {
             GameState.players.set(playerData.id, {
               id: playerData.id,
@@ -93,9 +88,7 @@ export default function GameSimple({ playerName }: Props) {
               color: playerData.color,
             });
           }
-          // Don't overwrite local player position from server (for now)
         } else {
-          // For other players, always use server data
           GameState.players.set(playerData.id, {
             id: playerData.id,
             name: playerData.name,
@@ -111,7 +104,6 @@ export default function GameSimple({ playerName }: Props) {
         }
       });
       
-      // Remove players that are no longer in the snapshot
       GameState.players.forEach((player, id) => {
         if (!currentPlayers.has(id)) {
           GameState.players.delete(id);
@@ -159,7 +151,6 @@ export default function GameSimple({ playerName }: Props) {
     };
   }, [socket, isConnected, isChatOpen]);
 
-  // Update player coordinates for debug display
   useEffect(() => {
     const interval = setInterval(() => {
       if (GameState.localPlayerId) {
@@ -168,7 +159,7 @@ export default function GameSimple({ playerName }: Props) {
           setPlayerCoords({ x: Math.round(player.x), y: Math.round(player.y) });
         }
       }
-    }, 100); // Update every 100ms for display
+    }, 100);
 
     return () => clearInterval(interval);
   }, []);

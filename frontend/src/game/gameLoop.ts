@@ -10,23 +10,14 @@ let socketRef: Socket | null = null;
 let lastPositionUpdate = 0;
 let onMessageSent: (() => void) | null = null;
 
-/**
- * Sets the socket for sending position updates
- */
 export function setSocket(socket: Socket | null) {
   socketRef = socket;
 }
 
-/**
- * Sets the callback for when messages are sent
- */
 export function setOnMessageSent(callback: (() => void) | null) {
   onMessageSent = callback;
 }
 
-/**
- * Sends position update to server
- */
 function sendPositionUpdate() {
   if (!socketRef || !GameState.localPlayerId) return;
 
@@ -41,9 +32,6 @@ function sendPositionUpdate() {
   onMessageSent?.();
 }
 
-/**
- * Starts the game loop using requestAnimationFrame
- */
 export function startGameLoop(canvas: HTMLCanvasElement) {
   if (isRunning) return;
   
@@ -54,20 +42,16 @@ export function startGameLoop(canvas: HTMLCanvasElement) {
   function frame(currentTime: number) {
     if (!isRunning) return;
     
-    // Calculate delta time
     const deltaTime = currentTime - lastTime;
     lastTime = currentTime;
 
-    // Update player movement
     updatePlayerMovement(deltaTime);
     
-    // Send position updates every 50ms (20 times per second)
     if (currentTime - lastPositionUpdate > 50) {
       sendPositionUpdate();
       lastPositionUpdate = currentTime;
     }
     
-    // Update camera to follow local player
     if (GameState.localPlayerId) {
       const localPlayer = GameState.players.get(GameState.localPlayerId);
       if (localPlayer) {
@@ -76,7 +60,6 @@ export function startGameLoop(canvas: HTMLCanvasElement) {
       }
     }
     
-    // Render frame
     renderFrame(canvas, GameState);
     
     rafId = requestAnimationFrame(frame);
@@ -85,9 +68,6 @@ export function startGameLoop(canvas: HTMLCanvasElement) {
   rafId = requestAnimationFrame(frame);
 }
 
-/**
- * Stops the game loop
- */
 export function stopGameLoop() {
   isRunning = false;
   if (rafId !== null) {
@@ -95,4 +75,3 @@ export function stopGameLoop() {
     rafId = null;
   }
 }
-

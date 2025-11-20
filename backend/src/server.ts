@@ -3,14 +3,12 @@ import type { ClientMessage, ServerMessage, PlayerData, Point } from '@garama/sh
 import { TICK_RATE, PLAYER_COLOR, PLAYER_RADIUS, MAP_WIDTH, MAP_HEIGHT, STATIC_OBJECTS } from '@garama/shared';
 import { circlePolygonCollision, resolveCirclePolygonCollision } from '@garama/shared';
 
-// Server authoritative game state
 const players = new Map<string, PlayerData>();
-let serverTick = 0; // Server tick counter, increments at 20Hz
+let serverTick = 0;
 
 export const createServer = () => {
   const port = Number(process.env.PORT) || 3001;
 
-  // Create Socket.IO server
   const io = new Server(port, {
     cors: {
       origin: "*",
@@ -18,11 +16,9 @@ export const createServer = () => {
     }
   });
 
-  // Handle client connections
   io.on('connection', (socket) => {
     console.log(`Client connected: ${socket.id}`);
 
-    // Handle player join
     socket.on('join', (msg: ClientMessage & { type: 'join' }) => {
       const player: PlayerData = {
         id: socket.id,
@@ -35,15 +31,12 @@ export const createServer = () => {
       console.log(`Player ${msg.name} joined at (0, 0)`);
     });
 
-    // Handle position updates
     socket.on('position', (msg: ClientMessage & { type: 'position' }) => {
       const player = players.get(socket.id);
       if (player) {
-        // Update position with bounds checking
         let newX = Math.max(PLAYER_RADIUS, Math.min(MAP_WIDTH - PLAYER_RADIUS, msg.x));
         let newY = Math.max(PLAYER_RADIUS, Math.min(MAP_HEIGHT - PLAYER_RADIUS, msg.y));
 
-        // Check collision with all static objects (server authoritative)
         let finalX = newX;
         let finalY = newY;
 
@@ -51,7 +44,6 @@ export const createServer = () => {
           const newCenter: Point = [finalX, finalY];
           
           if (circlePolygonCollision(newCenter, PLAYER_RADIUS, obj.polygon)) {
-            // Collision detected - resolve it
             const [pushX, pushY] = resolveCirclePolygonCollision(newCenter, PLAYER_RADIUS, obj.polygon);
             finalX += pushX;
             finalY += pushY;
@@ -63,12 +55,10 @@ export const createServer = () => {
       }
     });
 
-    // Handle 'ok' messages from clients
     socket.on('ok', (msg: ClientMessage) => {
       console.log(`Received 'ok' from client ${socket.id}`);
     });
 
-    // Handle chat messages from clients
     socket.on('chat', (msg: ClientMessage & { type: 'chat' }) => {
       console.log(`Chat from client ${socket.id}: "${msg.message}"`);
     });
@@ -79,7 +69,6 @@ export const createServer = () => {
     });
   });
 
-  // Server tick at 20hz - send snapshots
   const tickInterval = setInterval(() => {
     const snapshot: ServerMessage = {
       type: 'snapshot',
@@ -88,10 +77,8 @@ export const createServer = () => {
       serverTick: serverTick,
     };
 
-    // Broadcast snapshot to all connected clients
     io.emit('snapshot', snapshot);
     
-    // Increment server tick counter
     serverTick++;
   }, 1000 / TICK_RATE);
 
