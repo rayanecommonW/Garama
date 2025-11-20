@@ -1,7 +1,7 @@
 # Work still in Progress
 
 
-# 🕹️ Garama - Multiplayer .io Game
+# 🕹️ Multiplayer .io Game
 
 Multiplayer game ,  smooth movement, WebSocket ,  monorepo .
 
