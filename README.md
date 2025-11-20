@@ -3,17 +3,13 @@
 
 # 🕹️ Garama - Multiplayer .io Game
 
-A real-time multiplayer game built with modern web technologies, featuring smooth movement, WebSocket communication, and a scalable monorepo architecture.
+Multiplayer game ,  smooth movement, WebSocket ,  monorepo .
 
-Preview : Is Coming Soon
+Preview : [Preview here](https://garama-five.vercel.app)
 
 ## 🌟 Features
 
-- **Real-time Multiplayer**: WebSocket-based communication for instant gameplay
-- **Smooth Movement**: 20Hz game loop with client-side prediction
-- **Scalable Architecture**: Monorepo with shared type system
-- **Modern Tech Stack**: Next.js, Bun, Hono, TypeScript, Turborepo
-- **Cross-platform**: Works on desktop and mobile browsers
+- TO-DO
 
 ## 🏗️ Architecture
 
@@ -45,32 +41,6 @@ UI Updates ← Game State ← Broadcast ← 20Hz Game Loop
 - **Bun**
 - **Git**
 - **Turbo Repo**
-
-### Installation & Running
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd garama
-   ```
-
-2. **Install dependencies**
-   ```bash
-   cd backend
-   bun i
-
-   cd frontend
-   npm i
-   ```
-
-3. **Start development servers**
-   ```bash
-   npm run dev  # Runs both frontend + backend
-   ```
-
-4. **Open your browser**
-   - Frontend: http://localhost:3000
-   - Backend: http://localhost:3001
 
 ### Alternative Commands
 
@@ -129,50 +99,33 @@ TO-DO
 ### Road-Map
 
 #### 1. **Database Integration**
-```bash
-# Add Prisma + PostgreSQL
-bun add prisma @prisma/client
-bun add -D prisma
-```
+TO-DO
 
 #### 2. **Authentication System**
+TO-DO
 ```bash
-# Add NextAuth.js
 bun add next-auth
 ```
 
 #### 3. **State Management Enhancement**
+TO-DO
 ```bash
-# Add Redux Toolkit or Zustand middleware
 bun add @reduxjs/toolkit
 # or
 bun add immer
 ```
 
 #### 5. **Game Analytics**
-```bash
-# Add monitoring & analytics
-bun add @vercel/analytics
-bun add winston # Logging
-```
+TO-DO
 
 #### 7. **Performance Monitoring**
-```bash
-# Add performance tracking
-bun add @sentry/nextjs
-bun add web-vitals
-```
+TO-DO
 
 ### Infrastructure & Deployment
+Vercel+Railway for now but might change the backend when i burned all my tokens
 
-TO-DO : Front in vercel, Backend in Docker
 
-## 📈 Scaling Considerations
-
-### Horizontal Scaling
-- **Load Balancer**: Nginx/Traefik for backend distribution
-- **Redis**: Shared session store for WebSocket state
-- **Database**: Connection pooling for high concurrency
+## AI generated recomendation
 
 ### Performance Optimizations
 - **WebWorkers**: Offload heavy computations
