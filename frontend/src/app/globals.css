@@ -22,10 +22,20 @@
   }
 }
 
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }
 
 .animate-float-up {
   animation: float-up 3s ease-out forwards;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
 }
