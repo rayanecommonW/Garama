@@ -188,7 +188,6 @@ export default function GameSimple({ playerName }: Props) {
             <h2 className="text-xl font-semibold">Socket.IO Connection</h2>
           </div>
           <div className="text-right space-y-1">
-            <p>Server URL: {SERVER_URL}</p>
             <p>Last tick: {lastTick ? new Date(lastTick).toLocaleTimeString() : 'None'}</p>
           </div>
         </div>
