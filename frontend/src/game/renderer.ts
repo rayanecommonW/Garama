@@ -13,9 +13,6 @@ import {
 import type { StaticObject, Point } from '@garama/shared';
 import type { GameStateType } from './gameState';
 
-/**
- * Renders the game map and entities to canvas
- */
 export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -23,27 +20,22 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
   const viewportWidth = canvas.width;
   const viewportHeight = canvas.height;
 
-  // Update viewport dimensions in game state
   gameState.viewportWidth = viewportWidth;
   gameState.viewportHeight = viewportHeight;
 
-  // Calculate camera bounds (what part of the world is visible)
   const cameraLeft = gameState.camera.x - viewportWidth / 2;
   const cameraTop = gameState.camera.y - viewportHeight / 2;
   const cameraRight = cameraLeft + viewportWidth;
   const cameraBottom = cameraTop + viewportHeight;
 
-  // Fill entire viewport with gray (outside color)
   ctx.fillStyle = MAP_OUTSIDE_COLOR;
   ctx.fillRect(0, 0, viewportWidth, viewportHeight);
 
-  // Calculate world map bounds in screen coordinates
   const worldLeft = 0 - cameraLeft;
   const worldTop = viewportHeight - (MAP_HEIGHT - cameraTop); 
   const worldRight = MAP_WIDTH - cameraLeft;
   const worldBottom = viewportHeight - (0 - cameraTop); 
 
-  // Draw black background for world map area (only visible portion)
   ctx.fillStyle = '#000000';
   const visibleWorldLeft = Math.max(0, worldLeft);
   const visibleWorldTop = Math.max(0, worldTop);
@@ -54,13 +46,10 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
     ctx.fillRect(visibleWorldLeft, visibleWorldTop, visibleWorldRight - visibleWorldLeft, visibleWorldBottom - visibleWorldTop);
   }
 
-  // Draw world border
   ctx.strokeStyle = MAP_BORDER_COLOR;
   ctx.lineWidth = MAP_BORDER_WIDTH;
 
-  // Only draw border segments that are visible
   if (worldLeft >= 0 && worldLeft <= viewportWidth) {
-    // Left border
     const visibleTop = Math.max(0, worldTop);
     const visibleBottom = Math.min(viewportHeight, worldBottom);
     if (visibleBottom > visibleTop) {
@@ -72,7 +61,6 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
   }
 
   if (worldRight >= 0 && worldRight <= viewportWidth) {
-    // Right border
     const visibleTop = Math.max(0, worldTop);
     const visibleBottom = Math.min(viewportHeight, worldBottom);
     if (visibleBottom > visibleTop) {
@@ -84,7 +72,6 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
   }
 
   if (worldTop >= 0 && worldTop <= viewportHeight) {
-    // Top border
     const visibleLeft = Math.max(0, worldLeft);
     const visibleRight = Math.min(viewportWidth, worldRight);
     if (visibleRight > visibleLeft) {
@@ -96,7 +83,6 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
   }
 
   if (worldBottom >= 0 && worldBottom <= viewportHeight) {
-    // Bottom border
     const visibleLeft = Math.max(0, worldLeft);
     const visibleRight = Math.min(viewportWidth, worldRight);
     if (visibleRight > visibleLeft) {
@@ -107,22 +93,18 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
     }
   }
 
-  // Draw grid dots at intersections (only within world bounds)
   ctx.fillStyle = MAP_GRID_COLOR;
 
-  // Calculate which grid intersections are visible
   const startGridX = Math.max(0, Math.floor(cameraLeft / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
   const endGridX = Math.min(MAP_WIDTH, Math.ceil(cameraRight / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
   const startGridY = Math.max(0, Math.floor(cameraTop / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
   const endGridY = Math.min(MAP_HEIGHT, Math.ceil(cameraBottom / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
 
-  // Draw grid dots
   for (let x = startGridX; x <= endGridX; x += MAP_GRID_CELL_SIZE) {
     for (let y = startGridY; y <= endGridY; y += MAP_GRID_CELL_SIZE) {
       const screenX = x - cameraLeft;
       const screenY = viewportHeight - (y - cameraTop);
 
-      // Only draw if within viewport
       if (screenX >= 0 && screenX <= viewportWidth && screenY >= 0 && screenY <= viewportHeight) {
         ctx.beginPath();
         ctx.arc(screenX, screenY, MAP_GRID_DOT_SIZE / 2, 0, Math.PI * 2);
@@ -131,29 +113,23 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
     }
   }
 
-  // Draw static objects
   renderObjects(ctx, gameState, cameraLeft, cameraTop, viewportWidth, viewportHeight);
 
-  // Draw players
   gameState.players.forEach((player) => {
-    // Convert world coordinates to screen coordinates
     const screenX = player.x - cameraLeft;
     const screenY = viewportHeight - (player.y - cameraTop);
 
-    // Only draw if player is visible in viewport
     if (
       screenX + player.radius >= 0 &&
       screenX - player.radius <= viewportWidth &&
       screenY + player.radius >= 0 &&
       screenY - player.radius <= viewportHeight
     ) {
-      // Draw player circle
       ctx.fillStyle = player.color;
       ctx.beginPath();
       ctx.arc(screenX, screenY, player.radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Draw player name above the player
       ctx.fillStyle = '#ffffff';
       ctx.font = '12px sans-serif';
       ctx.textAlign = 'center';
@@ -163,15 +139,11 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
     }
   });
 
-  // Draw debug hitboxes if enabled
   if (gameState.debugCollisions) {
     renderDebugHitboxes(ctx, gameState, cameraLeft, cameraTop, viewportWidth, viewportHeight);
   }
 }
 
-/**
- * Renders static objects with creative visual styles
- */
 function renderObjects(
   ctx: CanvasRenderingContext2D,
   gameState: GameStateType,
@@ -181,14 +153,12 @@ function renderObjects(
   viewportHeight: number
 ) {
   gameState.objects.forEach((obj: StaticObject) => {
-    // Convert world polygon to screen coordinates
     const screenPolygon: Point[] = obj.polygon.map(([x, y]: Point) => {
       const screenX = x - cameraLeft;
       const screenY = viewportHeight - (y - cameraTop);
       return [screenX, screenY] as Point;
     });
 
-    // Simple culling - check if any point is visible
     const isVisible = screenPolygon.some(([x, y]) => 
       x >= -100 && x <= viewportWidth + 100 && 
       y >= -100 && y <= viewportHeight + 100
@@ -196,7 +166,6 @@ function renderObjects(
 
     if (!isVisible) return;
 
-    // Draw based on render style
     ctx.save();
     
     switch (obj.renderStyle) {
@@ -215,11 +184,7 @@ function renderObjects(
   });
 }
 
-/**
- * Renders a stone wall style object
- */
 function renderStoneWall(ctx: CanvasRenderingContext2D, polygon: Point[]) {
-  // Fill with gray stone color
   ctx.fillStyle = '#6b7280';
   ctx.beginPath();
   ctx.moveTo(polygon[0][0], polygon[0][1]);
@@ -229,16 +194,13 @@ function renderStoneWall(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   ctx.closePath();
   ctx.fill();
 
-  // Add darker border for depth
   ctx.strokeStyle = '#374151';
   ctx.lineWidth = 3;
   ctx.stroke();
 
-  // Add brick pattern
   ctx.strokeStyle = '#4b5563';
   ctx.lineWidth = 1;
   
-  // Calculate bounding box
   const xs = polygon.map(p => p[0]);
   const ys = polygon.map(p => p[1]);
   const minX = Math.min(...xs);
@@ -246,7 +208,6 @@ function renderStoneWall(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   const minY = Math.min(...ys);
   const maxY = Math.max(...ys);
 
-  // Draw horizontal lines
   for (let y = minY; y < maxY; y += 15) {
     ctx.beginPath();
     ctx.moveTo(minX, y);
@@ -254,7 +215,6 @@ function renderStoneWall(ctx: CanvasRenderingContext2D, polygon: Point[]) {
     ctx.stroke();
   }
 
-  // Draw vertical lines (staggered)
   let offsetToggle = false;
   for (let y = minY; y < maxY; y += 15) {
     const offset = offsetToggle ? 20 : 0;
@@ -268,11 +228,7 @@ function renderStoneWall(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   }
 }
 
-/**
- * Renders a wooden barrier style object
- */
 function renderWoodenBarrier(ctx: CanvasRenderingContext2D, polygon: Point[]) {
-  // Fill with brown wood color
   ctx.fillStyle = '#92400e';
   ctx.beginPath();
   ctx.moveTo(polygon[0][0], polygon[0][1]);
@@ -282,12 +238,10 @@ function renderWoodenBarrier(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   ctx.closePath();
   ctx.fill();
 
-  // Add darker border
   ctx.strokeStyle = '#78350f';
   ctx.lineWidth = 4;
   ctx.stroke();
 
-  // Add wood grain lines
   ctx.strokeStyle = '#78350f';
   ctx.lineWidth = 2;
   
@@ -298,7 +252,6 @@ function renderWoodenBarrier(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   const minY = Math.min(...ys);
   const maxY = Math.max(...ys);
 
-  // Vertical wood planks
   for (let x = minX; x < maxX; x += 25) {
     ctx.beginPath();
     ctx.moveTo(x, minY);
@@ -306,7 +259,6 @@ function renderWoodenBarrier(ctx: CanvasRenderingContext2D, polygon: Point[]) {
     ctx.stroke();
   }
 
-  // Horizontal support beams
   const midY = (minY + maxY) / 2;
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -315,11 +267,7 @@ function renderWoodenBarrier(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   ctx.stroke();
 }
 
-/**
- * Renders a metal style object
- */
 function renderMetal(ctx: CanvasRenderingContext2D, polygon: Point[]) {
-  // Create metallic gradient
   const xs = polygon.map(p => p[0]);
   const ys = polygon.map(p => p[1]);
   const minX = Math.min(...xs);
@@ -341,12 +289,10 @@ function renderMetal(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   ctx.closePath();
   ctx.fill();
 
-  // Add metallic border
   ctx.strokeStyle = '#475569';
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Add rivets
   ctx.fillStyle = '#334155';
   polygon.forEach(([x, y]) => {
     ctx.beginPath();
@@ -355,9 +301,6 @@ function renderMetal(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   });
 }
 
-/**
- * Renders debug hitboxes for objects and players
- */
 function renderDebugHitboxes(
   ctx: CanvasRenderingContext2D,
   gameState: GameStateType,
@@ -366,7 +309,6 @@ function renderDebugHitboxes(
   viewportWidth: number,
   viewportHeight: number
 ) {
-  // Draw object hitboxes
   ctx.strokeStyle = DEBUG_HITBOX_COLOR;
   ctx.lineWidth = 2;
   
@@ -385,7 +327,6 @@ function renderDebugHitboxes(
     ctx.closePath();
     ctx.stroke();
 
-    // Draw vertices
     ctx.fillStyle = DEBUG_HITBOX_COLOR;
     screenPolygon.forEach(([x, y]) => {
       ctx.beginPath();
@@ -394,7 +335,6 @@ function renderDebugHitboxes(
     });
   });
 
-  // Draw player hitboxes
   ctx.strokeStyle = DEBUG_PLAYER_HITBOX_COLOR;
   ctx.lineWidth = 2;
   
@@ -406,11 +346,9 @@ function renderDebugHitboxes(
     ctx.arc(screenX, screenY, player.radius, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Draw center point
     ctx.fillStyle = DEBUG_PLAYER_HITBOX_COLOR;
     ctx.beginPath();
     ctx.arc(screenX, screenY, 3, 0, Math.PI * 2);
     ctx.fill();
   });
 }
-

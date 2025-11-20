@@ -47,7 +47,6 @@ export default function Chat({ isOpen, isFloating, socket, isConnected, onClose,
     };
   }, [isOpen, onClose]);
 
-  // Clean up floating messages after 3 seconds
   useEffect(() => {
     if (floatingMessages.length === 0) return;
 
@@ -56,7 +55,6 @@ export default function Chat({ isOpen, isFloating, socket, isConnected, onClose,
       const filtered = floatingMessages.filter(msg => now - msg.timestamp < 3000);
       setFloatingMessages(filtered);
 
-      // Update parent about floating state
       const newIsFloating = filtered.length > 0;
       if (newIsFloating !== isFloating) {
         onStateChange(isOpen, newIsFloating);
@@ -119,14 +117,13 @@ export default function Chat({ isOpen, isFloating, socket, isConnected, onClose,
         <FloatingText
           key={floatingMsg.id}
           message={floatingMsg.message}
-          delay={index * 200} // Stagger animations
+          delay={index * 200}
         />
       ))}
     </div>
   );
 }
 
-// Separate component for individual floating messages
 function FloatingText({ message, delay }: { message: string; delay: number }) {
   return (
     <p

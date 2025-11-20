@@ -1,13 +1,8 @@
-/**
- * Input handler - tracks keyboard state
- * Uses plain JS object to avoid React re-renders
- */
-
 export type InputState = {
-  z: boolean; // up
-  q: boolean; // left
-  s: boolean; // down
-  d: boolean; // right
+  z: boolean;
+  q: boolean;
+  s: boolean;
+  d: boolean;
 };
 
 export const Input: InputState = {
@@ -17,12 +12,8 @@ export const Input: InputState = {
   d: false,
 };
 
-/**
- * Initializes keyboard event listeners
- */
 export function initInput() {
   const handleKeyDown = (event: KeyboardEvent) => {
-    // Ignore if typing in input/textarea
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
       return;
     }
@@ -74,4 +65,3 @@ export function initInput() {
     window.removeEventListener('keyup', handleKeyUp);
   };
 }
-

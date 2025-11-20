@@ -36,5 +36,3 @@ export function processJump(player: Player, deltaMs: number) {
   jumpBufferMs = Math.max(0, jumpBufferMs - deltaMs);
   wasZDown = Input.z;
 }
-
-

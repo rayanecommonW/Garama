@@ -9,10 +9,6 @@ type Props = {
   height?: number;
 };
 
-/**
- * Game canvas component - uses rAF loop for rendering
- * Game state is kept outside React in gameState module
- */
 export default function Map({ width, height }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -20,19 +16,15 @@ export default function Map({ width, height }: Props) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Set canvas size
     const canvasWidth = width ?? window.innerWidth;
     const canvasHeight = height ?? window.innerHeight - MAP_HEADER_HEIGHT;
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
 
-    // Initialize input handlers
     const cleanupInput = initInput();
 
-    // Start game loop
     startGameLoop(canvas);
 
-    // Handle window resize
     const handleResize = () => {
       const newWidth = width ?? window.innerWidth;
       const newHeight = height ?? window.innerHeight - MAP_HEADER_HEIGHT;
@@ -57,4 +49,3 @@ export default function Map({ width, height }: Props) {
     />
   );
 }
-

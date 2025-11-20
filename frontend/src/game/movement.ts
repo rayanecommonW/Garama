@@ -22,7 +22,6 @@ function applyHorizontal(player: typeof GameState.players extends Map<string, in
     player.vx = dirX ? dirX * PLAYER_SPEED : 0;
     return;
   }
-  // In air: allow changing direction or stopping completely
   player.vx = dirX ? dirX * PLAYER_SPEED : 0;
 }
 
@@ -130,7 +129,6 @@ export function updatePlayerMovement(deltaMs: number) {
   }
   if (resolved.hitCeil && player.vy > 0) player.vy = 0;
 
-  // World floor/ceiling as solid surfaces
   if (fy <= PLAYER_RADIUS + 1e-3 && player.vy <= 0) {
     player.vy = 0;
     player.onGround = true;
@@ -149,5 +147,3 @@ export function updatePlayerMovement(deltaMs: number) {
   player.x = fx;
   player.y = fy;
 }
-
-
