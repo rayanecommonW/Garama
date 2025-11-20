@@ -59,7 +59,7 @@ export default function Home({ onStart }: Props) {
             <button
               type="submit"
               disabled={!name.trim()}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-xl py-4 rounded-xl shadow-lg shadow-blue-900/30 transform transition-all active:scale-[0.98] hover:shadow-blue-900/50 border border-white/10 group relative overflow-hidden"
+              className="w-full bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-xl py-4 rounded-xl shadow-lg shadow-blue-900/30 transform transition-all active:scale-[0.98] hover:shadow-blue-900/50 border border-white/10 group relative overflow-hidden"
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
                 PLAY NOW
@@ -67,7 +67,7 @@ export default function Home({ onStart }: Props) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
                 </svg>
               </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
+              <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
             </button>
           </form>
         </div>
@@ -77,7 +77,7 @@ export default function Home({ onStart }: Props) {
             How to play
           </p>
           <div className="flex justify-center gap-4 text-slate-400 text-sm font-medium">
-            <span className="bg-slate-800/50 px-3 py-1 rounded-lg border border-slate-700/50">WASD to Move</span>
+            <span className="bg-slate-800/50 px-3 py-1 rounded-lg border border-slate-700/50">ZQSD to Move</span>
             <span className="bg-slate-800/50 px-3 py-1 rounded-lg border border-slate-700/50">Enter to Chat</span>
           </div>
         </div>
