@@ -8,14 +8,16 @@ import Chat from './Chat';
 import Map from './Map';
 import { GameState, spawnPlayer } from '../game/gameState';
 import { setSocket as setGameLoopSocket, setOnMessageSent } from '../game/gameLoop';
+import { KeyBindings } from '../game/input';
 
 const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001';
 
 type Props = {
   playerName: string;
+  keyBindings: KeyBindings;
 };
 
-export default function GameSimple({ playerName }: Props) {
+export default function GameSimple({ playerName, keyBindings }: Props) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [lastTick, setLastTick] = useState<number | null>(null);
@@ -166,7 +168,7 @@ export default function GameSimple({ playerName }: Props) {
 
   return (
     <>
-      <Map />
+      <Map keyBindings={keyBindings} />
       <div className="fixed top-0 left-0 right-0 z-50 bg-slate-800 border-b border-slate-700 p-4">
         <div className="grid grid-cols-3 gap-4 text-sm text-slate-200 max-w-6xl mx-auto">
           <div className="flex items-center gap-4">

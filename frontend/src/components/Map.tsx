@@ -2,14 +2,15 @@
 import { useEffect, useRef } from 'react';
 import { MAP_HEADER_HEIGHT } from '@garama/shared';
 import { startGameLoop, stopGameLoop } from '../game/gameLoop';
-import { initInput } from '../game/input';
+import { initInput, KeyBindings } from '../game/input';
 
 type Props = {
   width?: number;
   height?: number;
+  keyBindings: KeyBindings;
 };
 
-export default function Map({ width, height }: Props) {
+export default function Map({ width, height, keyBindings }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -21,7 +22,7 @@ export default function Map({ width, height }: Props) {
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
 
-    const cleanupInput = initInput();
+    const cleanupInput = initInput(keyBindings);
 
     startGameLoop(canvas);
 
@@ -39,7 +40,7 @@ export default function Map({ width, height }: Props) {
       cleanupInput();
       window.removeEventListener('resize', handleResize);
     };
-  }, [width, height]);
+  }, [width, height, keyBindings]);
 
   return (
     <canvas

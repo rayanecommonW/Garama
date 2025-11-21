@@ -5,13 +5,13 @@ import type { Player } from './gameState';
 const COYOTE_TIME_MS = 120;
 const JUMP_BUFFER_MS = 120;
 
-let wasZDown = false;
+let wasJumpDown = false;
 let coyoteMs = 0;
 let jumpBufferMs = 0;
 
 export function processJump(player: Player, deltaMs: number) {
-  const zEdge = Input.z && !wasZDown;
-  if (zEdge) jumpBufferMs = JUMP_BUFFER_MS;
+  const jumpEdge = Input.jump && !wasJumpDown;
+  if (jumpEdge) jumpBufferMs = JUMP_BUFFER_MS;
 
   const canJumpNow = (player.onGround || coyoteMs > 0) && jumpBufferMs > 0;
   if (canJumpNow) {
@@ -22,7 +22,7 @@ export function processJump(player: Player, deltaMs: number) {
     coyoteMs = 0;
   }
 
-  if (Input.z && player.vy > 0 && player.jumpHoldMs < JUMP_MAX_HOLD_MS) {
+  if (Input.jump && player.vy > 0 && player.jumpHoldMs < JUMP_MAX_HOLD_MS) {
     const hold = Math.min(JUMP_MAX_HOLD_MS - player.jumpHoldMs, deltaMs);
     player.vy += JUMP_HOLD_ACCEL * (hold / 1000);
     player.jumpHoldMs += hold;
@@ -34,5 +34,5 @@ export function processJump(player: Player, deltaMs: number) {
     coyoteMs = Math.max(0, coyoteMs - deltaMs);
   }
   jumpBufferMs = Math.max(0, jumpBufferMs - deltaMs);
-  wasZDown = Input.z;
+  wasJumpDown = Input.jump;
 }

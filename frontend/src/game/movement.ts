@@ -110,8 +110,8 @@ export function updatePlayerMovement(deltaMs: number) {
 
   const dtSec = deltaMs / 1000;
   let dirX = 0;
-  if (Input.d) dirX += 1;
-  if (Input.q) dirX -= 1;
+  if (Input.right) dirX += 1;
+  if (Input.left) dirX -= 1;
 
   applyHorizontal(player, dirX);
   applyGravity(player, dtSec);
