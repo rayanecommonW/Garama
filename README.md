@@ -1,7 +1,17 @@
 # Work still in Progress
 
+I wanna move to vite+react instead of next.js since ssr won't be used now that i realized
 
-# 🕹️ Multiplayer Game
+## Shoutout to these articles :
+https://lance-gg.github.io/docs_out/tutorial-guide_syncinterpolation.html
+
+https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking
+
+https://talent500.com/blog/websockets-real-time-communication-between-clients-and-servers/
+
+https://gabrielgambetta.com/client-server-game-architecture.html
+
+# Multiplayer Game
 
 Multiplayer game ,  smooth movement, WebSocket ,  monorepo .
 
