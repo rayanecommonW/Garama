@@ -1,4 +1,4 @@
-import type { StaticObject } from '@garama/shared';
+import type { StaticObject, Point } from '@garama/shared';
 import { STATIC_OBJECTS } from '@garama/shared';
 
 export type Player = {
@@ -19,15 +19,40 @@ export type Camera = {
   y: number;
 };
 
+export interface RenderableObject extends StaticObject {
+  boundingBox: {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+  };
+}
+
 export type GameStateType = {
   players: Map<string, Player>;
   localPlayerId: string | null;
   camera: Camera;
   viewportWidth: number;
   viewportHeight: number;
-  objects: StaticObject[];
+  objects: RenderableObject[];
   debugCollisions: boolean;
 };
+
+function computeBoundingBox(points: Point[]) {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const [x, y] of points) {
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  return { minX, maxX, minY, maxY };
+}
+
+const objectsWithBounds: RenderableObject[] = STATIC_OBJECTS.map((obj) => ({
+  ...obj,
+  boundingBox: computeBoundingBox(obj.polygon),
+}));
 
 export const GameState: GameStateType = {
   players: new Map<string, Player>(),
@@ -35,7 +60,7 @@ export const GameState: GameStateType = {
   camera: { x: 0, y: 0 },
   viewportWidth: 0,
   viewportHeight: 0,
-  objects: STATIC_OBJECTS,
+  objects: objectsWithBounds,
   debugCollisions: false,
 };
 
