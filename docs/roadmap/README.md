@@ -27,6 +27,10 @@ This directory contains the architectural guidelines and implementation roadmap 
     - LDtk Integration
 7.  [Rendering Choice](./07_RENDERING_CHOICE.md)
     - PixiJS (Performance Choice)
+8.  [Clock Synchronization](./08_CLOCK_SYNC.md)
+    - NTP-like exchanges
+    - Latency filtering
+    - Snapshot interpolation
 
 ## Usage
 Follow these documents sequentially to build the engine's core foundation before moving to gameplay content.

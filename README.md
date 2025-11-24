@@ -23,26 +23,46 @@ Preview : [Preview here](https://garama-five.vercel.app)
 
 ## 🏗️ Architecture
 
-### Project Structure
 
-```
-garama-monorepo/
-├── packages/
-│   └── shared/           # Shared types & constants
-├── backend/              # Game server (Bun + Hono)
-├── frontend/             # Game client (Next.js + React)
-└── turbo.json           # Monorepo configuration
-```
 
 ### Communication Flow
 
+```mermaid
+sequenceDiagram
+    participant C as Client (Player)
+    participant S as Server
+    participant O as Other Client
+
+    Note over C: Client Prediction
+    C->>C: Input + Local Move (Immediate)
+    C->>S: Send Input {seq: 1, t: 100}
+    
+    Note over S: Server Authoritative
+    S->>S: Receive Input
+    S->>S: Update State (Physics)
+    
+    Note over S: Lag Compensation (Rewind)
+    S->>S: Rewind State to t=100-Latency
+    S->>S: Check Hits/Collisions
+    S->>S: Restore State
+
+    S->>C: Broadcast Snapshot {seq: 1, pos: X}
+    S->>O: Broadcast Snapshot {seq: 1, pos: X}
+
+    Note over C: Reconciliation
+    C->>C: Compare Server Pos vs Local History
+    C->>C: If diff > threshold: Re-run Inputs from seq 1
+
+    Note over O: Interpolation
+    O->>O: Buffer Snapshots
+    O->>O: Render Entity at t - interpDelay
 ```
-Frontend (React) ↔ WebSocket ↔ Backend (Bun/Hono)
-     ↓                       ↓              ↓
-Input Events → Direction Msg → Process Input → Update Physics
-     ↓                       ↓              ↓
-UI Updates ← Game State ← Broadcast ← 20Hz Game Loop
-```
+
+### Architecture Overview
+- **Client Prediction**: Player moves immediately locally, then corrects if server disagrees.
+- **Lag Compensation**: Server "rewinds" time to check if a shot hit where the player saw the target.
+- **Interpolation**: Remote players are rendered slightly in the past to ensure smooth movement.
+
 
 ## 🚀 Quick Start
 
