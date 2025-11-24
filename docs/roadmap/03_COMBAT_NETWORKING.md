@@ -25,6 +25,24 @@ export const SWORD_ATTACK = {
 Trust the server for hit registration to prevent cheating.
 
 ### The Flow
+
+```mermaid
+sequenceDiagram
+    participant C as Client (Attacker)
+    participant S as Server
+    participant V as Victim
+
+    C->>S: Attack Start {tick: 100}
+    Note over S: Validates Cooldown
+    S->>S: Set State ATTACKING
+    
+    Note over S: At Tick 105 (Active Frame)
+    S->>S: Rewind Victim to Tick 100-Latency
+    S->>S: Check Hitbox vs Hurtbox
+    S->>V: Damage Taken Event
+    S->>C: Damage Confirmed Event
+```
+
 1.  **Client**: Sends `{ type: 'ATTACK_START', id: 'sword_1', tick: 100 }`.
 2.  **Server**:
     - Validates state (cooldowns, not stunned).

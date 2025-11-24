@@ -48,6 +48,18 @@ physics.checkAll((response) => {
 ```
 
 ## 3. Systems Integration
+
+```mermaid
+flowchart LR
+    A[Input System] --> B[Movement System]
+    B --> C[Collision System]
+    C -- Detect --> D{Collision?}
+    D -- Yes --> E[Resolve Overlap]
+    D -- No --> F[Next Entity]
+    E --> F
+    F --> G[Render System]
+```
+
 - **MovementSystem**: Updates `x, y` based on `vx, vy`.
 - **CollisionSystem**: Syncs physics bodies with ECS positions, runs `checkAll`, applies resolution, updates ECS positions.
 
