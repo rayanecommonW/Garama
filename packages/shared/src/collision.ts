@@ -8,8 +8,7 @@ export function pointInPolygon(point: Point, polygon: Point[]): boolean {
     const [xi, yi] = polygon[i];
     const [xj, yj] = polygon[j];
 
-    const intersect = ((yi > y) !== (yj > y)) &&
-      (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    const intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
 
     if (intersect) inside = !inside;
   }
@@ -40,8 +39,6 @@ function pointToSegmentDistance(point: Point, segmentStart: Point, segmentEnd: P
 }
 
 export function circlePolygonCollision(center: Point, radius: number, polygon: Point[]): boolean {
-  const [cx, cy] = center;
-
   if (pointInPolygon(center, polygon)) {
     return true;
   }
@@ -147,10 +144,7 @@ export function checkCircleMovementCollision(
 
   for (let i = 1; i <= steps; i++) {
     const t = i / steps;
-    const checkPoint: Point = [
-      x1 + (x2 - x1) * t,
-      y1 + (y2 - y1) * t
-    ];
+    const checkPoint: Point = [x1 + (x2 - x1) * t, y1 + (y2 - y1) * t];
     if (circlePolygonCollision(checkPoint, radius, polygon)) {
       return true;
     }

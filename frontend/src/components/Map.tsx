@@ -1,8 +1,9 @@
-"use client";
-import { useEffect, useRef } from 'react';
+'use client';
 import { MAP_HEADER_HEIGHT } from '@garama/shared';
+import { useEffect, useRef } from 'react';
+
 import { startGameLoop, stopGameLoop } from '../game/gameLoop';
-import { initInput, KeyBindings } from '../game/input';
+import { initInput, type KeyBindings } from '../game/input';
 
 type Props = {
   width?: number;
@@ -45,7 +46,7 @@ export default function Map({ width, height, keyBindings }: Props) {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed left-0 right-0 bottom-0 z-0"
+      className="fixed right-0 bottom-0 left-0 z-0"
       style={{ top: `${MAP_HEADER_HEIGHT}px` }}
     />
   );

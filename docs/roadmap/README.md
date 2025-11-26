@@ -41,5 +41,5 @@ This directory contains the architectural guidelines and implementation roadmap 
     - Raycasting for Anti-Tunneling
 
 ## Usage
-Follow these documents sequentially to build the engine's core foundation before moving to gameplay content.
 
+Follow these documents sequentially to build the engine's core foundation before moving to gameplay content.

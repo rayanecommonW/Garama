@@ -1,6 +1,7 @@
-"use client";
+'use client';
 import { useEffect, useRef, useState } from 'react';
-import { Socket } from 'socket.io-client';
+import { type Socket } from 'socket.io-client';
+
 import type { ClientMessage } from '@garama/shared';
 
 type FloatingMessage = {
@@ -18,7 +19,14 @@ type Props = {
   onStateChange: (isOpen: boolean, isFloating: boolean) => void;
 };
 
-export default function Chat({ isOpen, isFloating, socket, isConnected, onClose, onStateChange }: Props) {
+export default function Chat({
+  isOpen,
+  isFloating,
+  socket,
+  isConnected,
+  onClose,
+  onStateChange,
+}: Props) {
   const [message, setMessage] = useState('');
   const [floatingMessages, setFloatingMessages] = useState<FloatingMessage[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,7 +60,7 @@ export default function Chat({ isOpen, isFloating, socket, isConnected, onClose,
 
     const interval = setInterval(() => {
       const now = Date.now();
-      const filtered = floatingMessages.filter(msg => now - msg.timestamp < 3000);
+      const filtered = floatingMessages.filter((msg) => now - msg.timestamp < 3000);
       setFloatingMessages(filtered);
 
       const newIsFloating = filtered.length > 0;
@@ -69,7 +77,7 @@ export default function Chat({ isOpen, isFloating, socket, isConnected, onClose,
 
     const chatMessage: ClientMessage = {
       type: 'chat',
-      message: message.trim()
+      message: message.trim(),
     };
 
     socket.emit('chat', chatMessage);
@@ -77,10 +85,10 @@ export default function Chat({ isOpen, isFloating, socket, isConnected, onClose,
     const newMessage: FloatingMessage = {
       id: messageIdCounter.current++,
       message: message.trim(),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
-    setFloatingMessages(prev => [...prev, newMessage]);
+    setFloatingMessages((prev) => [...prev, newMessage]);
     setMessage('');
 
     onStateChange(false, true);
@@ -97,7 +105,7 @@ export default function Chat({ isOpen, isFloating, socket, isConnected, onClose,
   if (!isOpen && !isFloating) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
       {isOpen && (
         <div ref={modalRef} className="p-4">
           <input
@@ -107,18 +115,14 @@ export default function Chat({ isOpen, isFloating, socket, isConnected, onClose,
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder="Type message..."
-            className="px-3 py-2 bg-black/80 text-white text-center border-none outline-none rounded"
+            className="rounded border-none bg-black/80 px-3 py-2 text-center text-white outline-none"
             disabled={!isConnected}
           />
         </div>
       )}
 
       {floatingMessages.map((floatingMsg, index) => (
-        <FloatingText
-          key={floatingMsg.id}
-          message={floatingMsg.message}
-          delay={index * 200}
-        />
+        <FloatingText key={floatingMsg.id} message={floatingMsg.message} delay={index * 200} />
       ))}
     </div>
   );
@@ -127,10 +131,10 @@ export default function Chat({ isOpen, isFloating, socket, isConnected, onClose,
 function FloatingText({ message, delay }: { message: string; delay: number }) {
   return (
     <p
-      className="absolute text-white text-2xl font-light animate-float-up pointer-events-none"
+      className="animate-float-up pointer-events-none absolute text-2xl font-light text-white"
       style={{
         animationDelay: `${delay}ms`,
-        animationFillMode: 'forwards'
+        animationFillMode: 'forwards',
       }}
     >
       {message}

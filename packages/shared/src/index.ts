@@ -1,3 +1,5 @@
+import objectsData from '../objects.json';
+
 export const TICK_RATE = 20;
 
 export const MAP_GRID_CELL_SIZE = 32;
@@ -50,8 +52,6 @@ export type ServerMessage =
   | { type: 'tick'; timestamp: number }
   | { type: 'chat'; message: string; from?: string }
   | { type: 'snapshot'; players: PlayerData[]; timestamp: number; serverTick: number };
-
-import objectsData from '../objects.json';
 export const STATIC_OBJECTS: StaticObject[] = objectsData.objects as StaticObject[];
 
 export {

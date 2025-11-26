@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 type DebugItem = {
   label: string;
@@ -23,7 +23,14 @@ const colorClasses = {
   info: 'text-blue-400',
 };
 
-export default function DebugInfo({ title = 'Debug Info', items, className = '', compact = false, onToggleCollisions, collisionsEnabled }: DebugInfoProps) {
+export default function DebugInfo({
+  title = 'Debug Info',
+  items,
+  className = '',
+  compact = false,
+  onToggleCollisions,
+  collisionsEnabled,
+}: DebugInfoProps) {
   const debugItems: DebugItem[] = Array.isArray(items)
     ? items
     : Object.entries(items).map(([key, value]) => ({
@@ -36,32 +43,33 @@ export default function DebugInfo({ title = 'Debug Info', items, className = '',
     : 'text-sm text-slate-300 border-t border-slate-700 pt-3';
 
   return (
-    <div className={`bg-black p-4 rounded ${containerClasses} ${className}`}>
+    <div className={`rounded bg-black p-4 ${containerClasses} ${className}`}>
       {title && !compact && (
-        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
+        <h3 className="mb-2 text-xs font-semibold tracking-wide text-slate-400 uppercase">
           {title}
         </h3>
       )}
 
       <div className={compact ? 'grid grid-cols-2 gap-2' : 'space-y-1'}>
         {debugItems.map((item, index) => (
-          <div key={index} className={compact ? 'flex justify-between' : 'flex justify-between items-center'}>
+          <div
+            key={index}
+            className={compact ? 'flex justify-between' : 'flex items-center justify-between'}
+          >
             <span className="text-slate-400">{item.label}:</span>
-            <span className={colorClasses[item.color || 'default']}>
-              {item.value ?? '—'}
-            </span>
+            <span className={colorClasses[item.color || 'default']}>{item.value ?? '—'}</span>
           </div>
         ))}
       </div>
 
       {onToggleCollisions && (
-        <div className="mt-3 pt-3 border-t border-slate-700">
+        <div className="mt-3 border-t border-slate-700 pt-3">
           <button
             onClick={onToggleCollisions}
-            className={`w-full px-3 py-2 rounded text-sm font-medium transition-colors ${
+            className={`w-full rounded px-3 py-2 text-sm font-medium transition-colors ${
               collisionsEnabled
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                ? 'bg-red-600 text-white hover:bg-red-700'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
             {collisionsEnabled ? 'Hide Hitboxes' : 'Show Hitboxes'}
@@ -91,7 +99,15 @@ export function ConnectionStatus({ isConnected, url }: { isConnected: boolean; u
   );
 }
 
-export function PerformanceInfo({ fps, latency, memory }: { fps?: number; latency?: number; memory?: number }) {
+export function PerformanceInfo({
+  fps,
+  latency,
+  memory,
+}: {
+  fps?: number;
+  latency?: number;
+  memory?: number;
+}) {
   return (
     <DebugInfo
       title="Performance"
@@ -105,7 +121,13 @@ export function PerformanceInfo({ fps, latency, memory }: { fps?: number; latenc
   );
 }
 
-export function TimingInfo({ lastUpdate, updateCount }: { lastUpdate?: number; updateCount?: number }) {
+export function TimingInfo({
+  lastUpdate,
+  updateCount,
+}: {
+  lastUpdate?: number;
+  updateCount?: number;
+}) {
   return (
     <DebugInfo
       title="Timing"

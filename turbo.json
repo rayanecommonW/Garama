@@ -11,7 +11,20 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "lint": {
-      "dependsOn": []
+      "dependsOn": [],
+      "outputs": []
+    },
+    "lint:fix": {
+      "dependsOn": [],
+      "outputs": []
+    },
+    "format": {
+      "dependsOn": [],
+      "outputs": []
+    },
+    "format:check": {
+      "dependsOn": [],
+      "outputs": []
     }
   }
 }

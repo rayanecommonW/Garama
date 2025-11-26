@@ -1,5 +1,7 @@
-import { Input } from './input';
 import { JUMP_INITIAL_SPEED, JUMP_HOLD_ACCEL, JUMP_MAX_HOLD_MS } from '@garama/shared';
+
+import { Input } from './input';
+
 import type { Player } from './gameState';
 
 const COYOTE_TIME_MS = 120;

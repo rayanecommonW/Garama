@@ -1,5 +1,3 @@
-import { GameState, Player } from './gameState';
-import { Input } from './input';
 import {
   PLAYER_SPEED,
   MAP_WIDTH,
@@ -11,13 +9,26 @@ import {
   circlePolygonCollision,
   resolveCirclePolygonCollision,
 } from '@garama/shared';
-import type { Point } from '@garama/shared';
+
+import { GameState, type Player } from './gameState';
+import { Input } from './input';
 import { processJump } from './jump';
 
-const GROUND_EPS = 6;
-const FOOT_OFFSETS = [-PLAYER_RADIUS * 0.8, -PLAYER_RADIUS * 0.4, 0, PLAYER_RADIUS * 0.4, PLAYER_RADIUS * 0.8];
+import type { Point } from '@garama/shared';
 
-function applyHorizontal(player: typeof GameState.players extends Map<string, infer P> ? P : never, dirX: number) {
+const GROUND_EPS = 6;
+const FOOT_OFFSETS = [
+  -PLAYER_RADIUS * 0.8,
+  -PLAYER_RADIUS * 0.4,
+  0,
+  PLAYER_RADIUS * 0.4,
+  PLAYER_RADIUS * 0.8,
+];
+
+function applyHorizontal(
+  player: typeof GameState.players extends Map<string, infer P> ? P : never,
+  dirX: number
+) {
   if (player.onGround) {
     player.vx = dirX ? dirX * PLAYER_SPEED : 0;
     return;
@@ -25,12 +36,18 @@ function applyHorizontal(player: typeof GameState.players extends Map<string, in
   player.vx = dirX ? dirX * PLAYER_SPEED : 0;
 }
 
-function applyGravity(player: typeof GameState.players extends Map<string, infer P> ? P : never, dtSec: number) {
+function applyGravity(
+  player: typeof GameState.players extends Map<string, infer P> ? P : never,
+  dtSec: number
+) {
   (player as Player).vy -= GRAVITY * dtSec;
   if ((player as Player).vy < -MAX_FALL_SPEED) (player as Player).vy = -MAX_FALL_SPEED;
 }
 
-function integrate(player: typeof GameState.players extends Map<string, infer P> ? P : never, dtSec: number) {
+function integrate(
+  player: typeof GameState.players extends Map<string, infer P> ? P : never,
+  dtSec: number
+) {
   return {
     x: player.x + player.vx * dtSec,
     y: player.y + player.vy * dtSec,
@@ -62,15 +79,20 @@ function resolveWorldCollisions(x: number, y: number, radius: number, vy: number
 }
 
 function segmentsIntersect(a: Point, b: Point, c: Point, d: Point) {
-  const cross = (p: Point, q: Point, r: Point) => (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]);
+  const cross = (p: Point, q: Point, r: Point) =>
+    (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]);
   const onSeg = (p: Point, q: Point, r: Point) =>
-    Math.min(p[0], r[0]) <= q[0] && q[0] <= Math.max(p[0], r[0]) &&
-    Math.min(p[1], r[1]) <= q[1] && q[1] <= Math.max(p[1], r[1]);
+    Math.min(p[0], r[0]) <= q[0] &&
+    q[0] <= Math.max(p[0], r[0]) &&
+    Math.min(p[1], r[1]) <= q[1] &&
+    q[1] <= Math.max(p[1], r[1]);
   const d1 = cross(a, b, c);
   const d2 = cross(a, b, d);
   const d3 = cross(c, d, a);
   const d4 = cross(c, d, b);
-  if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) return true;
+  if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) {
+    return true;
+  }
   if (d1 === 0 && onSeg(a, c, b)) return true;
   if (d2 === 0 && onSeg(a, d, b)) return true;
   if (d3 === 0 && onSeg(c, a, d)) return true;
@@ -78,7 +100,12 @@ function segmentsIntersect(a: Point, b: Point, c: Point, d: Point) {
   return false;
 }
 
-function verticalSegmentIntersectsPolygon(x: number, topY: number, bottomY: number, polygon: Point[]) {
+function verticalSegmentIntersectsPolygon(
+  x: number,
+  topY: number,
+  bottomY: number,
+  polygon: Point[]
+) {
   const a: Point = [x, topY];
   const b: Point = [x, bottomY];
   for (let i = 0; i < polygon.length; i++) {

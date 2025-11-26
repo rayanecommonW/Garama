@@ -1,7 +1,16 @@
+import {
+  TICK_RATE,
+  PLAYER_COLOR,
+  PLAYER_RADIUS,
+  MAP_WIDTH,
+  MAP_HEIGHT,
+  STATIC_OBJECTS,
+  circlePolygonCollision,
+  resolveCirclePolygonCollision,
+} from '@garama/shared';
 import { Server } from 'socket.io';
+
 import type { ClientMessage, ServerMessage, PlayerData, Point } from '@garama/shared';
-import { TICK_RATE, PLAYER_COLOR, PLAYER_RADIUS, MAP_WIDTH, MAP_HEIGHT, STATIC_OBJECTS } from '@garama/shared';
-import { circlePolygonCollision, resolveCirclePolygonCollision } from '@garama/shared';
 
 const players = new Map<string, PlayerData>();
 let serverTick = 0;
@@ -11,9 +20,9 @@ export const createServer = () => {
 
   const io = new Server(port, {
     cors: {
-      origin: "*",
-      methods: ["GET", "POST"]
-    }
+      origin: '*',
+      methods: ['GET', 'POST'],
+    },
   });
 
   io.on('connection', (socket) => {
@@ -34,17 +43,21 @@ export const createServer = () => {
     socket.on('position', (msg: ClientMessage & { type: 'position' }) => {
       const player = players.get(socket.id);
       if (player) {
-        let newX = Math.max(PLAYER_RADIUS, Math.min(MAP_WIDTH - PLAYER_RADIUS, msg.x));
-        let newY = Math.max(PLAYER_RADIUS, Math.min(MAP_HEIGHT - PLAYER_RADIUS, msg.y));
+        const newX = Math.max(PLAYER_RADIUS, Math.min(MAP_WIDTH - PLAYER_RADIUS, msg.x));
+        const newY = Math.max(PLAYER_RADIUS, Math.min(MAP_HEIGHT - PLAYER_RADIUS, msg.y));
 
         let finalX = newX;
         let finalY = newY;
 
         for (const obj of STATIC_OBJECTS) {
           const newCenter: Point = [finalX, finalY];
-          
+
           if (circlePolygonCollision(newCenter, PLAYER_RADIUS, obj.polygon)) {
-            const [pushX, pushY] = resolveCirclePolygonCollision(newCenter, PLAYER_RADIUS, obj.polygon);
+            const [pushX, pushY] = resolveCirclePolygonCollision(
+              newCenter,
+              PLAYER_RADIUS,
+              obj.polygon
+            );
             finalX += pushX;
             finalY += pushY;
           }
@@ -55,7 +68,7 @@ export const createServer = () => {
       }
     });
 
-    socket.on('ok', (msg: ClientMessage) => {
+    socket.on('ok', (_msg: ClientMessage) => {
       console.log(`Received 'ok' from client ${socket.id}`);
     });
 
@@ -74,11 +87,11 @@ export const createServer = () => {
       type: 'snapshot',
       players: Array.from(players.values()),
       timestamp: Date.now(),
-      serverTick: serverTick,
+      serverTick,
     };
 
     io.emit('snapshot', snapshot);
-    
+
     serverTick++;
   }, 1000 / TICK_RATE);
 

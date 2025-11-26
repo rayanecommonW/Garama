@@ -3,6 +3,7 @@
 I wanna move to vite+react instead of next.js since ssr won't be used now that i realized
 
 ## Shoutout to these articles :
+
 https://lance-gg.github.io/docs_out/tutorial-guide_syncinterpolation.html
 
 https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking
@@ -13,7 +14,7 @@ https://gabrielgambetta.com/client-server-game-architecture.html
 
 # Multiplayer Game
 
-Multiplayer game ,  smooth movement, WebSocket ,  monorepo .
+Multiplayer game , smooth movement, WebSocket , monorepo .
 
 Preview : [Preview here](https://garama-five.vercel.app)
 
@@ -22,8 +23,6 @@ Preview : [Preview here](https://garama-five.vercel.app)
 - TO-DO
 
 ## 🏗️ Architecture
-
-
 
 ### Communication Flow
 
@@ -36,11 +35,11 @@ sequenceDiagram
     Note over C: Client Prediction
     C->>C: Input + Local Move (Immediate)
     C->>S: Send Input {seq: 1, t: 100}
-    
+
     Note over S: Server Authoritative
     S->>S: Receive Input
     S->>S: Update State (Physics)
-    
+
     Note over S: Lag Compensation (Rewind)
     S->>S: Rewind State to t=100-Latency
     S->>S: Check Hits/Collisions
@@ -59,10 +58,10 @@ sequenceDiagram
 ```
 
 ### Architecture Overview
+
 - **Client Prediction**: Player moves immediately locally, then corrects if server disagrees.
 - **Lag Compensation**: Server "rewinds" time to check if a shot hit where the player saw the target.
 - **Interpolation**: Remote players are rendered slightly in the past to ensure smooth movement.
-
 
 ## 🚀 Quick Start
 
@@ -97,18 +96,19 @@ For detailed technical documentation and implementation roadmap, see the [Game I
 4. **Smooth Experience**: 60fps rendering with 20Hz authoritative server updates
 
 ## 🛠️ Technology Stack
+
 Will move either to Go or native Websocket soon
 
 ### Core Technologies
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Frontend** | Next.js 15 + React 19 | UI framework with App Router |
-| **Backend** | Bun + Hono | Fast runtime + lightweight web framework |
-| **WebSocket** | Socket.io| Real-time bidirectional communication |
-| **Monorepo** | Turborepo | Build system and task orchestration |
-| **Language** | TypeScript | Type safety across entire stack |
-| **Styling** | Tailwind CSS | Utility-first CSS framework |
+| Component     | Technology            | Purpose                                  |
+| ------------- | --------------------- | ---------------------------------------- |
+| **Frontend**  | Next.js 15 + React 19 | UI framework with App Router             |
+| **Backend**   | Bun + Hono            | Fast runtime + lightweight web framework |
+| **WebSocket** | Socket.io             | Real-time bidirectional communication    |
+| **Monorepo**  | Turborepo             | Build system and task orchestration      |
+| **Language**  | TypeScript            | Type safety across entire stack          |
+| **Styling**   | Tailwind CSS          | Utility-first CSS framework              |
 
 ### Shared Architecture
 
@@ -133,16 +133,21 @@ TO-DO
 ### Road-Map
 
 #### 1. **Database Integration**
+
 TO-DO
 
 #### 2. **Authentication System**
+
 TO-DO
+
 ```bash
 bun add next-auth
 ```
 
 #### 3. **State Management Enhancement**
+
 TO-DO
+
 ```bash
 bun add @reduxjs/toolkit
 # or
@@ -150,32 +155,35 @@ bun add immer
 ```
 
 #### 5. **Game Analytics**
+
 TO-DO
 
 #### 7. **Performance Monitoring**
+
 TO-DO
 
 ### Infrastructure & Deployment
-Vercel+Railway for now but might change the backend when i burned all my tokens
 
+Vercel+Railway for now but might change the backend when i burned all my tokens
 
 ## AI generated recomendation
 
 ### Performance Optimizations
+
 - **WebWorkers**: Offload heavy computations
 - **Service Workers**: Cache game assets
 - **CDN**: Distribute static assets globally
 
 ### Monitoring & Observability
+
 - **Application Metrics**: Response times, error rates
 - **System Metrics**: CPU, memory, network usage
 - **Business Metrics**: DAU, retention, engagement
 
-
 ## 📄 License
+
 TO-DO
 
 ---
 
-
-*Have questions or want to help me? Please open a discussion !* 
+_Have questions or want to help me? Please open a discussion !_

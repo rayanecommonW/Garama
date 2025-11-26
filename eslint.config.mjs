@@ -1,49 +1,52 @@
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
 import importPlugin from 'eslint-plugin-import';
-import jsxA11y from 'eslint-plugin-jsx-a11y';
-import unusedImports from 'eslint-plugin-unused-imports';
 import prettierConfig from 'eslint-config-prettier';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+import unusedImports from 'eslint-plugin-unused-imports';
 
 /**
- * Frontend ESLint configuration.
- * Extends Next.js defaults and adds stricter rules for code quality.
- * Configured for a game project where React is mainly used for UI, not game loop.
+ * Shared ESLint base configuration for the Garama monorepo.
+ * This provides common rules that all packages extend.
  */
-const eslintConfig = [
+export const baseConfig = [
   js.configs.recommended,
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
   prettierConfig,
   {
-    ignores: ['node_modules/**', '.next/**', 'out/**', 'build/**', 'next-env.d.ts', '*.d.ts'],
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.next/**',
+      '**/out/**',
+      '**/build/**',
+      '**/.turbo/**',
+      '**/coverage/**',
+      '**/*.d.ts',
+    ],
   },
+];
+
+/**
+ * TypeScript configuration for Node.js/Bun backend and shared packages.
+ */
+export const typescriptConfig = [
+  ...baseConfig,
   {
     files: ['**/*.ts', '**/*.tsx'],
-    plugins: {
-      import: importPlugin,
-      'unused-imports': unusedImports,
-      'jsx-a11y': jsxA11y,
-    },
-    settings: {
-      react: {
-        version: 'detect',
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
       },
     },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+      import: importPlugin,
+      'unused-imports': unusedImports,
+    },
     rules: {
-      // Disable base rule in favor of TypeScript/unused-imports
-      'no-unused-vars': 'off',
-
-      // TypeScript rules (plugin already registered by next/typescript)
+      // TypeScript rules
       '@typescript-eslint/no-unused-vars': 'off', // Handled by unused-imports
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
@@ -78,23 +81,6 @@ const eslintConfig = [
       'import/no-duplicates': 'error',
       'import/first': 'error',
 
-      // React rules - relaxed for game loop code (plugins already registered by next)
-      'react/react-in-jsx-scope': 'off', // Not needed in Next.js
-      'react/prop-types': 'off', // Using TypeScript
-      'react/jsx-boolean-value': ['warn', 'never'],
-      'react/jsx-curly-brace-presence': ['warn', { props: 'never', children: 'never' }],
-      'react/self-closing-comp': 'warn',
-      'react/jsx-no-useless-fragment': 'warn',
-      'react/jsx-pascal-case': 'error',
-
-      // React Hooks - these are important even for game code
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
-
-      // Accessibility - basic rules only
-      'jsx-a11y/alt-text': 'warn',
-      'jsx-a11y/anchor-is-valid': 'warn',
-
       // General code quality
       'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
       'no-debugger': 'error',
@@ -120,20 +106,6 @@ const eslintConfig = [
       '@typescript-eslint/no-shadow': 'warn',
     },
   },
-  // Game loop files - more relaxed rules for performance-critical code
-  {
-    files: ['**/game/**/*.ts', '**/game/**/*.tsx'],
-    rules: {
-      // Allow console.log in game files for debugging
-      'no-console': 'off',
-      // Allow any for performance-critical game state
-      '@typescript-eslint/no-explicit-any': 'off',
-      // Allow non-null assertions in game code
-      '@typescript-eslint/no-non-null-assertion': 'off',
-      // Allow param reassign for game state mutations
-      'no-param-reassign': 'off',
-    },
-  },
 ];
 
-export default eslintConfig;
+export default typescriptConfig;

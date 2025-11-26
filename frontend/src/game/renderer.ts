@@ -10,8 +10,9 @@ import {
   DEBUG_HITBOX_COLOR,
   DEBUG_PLAYER_HITBOX_COLOR,
 } from '@garama/shared';
-import type { Point } from '@garama/shared';
+
 import type { GameStateType, RenderableObject } from './gameState';
+import type { Point } from '@garama/shared';
 
 export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType) {
   const ctx = canvas.getContext('2d');
@@ -155,21 +156,22 @@ function renderGrid(
   ctx.fillStyle = MAP_GRID_COLOR;
 
   const startGridX = Math.max(0, Math.floor(cameraLeft / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
-  const endGridX = Math.min(MAP_WIDTH, Math.ceil(cameraRight / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
+  const endGridX = Math.min(
+    MAP_WIDTH,
+    Math.ceil(cameraRight / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE
+  );
   const startGridY = Math.max(0, Math.floor(cameraTop / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
-  const endGridY = Math.min(MAP_HEIGHT, Math.ceil(cameraBottom / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
+  const endGridY = Math.min(
+    MAP_HEIGHT,
+    Math.ceil(cameraBottom / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE
+  );
 
   for (let x = startGridX; x <= endGridX; x += MAP_GRID_CELL_SIZE) {
     for (let y = startGridY; y <= endGridY; y += MAP_GRID_CELL_SIZE) {
       const screenX = x - cameraLeft;
       const screenY = viewportHeight - (y - cameraTop);
 
-      if (
-        screenX >= 0 &&
-        screenX <= viewportWidth &&
-        screenY >= 0 &&
-        screenY <= viewportHeight
-      ) {
+      if (screenX >= 0 && screenX <= viewportWidth && screenY >= 0 && screenY <= viewportHeight) {
         ctx.beginPath();
         ctx.arc(screenX, screenY, MAP_GRID_DOT_SIZE / 2, 0, Math.PI * 2);
         ctx.fill();
@@ -189,7 +191,6 @@ function renderObjects(
   cameraBottom: number // Max Y
 ) {
   gameState.objects.forEach((obj: RenderableObject) => {
-    
     const isVisible =
       obj.boundingBox.maxX >= cameraLeft &&
       obj.boundingBox.minX <= cameraRight &&
@@ -256,7 +257,6 @@ function renderDebugHitboxes(
   ctx.lineWidth = 2;
 
   gameState.objects.forEach((obj: RenderableObject) => {
-    
     const screenPolygon: Point[] = obj.polygon.map(([x, y]: Point) => {
       const screenX = x - cameraLeft;
       const screenY = viewportHeight - (y - cameraTop);

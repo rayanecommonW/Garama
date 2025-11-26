@@ -1,5 +1,6 @@
-import type { StaticObject, Point } from '@garama/shared';
 import { STATIC_OBJECTS } from '@garama/shared';
+
+import type { StaticObject, Point } from '@garama/shared';
 
 export type Player = {
   id: string;
@@ -39,7 +40,10 @@ export type GameStateType = {
 };
 
 function computeBoundingBox(points: Point[]) {
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    maxX = -Infinity,
+    minY = Infinity,
+    maxY = -Infinity;
   for (const [x, y] of points) {
     if (x < minX) minX = x;
     if (x > maxX) maxX = x;
@@ -64,10 +68,17 @@ export const GameState: GameStateType = {
   debugCollisions: false,
 };
 
-export function spawnPlayer(id: string, name: string, mapWidth: number, mapHeight: number, radius: number, color: string): Player {
+export function spawnPlayer(
+  id: string,
+  name: string,
+  mapWidth: number,
+  mapHeight: number,
+  radius: number,
+  color: string
+): Player {
   const x = 0;
   const y = radius;
-  
+
   const player: Player = {
     id,
     name,
@@ -80,11 +91,11 @@ export function spawnPlayer(id: string, name: string, mapWidth: number, mapHeigh
     radius,
     color,
   };
-  
+
   GameState.players.set(id, player);
-  
+
   GameState.camera.x = x;
   GameState.camera.y = y;
-  
+
   return player;
 }

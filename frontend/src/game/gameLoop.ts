@@ -1,6 +1,7 @@
-import { renderFrame } from './renderer';
 import { GameState } from './gameState';
 import { updatePlayerMovement } from './movement';
+import { renderFrame } from './renderer';
+
 import type { Socket } from 'socket.io-client';
 
 let rafId: number | null = null;
@@ -34,24 +35,24 @@ function sendPositionUpdate() {
 
 export function startGameLoop(canvas: HTMLCanvasElement) {
   if (isRunning) return;
-  
+
   isRunning = true;
   lastTime = performance.now();
   lastPositionUpdate = performance.now();
-  
+
   function frame(currentTime: number) {
     if (!isRunning) return;
-    
+
     const deltaTime = currentTime - lastTime;
     lastTime = currentTime;
 
     updatePlayerMovement(deltaTime);
-    
+
     if (currentTime - lastPositionUpdate > 50) {
       sendPositionUpdate();
       lastPositionUpdate = currentTime;
     }
-    
+
     if (GameState.localPlayerId) {
       const localPlayer = GameState.players.get(GameState.localPlayerId);
       if (localPlayer) {
@@ -59,12 +60,12 @@ export function startGameLoop(canvas: HTMLCanvasElement) {
         GameState.camera.y = localPlayer.y;
       }
     }
-    
+
     renderFrame(canvas, GameState);
-    
+
     rafId = requestAnimationFrame(frame);
   }
-  
+
   rafId = requestAnimationFrame(frame);
 }
 
