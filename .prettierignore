@@ -21,3 +21,6 @@ next-env.d.ts
 .turbo/
 coverage/
 
+# Documentation (written manually)
+docs/
+

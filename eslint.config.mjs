@@ -22,6 +22,7 @@ export const baseConfig = [
       '**/.turbo/**',
       '**/coverage/**',
       '**/*.d.ts',
+      'docs/**',
     ],
   },
 ];
