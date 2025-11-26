@@ -85,6 +85,10 @@ npm run dev:frontend
 npm run build
 ```
 
+## 📚 Documentation
+
+For detailed technical documentation and implementation roadmap, see the [Game Implementation Roadmap](./docs/roadmap/README.md).
+
 ## 🎮 How to Play
 
 1. **Join the Game**: Enter your player name and click join
