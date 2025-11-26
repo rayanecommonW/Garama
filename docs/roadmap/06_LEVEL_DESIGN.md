@@ -26,6 +26,15 @@ For PvP Metroidvania, the map is an **Arena**, not a linear level.
 **Highly Recommended.** This allows you to keep your engine lightweight while getting a AAA-grade level editor.
 
 ### Workflow
+
+```mermaid
+flowchart LR
+    A[LDtk Editor] -- Save --> B[.ldtk File]
+    B -- Export Script --> C[Map JSON]
+    C -- Load --> D[Server (Collisions)]
+    C -- Load --> E[Client (Visuals)]
+```
+
 1.  **Design**: Create map in LDtk (`.ldtk` file).
 2.  **Export**: Export to JSON/Simples format.
 3.  **Load**:

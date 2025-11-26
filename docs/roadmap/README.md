@@ -31,6 +31,14 @@ This directory contains the architectural guidelines and implementation roadmap 
     - NTP-like exchanges
     - Latency filtering
     - Snapshot interpolation
+9.  [Performance & Optimization](./09_PERFORMANCE.md)
+    - Object Pooling (GC fix)
+    - Sub-pixel Rendering
+    - Texture Atlases
+10. [Advanced Gameplay Systems](./10_ADVANCED_GAMEPLAY.md)
+    - Boss HFSM ("The Tell" Architecture)
+    - Narrative Flags
+    - Raycasting for Anti-Tunneling
 
 ## Usage
 Follow these documents sequentially to build the engine's core foundation before moving to gameplay content.

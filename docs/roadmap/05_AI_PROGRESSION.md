@@ -4,6 +4,22 @@
 Avoid "boolean hell" (`isJumping`, `isRunning`). Use a strict FSM.
 
 ### States
+
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE
+    IDLE --> RUN : Input
+    IDLE --> JUMP : Input
+    RUN --> IDLE : No Input
+    RUN --> JUMP : Input
+    JUMP --> IDLE : Landed
+    IDLE --> ATTACK : Action
+    ATTACK --> IDLE : Anim End
+    RUN --> ATTACK : Action
+    ATTACK --> STUNNED : Hit
+    STUNNED --> IDLE : Timer End
+```
+
 - `IDLE`
 - `RUN`
 - `JUMP`

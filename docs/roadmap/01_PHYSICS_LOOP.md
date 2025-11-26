@@ -15,6 +15,18 @@ We must decouple the **Rendering Loop** (variable Hz) from the **Physics Loop** 
 - `MAX_ACCUMULATOR`: Prevent spiral of death (e.g., clamp at 100ms)
 
 **The Loop Structure:**
+
+```mermaid
+flowchart TD
+    A[Start Frame] --> B{Accumulator >= PHYSICS_STEP?}
+    B -- Yes --> C[Update Physics (Fixed dt)]
+    C --> D[Accumulator -= PHYSICS_STEP]
+    D --> B
+    B -- No --> E[Calculate Alpha]
+    E --> F[Render(Interpolated)]
+    F --> G[Request Next Frame]
+```
+
 1.  **Input**: Capture input state.
 2.  **Accumulate**: Add `deltaTime` (time since last frame) to an `accumulator`.
 3.  **Physics Step (Fixed)**:

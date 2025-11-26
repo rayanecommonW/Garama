@@ -25,6 +25,21 @@ Clients and server run separate clocks and experience variable one-way latency a
 ## Detailed Procedure
 
 ### A — Initial Sync (On Connect)
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+
+    loop K times
+        C->>S: Ping {t0}
+        S->>C: Pong {t0, serverTime}
+        Note over C: Calc RTT & Offset
+        C-->>C: Wait pauseMs
+    end
+    Note over C: Filter Outliers & Average
+```
+
 1.  Send `ping` with `t0`.
 2.  Receive `pong` with `serverTime` at `t1`.
 3.  `rtt = t1 - t0`.
