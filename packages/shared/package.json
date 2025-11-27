@@ -9,6 +9,8 @@
     "dev": "tsc --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"No tests yet\"",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

@@ -1,0 +1,20 @@
+#!/bin/sh
+
+echo "🔍 Running pre-push checks..."
+
+echo "📝 Running typecheck..."
+npm run typecheck
+if [ $? -ne 0 ]; then
+  echo "❌ Typecheck failed. Push aborted."
+  exit 1
+fi
+
+echo "🧹 Running lint:fix..."
+npm run lint:fix
+if [ $? -ne 0 ]; then
+  echo "❌ Lint failed. Push aborted."
+  exit 1
+fi
+
+echo "✅ All pre-push checks passed!"
+

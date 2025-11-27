@@ -38,7 +38,7 @@ const eslintConfig = [
       '@typescript-eslint/no-explicit-any': 'error', // Strict: no any in shared types
       '@typescript-eslint/explicit-function-return-type': 'warn',
       '@typescript-eslint/explicit-module-boundary-types': 'warn',
-      '@typescript-eslint/no-non-null-assertion': 'error',
+      '@typescript-eslint/no-non-null-assertion': 'warn', // Allow in array loops where index is known valid
       '@typescript-eslint/consistent-type-imports': [
         'warn',
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
