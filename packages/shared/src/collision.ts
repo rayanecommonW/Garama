@@ -5,8 +5,8 @@ export function pointInPolygon(point: Point, polygon: Point[]): boolean {
   let inside = false;
 
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const [xi, yi] = polygon[i];
-    const [xj, yj] = polygon[j];
+    const [xi, yi] = polygon[i]!;
+    const [xj, yj] = polygon[j]!;
 
     const intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
 
@@ -44,8 +44,8 @@ export function circlePolygonCollision(center: Point, radius: number, polygon: P
   }
 
   for (let i = 0; i < polygon.length; i++) {
-    const start = polygon[i];
-    const end = polygon[(i + 1) % polygon.length];
+    const start = polygon[i]!;
+    const end = polygon[(i + 1) % polygon.length]!;
     const distance = pointToSegmentDistance(center, start, end);
 
     if (distance <= radius) {
@@ -70,8 +70,8 @@ export function resolveCirclePolygonCollision(
 
   if (isInside) {
     for (let i = 0; i < polygon.length; i++) {
-      const start = polygon[i];
-      const end = polygon[(i + 1) % polygon.length];
+      const start = polygon[i]!;
+      const end = polygon[(i + 1) % polygon.length]!;
       const [x1, y1] = start;
       const [x2, y2] = end;
 
@@ -92,8 +92,8 @@ export function resolveCirclePolygonCollision(
     }
   } else {
     for (let i = 0; i < polygon.length; i++) {
-      const start = polygon[i];
-      const end = polygon[(i + 1) % polygon.length];
+      const start = polygon[i]!;
+      const end = polygon[(i + 1) % polygon.length]!;
       const [x1, y1] = start;
       const [x2, y2] = end;
 
