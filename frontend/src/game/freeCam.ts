@@ -1,30 +1,14 @@
-/**
- * Free Camera Module
- * Handles free camera movement, zoom, and input for level design exploration.
- */
-
 import { GameState } from './gameState';
-
-// ============================================================================
-// Constants
-// ============================================================================
 
 const FREE_CAM_SPEED = 800;
 const DRAG_SENSITIVITY = 1;
-
-// Zoom uses multiplicative scaling for smooth feel
 const ZOOM_MIN = 0.1;
 const ZOOM_MAX = 3;
-const ZOOM_FACTOR = 1.08; // 8% per scroll step - smooth and precise
-
-// ============================================================================
-// State
-// ============================================================================
+const ZOOM_FACTOR = 1.08;
 
 let freeCamX = 0;
 let freeCamY = 0;
 
-// Keyboard input state
 const keyboardInput = {
   up: false,
   down: false,
@@ -32,21 +16,14 @@ const keyboardInput = {
   right: false,
 };
 
-// Drag state
 let isDragging = false;
 let lastDragX = 0;
 let lastDragY = 0;
 
-// ============================================================================
-// Public API
-// ============================================================================
-
-/** Returns current free cam position */
 export function getFreeCamPosition() {
   return { x: freeCamX, y: freeCamY };
 }
 
-/** Resets free cam to player position and zoom to 1 */
 export function resetFreeCamToPlayer() {
   if (GameState.localPlayerId) {
     const player = GameState.players.get(GameState.localPlayerId);
@@ -59,12 +36,11 @@ export function resetFreeCamToPlayer() {
   resetInputState();
 }
 
-/** Updates free cam position based on keyboard input */
 export function updateFreeCam(deltaMs: number) {
   if (!GameState.freeCamMode) return;
 
   const dtSec = deltaMs / 1000;
-  const speed = FREE_CAM_SPEED / GameState.freeCamZoom; // Faster when zoomed out
+  const speed = FREE_CAM_SPEED / GameState.freeCamZoom;
 
   if (keyboardInput.up) freeCamY += speed * dtSec;
   if (keyboardInput.down) freeCamY -= speed * dtSec;
@@ -72,7 +48,6 @@ export function updateFreeCam(deltaMs: number) {
   if (keyboardInput.right) freeCamX += speed * dtSec;
 }
 
-/** Sets up all event handlers for free cam controls */
 export function setupFreeCamHandlers(canvas: HTMLCanvasElement): () => void {
   const cleanupMouse = setupMouseHandlers(canvas);
   const cleanupKeyboard = setupKeyboardHandlers();
@@ -85,9 +60,9 @@ export function setupFreeCamHandlers(canvas: HTMLCanvasElement): () => void {
   };
 }
 
-// ============================================================================
-// Mouse Handlers (Drag & Coordinate Tracking)
-// ============================================================================
+export function isDraggingCamera(): boolean {
+  return isDragging;
+}
 
 function setupMouseHandlers(canvas: HTMLCanvasElement): () => void {
   const handleMouseMove = (e: MouseEvent) => {
@@ -95,17 +70,14 @@ function setupMouseHandlers(canvas: HTMLCanvasElement): () => void {
     const screenX = e.clientX - rect.left;
     const screenY = e.clientY - rect.top;
 
-    // Update world coordinates for coordinate display
     updateMouseWorldCoords(screenX, screenY);
 
-    // Handle dragging
     if (GameState.freeCamMode && isDragging) {
       const dx = e.clientX - lastDragX;
       const dy = e.clientY - lastDragY;
 
-      // Move camera opposite to drag direction, adjusted for zoom
-      freeCamX -= dx / GameState.freeCamZoom * DRAG_SENSITIVITY;
-      freeCamY += dy / GameState.freeCamZoom * DRAG_SENSITIVITY;
+      freeCamX -= (dx / GameState.freeCamZoom) * DRAG_SENSITIVITY;
+      freeCamY += (dy / GameState.freeCamZoom) * DRAG_SENSITIVITY;
 
       lastDragX = e.clientX;
       lastDragY = e.clientY;
@@ -147,7 +119,6 @@ function setupMouseHandlers(canvas: HTMLCanvasElement): () => void {
   };
 }
 
-/** Updates mouse world coordinates based on screen position and zoom */
 function updateMouseWorldCoords(screenX: number, screenY: number) {
   const zoom = GameState.freeCamZoom;
   const cameraLeft = GameState.camera.x - GameState.viewportWidth / 2 / zoom;
@@ -159,15 +130,9 @@ function updateMouseWorldCoords(screenX: number, screenY: number) {
   GameState.mouse.worldY = Math.round(cameraTop + (GameState.viewportHeight - screenY) / zoom);
 }
 
-// ============================================================================
-// Keyboard Handlers (Arrow Keys & WASD)
-// ============================================================================
-
 function setupKeyboardHandlers(): () => void {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (!GameState.freeCamMode) return;
-
-    // Ignore if typing in input
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
     switch (e.key) {
@@ -242,10 +207,6 @@ function setupKeyboardHandlers(): () => void {
   };
 }
 
-// ============================================================================
-// Wheel Handler (Zoom)
-// ============================================================================
-
 function setupWheelHandler(canvas: HTMLCanvasElement): () => void {
   const handleWheel = (e: WheelEvent) => {
     if (!GameState.freeCamMode) return;
@@ -266,53 +227,37 @@ function setupWheelHandler(canvas: HTMLCanvasElement): () => void {
   };
 }
 
-// ============================================================================
-// Zoom Logic
-// ============================================================================
-
-/** Applies zoom centered on a screen position */
 function applyZoomAtPoint(screenX: number, screenY: number, isZoomingIn: boolean) {
   const oldZoom = GameState.freeCamZoom;
-  
-  // Multiplicative zoom for smooth scaling
+
   const newZoom = isZoomingIn
     ? Math.min(ZOOM_MAX, oldZoom * ZOOM_FACTOR)
     : Math.max(ZOOM_MIN, oldZoom / ZOOM_FACTOR);
 
-  // Skip if no change (at min/max)
   if (Math.abs(newZoom - oldZoom) < 0.001) return;
 
-  // Calculate world position under cursor before zoom
   const halfW = GameState.viewportWidth / 2;
   const halfH = GameState.viewportHeight / 2;
   const worldX = freeCamX + (screenX - halfW) / oldZoom;
   const worldY = freeCamY + (halfH - screenY) / oldZoom;
 
-  // Apply new zoom
   GameState.freeCamZoom = newZoom;
 
-  // Adjust camera so world position stays under cursor
   freeCamX = worldX - (screenX - halfW) / newZoom;
   freeCamY = worldY - (halfH - screenY) / newZoom;
 }
 
-/** Zooms in from center (for keyboard) */
 function zoomIn() {
   const centerX = GameState.viewportWidth / 2;
   const centerY = GameState.viewportHeight / 2;
   applyZoomAtPoint(centerX, centerY, true);
 }
 
-/** Zooms out from center (for keyboard) */
 function zoomOut() {
   const centerX = GameState.viewportWidth / 2;
   const centerY = GameState.viewportHeight / 2;
   applyZoomAtPoint(centerX, centerY, false);
 }
-
-// ============================================================================
-// Internal Helpers
-// ============================================================================
 
 function resetInputState() {
   keyboardInput.up = false;
@@ -321,9 +266,3 @@ function resetInputState() {
   keyboardInput.right = false;
   isDragging = false;
 }
-
-/** Returns whether currently dragging */
-export function isDraggingCamera(): boolean {
-  return isDragging;
-}
-

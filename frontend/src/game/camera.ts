@@ -1,16 +1,6 @@
-/**
- * Camera Module
- * Handles camera position updates and following logic.
- */
-
 import { getFreeCamPosition } from './freeCam';
 import { GameState } from './gameState';
 
-// ============================================================================
-// Public API
-// ============================================================================
-
-/** Updates camera position based on current mode (free cam or follow player) */
 export function updateCamera(canvas: HTMLCanvasElement) {
   if (GameState.freeCamMode) {
     updateFreeCamCamera(canvas);
@@ -19,11 +9,6 @@ export function updateCamera(canvas: HTMLCanvasElement) {
   }
 }
 
-// ============================================================================
-// Camera Modes
-// ============================================================================
-
-/** Updates camera to free cam position */
 function updateFreeCamCamera(canvas: HTMLCanvasElement) {
   const { x, y } = getFreeCamPosition();
   GameState.camera.x = x;
@@ -31,7 +16,6 @@ function updateFreeCamCamera(canvas: HTMLCanvasElement) {
   canvas.style.cursor = 'grab';
 }
 
-/** Updates camera to follow local player */
 function updateFollowCamera() {
   if (GameState.localPlayerId) {
     const localPlayer = GameState.players.get(GameState.localPlayerId);
@@ -40,11 +24,9 @@ function updateFollowCamera() {
       GameState.camera.y = localPlayer.y;
     }
   }
-  // Reset zoom when not in free cam
   GameState.freeCamZoom = 1;
 }
 
-/** Sets cursor based on current mode and drag state */
 export function updateCursor(canvas: HTMLCanvasElement, isDragging: boolean) {
   if (GameState.freeCamMode) {
     canvas.style.cursor = isDragging ? 'grabbing' : 'grab';
@@ -52,4 +34,3 @@ export function updateCursor(canvas: HTMLCanvasElement, isDragging: boolean) {
     canvas.style.cursor = 'default';
   }
 }
-

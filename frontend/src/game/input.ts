@@ -27,7 +27,6 @@ export const DEFAULT_KEY_BINDINGS: KeyBindings = {
 };
 
 export function initInput(bindings: KeyBindings = DEFAULT_KEY_BINDINGS) {
-  // Reset state to avoid stuck keys between sessions
   Input.jump = false;
   Input.left = false;
   Input.right = false;

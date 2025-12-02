@@ -1,8 +1,3 @@
-/**
- * Renderer Module
- * Main rendering logic for the game world.
- */
-
 import {
   MAP_GRID_CELL_SIZE,
   MAP_GRID_DOT_SIZE,
@@ -30,10 +25,7 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
   gameState.viewportWidth = viewportWidth;
   gameState.viewportHeight = viewportHeight;
 
-  // Apply zoom for free cam mode
   const zoom = gameState.freeCamMode ? gameState.freeCamZoom : 1;
-  
-  // Calculate effective viewport size based on zoom
   const effectiveWidth = viewportWidth / zoom;
   const effectiveHeight = viewportHeight / zoom;
 
@@ -42,64 +34,36 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
   const cameraRight = cameraLeft + effectiveWidth;
   const cameraBottom = cameraTop + effectiveHeight;
 
-  // Clear and fill background
   ctx.fillStyle = MAP_OUTSIDE_COLOR;
   ctx.fillRect(0, 0, viewportWidth, viewportHeight);
 
-  // Apply zoom transform
   ctx.save();
   ctx.scale(zoom, zoom);
 
   renderMapBackground(ctx, cameraLeft, cameraTop, effectiveWidth, effectiveHeight);
-
   renderMapBorders(ctx, cameraLeft, cameraTop, effectiveWidth, effectiveHeight);
-
   renderGrid(ctx, cameraLeft, cameraTop, cameraRight, cameraBottom, effectiveWidth, effectiveHeight);
 
   const backgroundObjects = gameState.objects.filter((obj) => obj.zIndex < PLAYER_Z_INDEX);
   const foregroundObjects = gameState.objects.filter((obj) => obj.zIndex >= PLAYER_Z_INDEX);
 
-  // Sort each layer by z-index
   backgroundObjects.sort((a, b) => a.zIndex - b.zIndex);
   foregroundObjects.sort((a, b) => a.zIndex - b.zIndex);
 
-  renderObjectsList(
-    ctx,
-    backgroundObjects,
-    cameraLeft,
-    cameraTop,
-    effectiveWidth,
-    effectiveHeight,
-    cameraRight,
-    cameraBottom
-  );
-
+  renderObjectsList(ctx, backgroundObjects, cameraLeft, cameraTop, effectiveWidth, effectiveHeight, cameraRight, cameraBottom);
   renderPlayers(ctx, gameState, cameraLeft, cameraTop, effectiveHeight);
-
-  renderObjectsList(
-    ctx,
-    foregroundObjects,
-    cameraLeft,
-    cameraTop,
-    effectiveWidth,
-    effectiveHeight,
-    cameraRight,
-    cameraBottom
-  );
+  renderObjectsList(ctx, foregroundObjects, cameraLeft, cameraTop, effectiveWidth, effectiveHeight, cameraRight, cameraBottom);
 
   if (gameState.debugCollisions) {
     renderDebugHitboxes(ctx, gameState, cameraLeft, cameraTop, effectiveHeight);
   }
 
-  // Restore transform before drawing UI elements
   ctx.restore();
 
-  // Draw coordinate overlay near mouse cursor (not affected by zoom)
   if (gameState.showCoordinates) {
     renderMouseCoordinates(ctx, gameState);
   }
 
-  // Draw free cam indicator (not affected by zoom)
   if (gameState.freeCamMode) {
     renderFreeCamIndicator(ctx, viewportWidth, gameState.freeCamZoom);
   }
@@ -205,15 +169,9 @@ function renderGrid(
   ctx.fillStyle = MAP_GRID_COLOR;
 
   const startGridX = Math.max(0, Math.floor(cameraLeft / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
-  const endGridX = Math.min(
-    MAP_WIDTH,
-    Math.ceil(cameraRight / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE
-  );
+  const endGridX = Math.min(MAP_WIDTH, Math.ceil(cameraRight / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
   const startGridY = Math.max(0, Math.floor(cameraTop / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
-  const endGridY = Math.min(
-    MAP_HEIGHT,
-    Math.ceil(cameraBottom / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE
-  );
+  const endGridY = Math.min(MAP_HEIGHT, Math.ceil(cameraBottom / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
 
   for (let x = startGridX; x <= endGridX; x += MAP_GRID_CELL_SIZE) {
     for (let y = startGridY; y <= endGridY; y += MAP_GRID_CELL_SIZE) {
@@ -233,11 +191,11 @@ function renderObjectsList(
   ctx: CanvasRenderingContext2D,
   objects: RenderableObject[],
   cameraLeft: number,
-  cameraTop: number, // Min Y
+  cameraTop: number,
   viewportWidth: number,
   viewportHeight: number,
   cameraRight: number,
-  cameraBottom: number // Max Y
+  cameraBottom: number
 ) {
   objects.forEach((obj: RenderableObject) => {
     const isVisible =

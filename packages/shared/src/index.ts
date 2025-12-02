@@ -36,11 +36,10 @@ export type RawStaticObject = {
   width: number;
   height: number;
   renderStyle: RenderStyle;
-  isCollision?: boolean; 
-  zIndex?: number; 
+  isCollision?: boolean;
+  zIndex?: number;
 };
 
-/** Runtime format with polygon for collision/rendering */
 export type StaticObject = {
   id: string;
   polygon: Point[];
@@ -49,7 +48,6 @@ export type StaticObject = {
   zIndex: number;
 };
 
-/** Converts a raw object (position + dimensions) to polygon format */
 function rawToPolygon(raw: RawStaticObject): StaticObject {
   const [cx, cy] = raw.position;
   const halfW = raw.width / 2;
@@ -58,14 +56,14 @@ function rawToPolygon(raw: RawStaticObject): StaticObject {
   return {
     id: raw.id,
     polygon: [
-      [cx - halfW, cy - halfH], // bottom-left
-      [cx + halfW, cy - halfH], // bottom-right
-      [cx + halfW, cy + halfH], // top-right
-      [cx - halfW, cy + halfH], // top-left
+      [cx - halfW, cy - halfH],
+      [cx + halfW, cy - halfH],
+      [cx + halfW, cy + halfH],
+      [cx - halfW, cy + halfH],
     ],
     renderStyle: raw.renderStyle,
-    isCollision: raw.isCollision !== false, // defaults to true
-    zIndex: raw.zIndex ?? 0, // defaults to 0 (behind player)
+    isCollision: raw.isCollision !== false,
+    zIndex: raw.zIndex ?? 0,
   };
 }
 
@@ -88,7 +86,6 @@ export type ServerMessage =
   | { type: 'chat'; message: string; from?: string }
   | { type: 'snapshot'; players: PlayerData[]; timestamp: number; serverTick: number };
 
-/** Static objects converted from JSON (position/width/height) to polygon format */
 export const STATIC_OBJECTS: StaticObject[] = (objectsData.objects as RawStaticObject[]).map(rawToPolygon);
 
 export {
