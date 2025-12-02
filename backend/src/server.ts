@@ -50,6 +50,7 @@ export const createServer = () => {
         let finalY = newY;
 
         for (const obj of STATIC_OBJECTS) {
+          if (!obj.isCollision) continue;
           const newCenter: Point = [finalX, finalY];
 
           if (circlePolygonCollision(newCenter, PLAYER_RADIUS, obj.polygon)) {

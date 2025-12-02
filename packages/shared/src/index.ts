@@ -28,11 +28,46 @@ export type Point = [number, number];
 
 export type RenderStyle = 'stone-wall' | 'wooden-barrier' | 'metal';
 
+export const PLAYER_Z_INDEX = 50;
+
+export type RawStaticObject = {
+  id: string;
+  position: Point;
+  width: number;
+  height: number;
+  renderStyle: RenderStyle;
+  isCollision?: boolean; 
+  zIndex?: number; 
+};
+
+/** Runtime format with polygon for collision/rendering */
 export type StaticObject = {
   id: string;
   polygon: Point[];
   renderStyle: RenderStyle;
+  isCollision: boolean;
+  zIndex: number;
 };
+
+/** Converts a raw object (position + dimensions) to polygon format */
+function rawToPolygon(raw: RawStaticObject): StaticObject {
+  const [cx, cy] = raw.position;
+  const halfW = raw.width / 2;
+  const halfH = raw.height / 2;
+
+  return {
+    id: raw.id,
+    polygon: [
+      [cx - halfW, cy - halfH], // bottom-left
+      [cx + halfW, cy - halfH], // bottom-right
+      [cx + halfW, cy + halfH], // top-right
+      [cx - halfW, cy + halfH], // top-left
+    ],
+    renderStyle: raw.renderStyle,
+    isCollision: raw.isCollision !== false, // defaults to true
+    zIndex: raw.zIndex ?? 0, // defaults to 0 (behind player)
+  };
+}
 
 export type PlayerData = {
   id: string;
@@ -52,7 +87,9 @@ export type ServerMessage =
   | { type: 'tick'; timestamp: number }
   | { type: 'chat'; message: string; from?: string }
   | { type: 'snapshot'; players: PlayerData[]; timestamp: number; serverTick: number };
-export const STATIC_OBJECTS: StaticObject[] = objectsData.objects as StaticObject[];
+
+/** Static objects converted from JSON (position/width/height) to polygon format */
+export const STATIC_OBJECTS: StaticObject[] = (objectsData.objects as RawStaticObject[]).map(rawToPolygon);
 
 export {
   pointInPolygon,

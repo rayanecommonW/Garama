@@ -9,6 +9,7 @@ import {
   MAP_HEIGHT,
   DEBUG_HITBOX_COLOR,
   DEBUG_PLAYER_HITBOX_COLOR,
+  PLAYER_Z_INDEX,
 } from '@garama/shared';
 
 import type { GameStateType, RenderableObject } from './gameState';
@@ -38,9 +39,16 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
 
   renderGrid(ctx, cameraLeft, cameraTop, cameraRight, cameraBottom, viewportWidth, viewportHeight);
 
-  renderObjects(
+  const backgroundObjects = gameState.objects.filter((obj) => obj.zIndex < PLAYER_Z_INDEX);
+  const foregroundObjects = gameState.objects.filter((obj) => obj.zIndex >= PLAYER_Z_INDEX);
+
+  // Sort each layer by z-index
+  backgroundObjects.sort((a, b) => a.zIndex - b.zIndex);
+  foregroundObjects.sort((a, b) => a.zIndex - b.zIndex);
+
+  renderObjectsList(
     ctx,
-    gameState,
+    backgroundObjects,
     cameraLeft,
     cameraTop,
     viewportWidth,
@@ -50,6 +58,17 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
   );
 
   renderPlayers(ctx, gameState, cameraLeft, cameraTop, viewportHeight);
+
+  renderObjectsList(
+    ctx,
+    foregroundObjects,
+    cameraLeft,
+    cameraTop,
+    viewportWidth,
+    viewportHeight,
+    cameraRight,
+    cameraBottom
+  );
 
   if (gameState.debugCollisions) {
     renderDebugHitboxes(ctx, gameState, cameraLeft, cameraTop, viewportHeight);
@@ -180,9 +199,9 @@ function renderGrid(
   }
 }
 
-function renderObjects(
+function renderObjectsList(
   ctx: CanvasRenderingContext2D,
-  gameState: GameStateType,
+  objects: RenderableObject[],
   cameraLeft: number,
   cameraTop: number, // Min Y
   viewportWidth: number,
@@ -190,7 +209,7 @@ function renderObjects(
   cameraRight: number,
   cameraBottom: number // Max Y
 ) {
-  gameState.objects.forEach((obj: RenderableObject) => {
+  objects.forEach((obj: RenderableObject) => {
     const isVisible =
       obj.boundingBox.maxX >= cameraLeft &&
       obj.boundingBox.minX <= cameraRight &&

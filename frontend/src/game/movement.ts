@@ -66,6 +66,7 @@ function resolveWorldCollisions(x: number, y: number, radius: number, vy: number
   let landed = false;
   let hitCeil = false;
   for (const obj of GameState.objects) {
+    if (!obj.isCollision) continue;
     const center: Point = [fx, fy];
     if (circlePolygonCollision(center, radius, obj.polygon)) {
       const [px, py] = resolveCirclePolygonCollision(center, radius, obj.polygon);
@@ -120,6 +121,7 @@ function hasGroundSupport(x: number, y: number) {
   const topY = y;
   const bottomY = y - GROUND_EPS;
   for (const obj of GameState.objects) {
+    if (!obj.isCollision) continue;
     for (const ox of FOOT_OFFSETS) {
       const px = x + ox;
       if (verticalSegmentIntersectsPolygon(px, topY, bottomY, obj.polygon)) return true;
