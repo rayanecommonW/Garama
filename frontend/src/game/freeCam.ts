@@ -9,11 +9,13 @@ import { GameState } from './gameState';
 // Constants
 // ============================================================================
 
-const FREE_CAM_SPEED = 800; // pixels per second for keyboard movement
-const DRAG_SENSITIVITY = 1; // 1:1 drag movement
+const FREE_CAM_SPEED = 800;
+const DRAG_SENSITIVITY = 1;
+
+// Zoom uses multiplicative scaling for smooth feel
 const ZOOM_MIN = 0.1;
-const ZOOM_MAX = 2;
-const ZOOM_STEP = 0.1;
+const ZOOM_MAX = 3;
+const ZOOM_FACTOR = 1.08; // 8% per scroll step - smooth and precise
 
 // ============================================================================
 // State
@@ -249,11 +251,12 @@ function setupWheelHandler(canvas: HTMLCanvasElement): () => void {
     if (!GameState.freeCamMode) return;
     e.preventDefault();
 
-    if (e.deltaY > 0) {
-      zoomOut();
-    } else {
-      zoomIn();
-    }
+    const rect = canvas.getBoundingClientRect();
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+    const isZoomingIn = e.deltaY < 0;
+
+    applyZoomAtPoint(screenX, screenY, isZoomingIn);
   };
 
   canvas.addEventListener('wheel', handleWheel, { passive: false });
@@ -264,15 +267,47 @@ function setupWheelHandler(canvas: HTMLCanvasElement): () => void {
 }
 
 // ============================================================================
-// Zoom Helpers
+// Zoom Logic
 // ============================================================================
 
-function zoomIn() {
-  GameState.freeCamZoom = Math.min(ZOOM_MAX, GameState.freeCamZoom + ZOOM_STEP);
+/** Applies zoom centered on a screen position */
+function applyZoomAtPoint(screenX: number, screenY: number, isZoomingIn: boolean) {
+  const oldZoom = GameState.freeCamZoom;
+  
+  // Multiplicative zoom for smooth scaling
+  const newZoom = isZoomingIn
+    ? Math.min(ZOOM_MAX, oldZoom * ZOOM_FACTOR)
+    : Math.max(ZOOM_MIN, oldZoom / ZOOM_FACTOR);
+
+  // Skip if no change (at min/max)
+  if (Math.abs(newZoom - oldZoom) < 0.001) return;
+
+  // Calculate world position under cursor before zoom
+  const halfW = GameState.viewportWidth / 2;
+  const halfH = GameState.viewportHeight / 2;
+  const worldX = freeCamX + (screenX - halfW) / oldZoom;
+  const worldY = freeCamY + (halfH - screenY) / oldZoom;
+
+  // Apply new zoom
+  GameState.freeCamZoom = newZoom;
+
+  // Adjust camera so world position stays under cursor
+  freeCamX = worldX - (screenX - halfW) / newZoom;
+  freeCamY = worldY - (halfH - screenY) / newZoom;
 }
 
+/** Zooms in from center (for keyboard) */
+function zoomIn() {
+  const centerX = GameState.viewportWidth / 2;
+  const centerY = GameState.viewportHeight / 2;
+  applyZoomAtPoint(centerX, centerY, true);
+}
+
+/** Zooms out from center (for keyboard) */
 function zoomOut() {
-  GameState.freeCamZoom = Math.max(ZOOM_MIN, GameState.freeCamZoom - ZOOM_STEP);
+  const centerX = GameState.viewportWidth / 2;
+  const centerY = GameState.viewportHeight / 2;
+  applyZoomAtPoint(centerX, centerY, false);
 }
 
 // ============================================================================
