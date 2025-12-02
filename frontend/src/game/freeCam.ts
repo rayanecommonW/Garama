@@ -1,0 +1,294 @@
+/**
+ * Free Camera Module
+ * Handles free camera movement, zoom, and input for level design exploration.
+ */
+
+import { GameState } from './gameState';
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const FREE_CAM_SPEED = 800; // pixels per second for keyboard movement
+const DRAG_SENSITIVITY = 1; // 1:1 drag movement
+const ZOOM_MIN = 0.1;
+const ZOOM_MAX = 2;
+const ZOOM_STEP = 0.1;
+
+// ============================================================================
+// State
+// ============================================================================
+
+let freeCamX = 0;
+let freeCamY = 0;
+
+// Keyboard input state
+const keyboardInput = {
+  up: false,
+  down: false,
+  left: false,
+  right: false,
+};
+
+// Drag state
+let isDragging = false;
+let lastDragX = 0;
+let lastDragY = 0;
+
+// ============================================================================
+// Public API
+// ============================================================================
+
+/** Returns current free cam position */
+export function getFreeCamPosition() {
+  return { x: freeCamX, y: freeCamY };
+}
+
+/** Resets free cam to player position and zoom to 1 */
+export function resetFreeCamToPlayer() {
+  if (GameState.localPlayerId) {
+    const player = GameState.players.get(GameState.localPlayerId);
+    if (player) {
+      freeCamX = player.x;
+      freeCamY = player.y;
+    }
+  }
+  GameState.freeCamZoom = 1;
+  resetInputState();
+}
+
+/** Updates free cam position based on keyboard input */
+export function updateFreeCam(deltaMs: number) {
+  if (!GameState.freeCamMode) return;
+
+  const dtSec = deltaMs / 1000;
+  const speed = FREE_CAM_SPEED / GameState.freeCamZoom; // Faster when zoomed out
+
+  if (keyboardInput.up) freeCamY += speed * dtSec;
+  if (keyboardInput.down) freeCamY -= speed * dtSec;
+  if (keyboardInput.left) freeCamX -= speed * dtSec;
+  if (keyboardInput.right) freeCamX += speed * dtSec;
+}
+
+/** Sets up all event handlers for free cam controls */
+export function setupFreeCamHandlers(canvas: HTMLCanvasElement): () => void {
+  const cleanupMouse = setupMouseHandlers(canvas);
+  const cleanupKeyboard = setupKeyboardHandlers();
+  const cleanupWheel = setupWheelHandler(canvas);
+
+  return () => {
+    cleanupMouse();
+    cleanupKeyboard();
+    cleanupWheel();
+  };
+}
+
+// ============================================================================
+// Mouse Handlers (Drag & Coordinate Tracking)
+// ============================================================================
+
+function setupMouseHandlers(canvas: HTMLCanvasElement): () => void {
+  const handleMouseMove = (e: MouseEvent) => {
+    const rect = canvas.getBoundingClientRect();
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+
+    // Update world coordinates for coordinate display
+    updateMouseWorldCoords(screenX, screenY);
+
+    // Handle dragging
+    if (GameState.freeCamMode && isDragging) {
+      const dx = e.clientX - lastDragX;
+      const dy = e.clientY - lastDragY;
+
+      // Move camera opposite to drag direction, adjusted for zoom
+      freeCamX -= dx / GameState.freeCamZoom * DRAG_SENSITIVITY;
+      freeCamY += dy / GameState.freeCamZoom * DRAG_SENSITIVITY;
+
+      lastDragX = e.clientX;
+      lastDragY = e.clientY;
+    }
+  };
+
+  const handleMouseDown = (e: MouseEvent) => {
+    if (GameState.freeCamMode && e.button === 0) {
+      isDragging = true;
+      lastDragX = e.clientX;
+      lastDragY = e.clientY;
+      canvas.style.cursor = 'grabbing';
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (isDragging) {
+      isDragging = false;
+      if (GameState.freeCamMode) {
+        canvas.style.cursor = 'grab';
+      }
+    }
+  };
+
+  const handleMouseLeave = () => {
+    isDragging = false;
+  };
+
+  canvas.addEventListener('mousemove', handleMouseMove);
+  canvas.addEventListener('mousedown', handleMouseDown);
+  canvas.addEventListener('mouseup', handleMouseUp);
+  canvas.addEventListener('mouseleave', handleMouseLeave);
+
+  return () => {
+    canvas.removeEventListener('mousemove', handleMouseMove);
+    canvas.removeEventListener('mousedown', handleMouseDown);
+    canvas.removeEventListener('mouseup', handleMouseUp);
+    canvas.removeEventListener('mouseleave', handleMouseLeave);
+  };
+}
+
+/** Updates mouse world coordinates based on screen position and zoom */
+function updateMouseWorldCoords(screenX: number, screenY: number) {
+  const zoom = GameState.freeCamZoom;
+  const cameraLeft = GameState.camera.x - GameState.viewportWidth / 2 / zoom;
+  const cameraTop = GameState.camera.y - GameState.viewportHeight / 2 / zoom;
+
+  GameState.mouse.screenX = screenX;
+  GameState.mouse.screenY = screenY;
+  GameState.mouse.worldX = Math.round(cameraLeft + screenX / zoom);
+  GameState.mouse.worldY = Math.round(cameraTop + (GameState.viewportHeight - screenY) / zoom);
+}
+
+// ============================================================================
+// Keyboard Handlers (Arrow Keys & WASD)
+// ============================================================================
+
+function setupKeyboardHandlers(): () => void {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (!GameState.freeCamMode) return;
+
+    // Ignore if typing in input
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+    switch (e.key) {
+      case 'ArrowUp':
+      case 'w':
+      case 'W':
+        keyboardInput.up = true;
+        e.preventDefault();
+        break;
+      case 'ArrowDown':
+      case 's':
+      case 'S':
+        keyboardInput.down = true;
+        e.preventDefault();
+        break;
+      case 'ArrowLeft':
+      case 'a':
+      case 'A':
+        keyboardInput.left = true;
+        e.preventDefault();
+        break;
+      case 'ArrowRight':
+      case 'd':
+      case 'D':
+        keyboardInput.right = true;
+        e.preventDefault();
+        break;
+      case '+':
+      case '=':
+        zoomIn();
+        e.preventDefault();
+        break;
+      case '-':
+      case '_':
+        zoomOut();
+        e.preventDefault();
+        break;
+    }
+  };
+
+  const handleKeyUp = (e: KeyboardEvent) => {
+    switch (e.key) {
+      case 'ArrowUp':
+      case 'w':
+      case 'W':
+        keyboardInput.up = false;
+        break;
+      case 'ArrowDown':
+      case 's':
+      case 'S':
+        keyboardInput.down = false;
+        break;
+      case 'ArrowLeft':
+      case 'a':
+      case 'A':
+        keyboardInput.left = false;
+        break;
+      case 'ArrowRight':
+      case 'd':
+      case 'D':
+        keyboardInput.right = false;
+        break;
+    }
+  };
+
+  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('keyup', handleKeyUp);
+
+  return () => {
+    window.removeEventListener('keydown', handleKeyDown);
+    window.removeEventListener('keyup', handleKeyUp);
+  };
+}
+
+// ============================================================================
+// Wheel Handler (Zoom)
+// ============================================================================
+
+function setupWheelHandler(canvas: HTMLCanvasElement): () => void {
+  const handleWheel = (e: WheelEvent) => {
+    if (!GameState.freeCamMode) return;
+    e.preventDefault();
+
+    if (e.deltaY > 0) {
+      zoomOut();
+    } else {
+      zoomIn();
+    }
+  };
+
+  canvas.addEventListener('wheel', handleWheel, { passive: false });
+
+  return () => {
+    canvas.removeEventListener('wheel', handleWheel);
+  };
+}
+
+// ============================================================================
+// Zoom Helpers
+// ============================================================================
+
+function zoomIn() {
+  GameState.freeCamZoom = Math.min(ZOOM_MAX, GameState.freeCamZoom + ZOOM_STEP);
+}
+
+function zoomOut() {
+  GameState.freeCamZoom = Math.max(ZOOM_MIN, GameState.freeCamZoom - ZOOM_STEP);
+}
+
+// ============================================================================
+// Internal Helpers
+// ============================================================================
+
+function resetInputState() {
+  keyboardInput.up = false;
+  keyboardInput.down = false;
+  keyboardInput.left = false;
+  keyboardInput.right = false;
+  isDragging = false;
+}
+
+/** Returns whether currently dragging */
+export function isDraggingCamera(): boolean {
+  return isDragging;
+}
+

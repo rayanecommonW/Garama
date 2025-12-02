@@ -29,6 +29,13 @@ export interface RenderableObject extends StaticObject {
   };
 }
 
+export type MouseState = {
+  screenX: number;
+  screenY: number;
+  worldX: number;
+  worldY: number;
+};
+
 export type GameStateType = {
   players: Map<string, Player>;
   localPlayerId: string | null;
@@ -37,6 +44,10 @@ export type GameStateType = {
   viewportHeight: number;
   objects: RenderableObject[];
   debugCollisions: boolean;
+  freeCamMode: boolean;
+  freeCamZoom: number;
+  showCoordinates: boolean;
+  mouse: MouseState;
 };
 
 function computeBoundingBox(points: Point[]) {
@@ -66,6 +77,10 @@ export const GameState: GameStateType = {
   viewportHeight: 0,
   objects: objectsWithBounds,
   debugCollisions: false,
+  freeCamMode: false,
+  freeCamZoom: 1,
+  showCoordinates: false,
+  mouse: { screenX: 0, screenY: 0, worldX: 0, worldY: 0 },
 };
 
 export function spawnPlayer(

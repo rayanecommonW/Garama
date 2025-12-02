@@ -13,6 +13,10 @@ type DebugInfoProps = {
   compact?: boolean;
   onToggleCollisions?: () => void;
   collisionsEnabled?: boolean;
+  onToggleFreeCam?: () => void;
+  freeCamEnabled?: boolean;
+  onToggleCoordinates?: () => void;
+  coordinatesEnabled?: boolean;
 };
 
 const colorClasses = {
@@ -30,6 +34,10 @@ export default function DebugInfo({
   compact = false,
   onToggleCollisions,
   collisionsEnabled,
+  onToggleFreeCam,
+  freeCamEnabled,
+  onToggleCoordinates,
+  coordinatesEnabled,
 }: DebugInfoProps) {
   const debugItems: DebugItem[] = Array.isArray(items)
     ? items
@@ -62,18 +70,44 @@ export default function DebugInfo({
         ))}
       </div>
 
-      {onToggleCollisions && (
-        <div className="mt-3 border-t border-slate-700 pt-3">
-          <button
-            onClick={onToggleCollisions}
-            className={`w-full rounded px-3 py-2 text-sm font-medium transition-colors ${
-              collisionsEnabled
-                ? 'bg-red-600 text-white hover:bg-red-700'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            {collisionsEnabled ? 'Hide Hitboxes' : 'Show Hitboxes'}
-          </button>
+      {(onToggleCollisions || onToggleFreeCam || onToggleCoordinates) && (
+        <div className="mt-3 border-t border-slate-700 pt-3 space-y-2">
+          {onToggleCollisions && (
+            <button
+              onClick={onToggleCollisions}
+              className={`w-full rounded px-3 py-2 text-sm font-medium transition-colors ${
+                collisionsEnabled
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
+            >
+              {collisionsEnabled ? '🔲 Hide Hitboxes' : '🔲 Show Hitboxes'}
+            </button>
+          )}
+          {onToggleFreeCam && (
+            <button
+              onClick={onToggleFreeCam}
+              className={`w-full rounded px-3 py-2 text-sm font-medium transition-colors ${
+                freeCamEnabled
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
+            >
+              {freeCamEnabled ? '📷 Exit Free Cam' : '📷 Free Cam Mode'}
+            </button>
+          )}
+          {onToggleCoordinates && (
+            <button
+              onClick={onToggleCoordinates}
+              className={`w-full rounded px-3 py-2 text-sm font-medium transition-colors ${
+                coordinatesEnabled
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
+            >
+              {coordinatesEnabled ? '📍 Hide Coordinates' : '📍 Show Coordinates'}
+            </button>
+          )}
         </div>
       )}
     </div>

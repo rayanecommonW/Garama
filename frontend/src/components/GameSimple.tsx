@@ -3,7 +3,7 @@ import { MAP_WIDTH, MAP_HEIGHT, PLAYER_RADIUS, PLAYER_COLOR } from '@garama/shar
 import { useEffect, useState, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
 
-import { setSocket as setGameLoopSocket, setOnMessageSent } from '../game/gameLoop';
+import { setSocket as setGameLoopSocket, setOnMessageSent, resetFreeCamToPlayer } from '../game/gameLoop';
 import { GameState, spawnPlayer } from '../game/gameState';
 import { type KeyBindings } from '../game/input';
 
@@ -221,6 +221,19 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
             GameState.debugCollisions = !GameState.debugCollisions;
           }}
           collisionsEnabled={GameState.debugCollisions}
+          onToggleFreeCam={() => {
+            const newValue = !GameState.freeCamMode;
+            GameState.freeCamMode = newValue;
+            if (newValue) {
+              // Initialize free cam position to player location
+              resetFreeCamToPlayer();
+            }
+          }}
+          freeCamEnabled={GameState.freeCamMode}
+          onToggleCoordinates={() => {
+            GameState.showCoordinates = !GameState.showCoordinates;
+          }}
+          coordinatesEnabled={GameState.showCoordinates}
         />
       </div>
 
