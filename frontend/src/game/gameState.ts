@@ -1,6 +1,10 @@
-import { STATIC_OBJECTS } from '@garama/shared';
-
-import type { StaticObject, Point } from '@garama/shared';
+import {
+  STATIC_OBJECTS,
+  PLAYER_MAX_HEALTH,
+  type StaticObject,
+  type Point,
+  type AttackDirection,
+} from '@garama/shared';
 
 export type Player = {
   id: string;
@@ -13,6 +17,12 @@ export type Player = {
   jumpHoldMs: number;
   radius: number;
   color: string;
+  hp: number;
+  isDead: boolean;
+  hitFlashMs?: number;
+  attackMsLeft?: number;
+  attackDir?: AttackDirection;
+  facing?: AttackDirection;
 };
 
 export type Camera = {
@@ -105,6 +115,10 @@ export function spawnPlayer(
     jumpHoldMs: 0,
     radius,
     color,
+    hp: PLAYER_MAX_HEALTH,
+    isDead: false,
+    attackMsLeft: 0,
+    facing: 'right',
   };
 
   GameState.players.set(id, player);

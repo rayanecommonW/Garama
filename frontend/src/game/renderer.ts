@@ -8,9 +8,11 @@ import {
   MAP_WIDTH,
   MAP_HEIGHT,
   PLAYER_Z_INDEX,
+  PLAYER_MAX_HEALTH,
 } from '@garama/shared';
 
 import { renderDebugHitboxes, renderFreeCamIndicator, renderMouseCoordinates } from './debugRenderer';
+import { renderSlashVfx } from './slashRenderer';
 
 import type { GameStateType, RenderableObject } from './gameState';
 import type { Point } from '@garama/shared';
@@ -239,10 +241,39 @@ function renderPlayers(
     const screenX = player.x - cameraLeft;
     const screenY = viewportHeight - (player.y - cameraTop);
 
-    ctx.fillStyle = player.color;
+    const isFlashing = (player.hitFlashMs ?? 0) > 0;
+    let fillColor = player.color;
+    if (player.isDead) {
+      fillColor = '#4b5563';
+    } else if (isFlashing) {
+      fillColor = '#ff4d4d';
+    }
+    ctx.fillStyle = fillColor;
     ctx.beginPath();
     ctx.arc(screenX, screenY, player.radius, 0, Math.PI * 2);
     ctx.fill();
+
+    if (player.attackMsLeft && player.attackMsLeft > 0 && player.attackDir) {
+      renderSlashVfx({
+        ctx,
+        originX: screenX,
+        originY: screenY,
+        radius: player.radius,
+        dir: player.attackDir,
+        msLeft: player.attackMsLeft,
+        hitbox: { reach: 60, height: 50 },
+      });
+    }
+
+    const barWidth = player.radius * 2;
+    const hpRatio = Math.max(0, Math.min(1, (player.hp ?? PLAYER_MAX_HEALTH) / PLAYER_MAX_HEALTH));
+    const barX = screenX - barWidth / 2;
+    const barY = screenY - player.radius - 10;
+
+    ctx.fillStyle = '#1f2937';
+    ctx.fillRect(barX, barY, barWidth, 4);
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(barX, barY, barWidth * hpRatio, 4);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = '12px sans-serif';

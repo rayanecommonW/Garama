@@ -14,6 +14,18 @@ export const MAP_HEIGHT = 10000;
 export const PLAYER_RADIUS = 16;
 export const PLAYER_COLOR = '#3b82f6';
 export const PLAYER_SPEED = 700;
+export const PLAYER_MAX_HEALTH = 100;
+export const SWORD_DAMAGE = 20;
+export const SWORD_COOLDOWN_MS = 500;
+export const SWORD_ATTACK = {
+  totalDuration: 18,
+  damage: SWORD_DAMAGE,
+  phases: [
+    { frame: 0, type: 'startup' as const },
+    { frame: 4, type: 'active' as const, rect: { x: 18, y: -10, w: 34, h: 46 } },
+    { frame: 12, type: 'recovery' as const },
+  ],
+};
 
 export const GRAVITY = 3000;
 export const JUMP_INITIAL_SPEED = 2000;
@@ -73,18 +85,25 @@ export type PlayerData = {
   x: number;
   y: number;
   color: string;
+  hp: number;
+  isDead?: boolean;
 };
+
+export type AttackDirection = 'left' | 'right' | 'up' | 'down';
 
 export type ClientMessage =
   | { type: 'ok' }
   | { type: 'chat'; message: string }
   | { type: 'join'; name: string }
-  | { type: 'position'; x: number; y: number };
+  | { type: 'position'; x: number; y: number }
+  | { type: 'attack_start'; direction: AttackDirection; isAirborne: boolean; clientTime: number };
 
 export type ServerMessage =
   | { type: 'tick'; timestamp: number }
   | { type: 'chat'; message: string; from?: string }
-  | { type: 'snapshot'; players: PlayerData[]; timestamp: number; serverTick: number };
+  | { type: 'snapshot'; players: PlayerData[]; timestamp: number; serverTick: number }
+  | { type: 'damage'; targetId: string; hp: number }
+  | { type: 'death'; targetId: string };
 
 export const STATIC_OBJECTS: StaticObject[] = (objectsData.objects as RawStaticObject[]).map(rawToPolygon);
 

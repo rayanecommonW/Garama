@@ -136,11 +136,15 @@ export function updatePlayerMovement(deltaMs: number) {
   if (!GameState.localPlayerId) return;
   const player = GameState.players.get(GameState.localPlayerId) as Player | undefined;
   if (!player) return;
+  if (player.isDead) return;
 
   const dtSec = deltaMs / 1000;
   let dirX = 0;
   if (Input.right) dirX += 1;
   if (Input.left) dirX -= 1;
+
+  if (dirX > 0) player.facing = 'right';
+  else if (dirX < 0) player.facing = 'left';
 
   applyHorizontal(player, dirX);
   applyGravity(player, dtSec);
