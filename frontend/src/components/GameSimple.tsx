@@ -99,6 +99,10 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
               hp: playerData.hp ?? PLAYER_MAX_HEALTH,
               isDead: playerData.isDead ?? false,
               hitFlashMs: 0,
+              dashMsLeft: 0,
+              dashCooldownMs: 0,
+              dashDir: 'right',
+              canAirDash: true,
             });
           }
           const localPlayer = GameState.players.get(playerData.id);
@@ -131,6 +135,10 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
               hp: playerData.hp ?? PLAYER_MAX_HEALTH,
               isDead: playerData.isDead ?? false,
               hitFlashMs: 0,
+              dashMsLeft: 0,
+              dashCooldownMs: 0,
+              dashDir: 'right',
+              canAirDash: true,
             });
           }
         }
