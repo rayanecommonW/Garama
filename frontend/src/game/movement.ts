@@ -14,7 +14,7 @@ import { GameState, type Player } from './gameState';
 import { Input } from './input';
 import { processJump } from './jump';
 
-import type { Point } from '@garama/shared';
+import type { AttackDirection, Point } from '@garama/shared';
 
 const GROUND_EPS = 6;
 const FOOT_OFFSETS = [
@@ -24,6 +24,12 @@ const FOOT_OFFSETS = [
   PLAYER_RADIUS * 0.4,
   PLAYER_RADIUS * 0.8,
 ];
+
+const DASH_SPEED = 1400;
+const DASH_DURATION_MS = 180;
+const DASH_COOLDOWN_MS = 500;
+
+let wasDashDown = false;
 
 function applyHorizontal(
   player: typeof GameState.players extends Map<string, infer P> ? P : never,
@@ -139,15 +145,41 @@ export function updatePlayerMovement(deltaMs: number) {
   if (player.isDead) return;
 
   const dtSec = deltaMs / 1000;
+
+  player.dashCooldownMs = Math.max(0, player.dashCooldownMs - deltaMs);
+
+  const dashEdge = Input.dash && !wasDashDown;
+  const canStartDash = dashEdge && player.dashCooldownMs <= 0 && (player.onGround || player.canAirDash);
+  if (canStartDash) {
+    const dashDir: AttackDirection = player.facing === 'left' ? 'left' : 'right';
+    player.dashDir = dashDir;
+    player.dashMsLeft = DASH_DURATION_MS;
+    player.dashCooldownMs = DASH_COOLDOWN_MS;
+    player.vy = 0;
+    player.vx = (dashDir === 'left' ? -1 : 1) * DASH_SPEED;
+    if (!player.onGround) player.canAirDash = false;
+  }
+
+  const isDashing = player.dashMsLeft > 0;
+  if (isDashing) {
+    player.dashMsLeft = Math.max(0, player.dashMsLeft - deltaMs);
+    player.vx = (player.dashDir === 'left' ? -1 : 1) * DASH_SPEED;
+    player.vy = 0;
+  }
+
   let dirX = 0;
   if (Input.right) dirX += 1;
   if (Input.left) dirX -= 1;
 
-  if (dirX > 0) player.facing = 'right';
-  else if (dirX < 0) player.facing = 'left';
+  if (!isDashing) {
+    if (dirX > 0) player.facing = 'right';
+    else if (dirX < 0) player.facing = 'left';
+  }
 
-  applyHorizontal(player, dirX);
-  applyGravity(player, dtSec);
+  if (!isDashing) {
+    applyHorizontal(player, dirX);
+    applyGravity(player, dtSec);
+  }
 
   const pos = integrate(player, dtSec);
   const clamped = clampToMap(pos.x, pos.y);
@@ -159,12 +191,14 @@ export function updatePlayerMovement(deltaMs: number) {
   if (resolved.landed) {
     player.vy = 0;
     player.onGround = true;
+    player.canAirDash = true;
   }
   if (resolved.hitCeil && player.vy > 0) player.vy = 0;
 
   if (fy <= PLAYER_RADIUS + 1e-3 && player.vy <= 0) {
     player.vy = 0;
     player.onGround = true;
+    player.canAirDash = true;
   }
   if (fy >= MAP_HEIGHT - PLAYER_RADIUS - 1e-3 && player.vy > 0) {
     player.vy = 0;
@@ -173,10 +207,14 @@ export function updatePlayerMovement(deltaMs: number) {
   if (!player.onGround && player.vy <= 0 && hasGroundSupport(fx, fy)) {
     player.vy = 0;
     player.onGround = true;
+    player.canAirDash = true;
   }
 
-  processJump(player, deltaMs);
+  if (!isDashing) {
+    processJump(player, deltaMs);
+  }
 
   player.x = fx;
   player.y = fy;
+  wasDashDown = Input.dash;
 }

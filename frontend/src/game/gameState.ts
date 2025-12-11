@@ -23,6 +23,10 @@ export type Player = {
   attackMsLeft?: number;
   attackDir?: AttackDirection;
   facing?: AttackDirection;
+  dashMsLeft: number;
+  dashCooldownMs: number;
+  dashDir: AttackDirection;
+  canAirDash: boolean;
 };
 
 export type Camera = {
@@ -119,6 +123,10 @@ export function spawnPlayer(
     isDead: false,
     attackMsLeft: 0,
     facing: 'right',
+    dashMsLeft: 0,
+    dashCooldownMs: 0,
+    dashDir: 'right',
+    canAirDash: true,
   };
 
   GameState.players.set(id, player);

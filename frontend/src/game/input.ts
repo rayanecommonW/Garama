@@ -5,6 +5,7 @@ export type InputState = {
   down: boolean;
   up: boolean;
   attack: boolean;
+  dash: boolean;
 };
 
 export const Input: InputState = {
@@ -14,6 +15,7 @@ export const Input: InputState = {
   down: false,
   up: false,
   attack: false,
+  dash: false,
 };
 
 export type KeyBindings = {
@@ -23,6 +25,7 @@ export type KeyBindings = {
   down: string;
   up: string;
   attack: string;
+  dash: string;
 };
 
 export const DEFAULT_KEY_BINDINGS: KeyBindings = {
@@ -32,6 +35,7 @@ export const DEFAULT_KEY_BINDINGS: KeyBindings = {
   down: 's',
   up: 'z',
   attack: 'j',
+  dash: 'k',
 };
 
 export function initInput(bindings: KeyBindings = DEFAULT_KEY_BINDINGS) {
@@ -41,6 +45,7 @@ export function initInput(bindings: KeyBindings = DEFAULT_KEY_BINDINGS) {
   Input.down = false;
   Input.up = false;
   Input.attack = false;
+  Input.dash = false;
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
@@ -72,6 +77,10 @@ export function initInput(bindings: KeyBindings = DEFAULT_KEY_BINDINGS) {
       Input.attack = true;
       event.preventDefault();
     }
+    if (key === bindings.dash.toLowerCase()) {
+      Input.dash = true;
+      event.preventDefault();
+    }
   };
 
   const handleKeyUp = (event: KeyboardEvent) => {
@@ -98,6 +107,10 @@ export function initInput(bindings: KeyBindings = DEFAULT_KEY_BINDINGS) {
     }
     if (key === bindings.attack.toLowerCase()) {
       Input.attack = false;
+      event.preventDefault();
+    }
+    if (key === bindings.dash.toLowerCase()) {
+      Input.dash = false;
       event.preventDefault();
     }
   };

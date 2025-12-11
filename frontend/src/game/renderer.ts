@@ -17,6 +17,8 @@ import { renderSlashVfx } from './slashRenderer';
 import type { GameStateType, RenderableObject } from './gameState';
 import type { Point } from '@garama/shared';
 
+const DASH_TRAIL_DURATION_MS = 180;
+
 export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -241,6 +243,11 @@ function renderPlayers(
     const screenX = player.x - cameraLeft;
     const screenY = viewportHeight - (player.y - cameraTop);
 
+    if (player.dashMsLeft > 0) {
+      const dashDir = player.dashDir === 'left' ? 'left' : 'right';
+      renderDashTrail(ctx, screenX, screenY, player.radius, dashDir, player.dashMsLeft);
+    }
+
     const isFlashing = (player.hitFlashMs ?? 0) > 0;
     let fillColor = player.color;
     if (player.isDead) {
@@ -284,6 +291,34 @@ function renderPlayers(
     const nameY = screenY - player.radius - 4;
     ctx.fillText(player.name, screenX, nameY);
   });
+}
+
+function renderDashTrail(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  dashDir: 'left' | 'right',
+  dashMsLeft: number
+) {
+  const ratio = Math.max(0, Math.min(1, dashMsLeft / DASH_TRAIL_DURATION_MS));
+  const dirSign = dashDir === 'left' ? 1 : -1;
+  const streaks = 3;
+
+  ctx.save();
+  ctx.fillStyle = '#ffffff';
+  for (let i = 0; i < streaks; i++) {
+    const t = (i + 1) / streaks;
+    const offset = (radius * 1.4 + 10 * t) * dirSign;
+    const sizeScale = 1 - i * 0.15;
+    const alpha = 0.35 * ratio * (1 - i * 0.2);
+
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.ellipse(centerX - offset, centerY, radius * sizeScale, radius * 0.7 * sizeScale, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 function renderStoneWall(ctx: CanvasRenderingContext2D, polygon: Point[]) {
