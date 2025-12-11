@@ -11,13 +11,12 @@ import {
   PLAYER_MAX_HEALTH,
 } from '@garama/shared';
 
+import { renderDashTrail } from './dashRenderer';
 import { renderDebugHitboxes, renderFreeCamIndicator, renderMouseCoordinates } from './debugRenderer';
 import { renderSlashVfx } from './slashRenderer';
 
 import type { GameStateType, RenderableObject } from './gameState';
 import type { Point } from '@garama/shared';
-
-const DASH_TRAIL_DURATION_MS = 180;
 
 export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType) {
   const ctx = canvas.getContext('2d');
@@ -293,33 +292,6 @@ function renderPlayers(
   });
 }
 
-function renderDashTrail(
-  ctx: CanvasRenderingContext2D,
-  centerX: number,
-  centerY: number,
-  radius: number,
-  dashDir: 'left' | 'right',
-  dashMsLeft: number
-) {
-  const ratio = Math.max(0, Math.min(1, dashMsLeft / DASH_TRAIL_DURATION_MS));
-  const dirSign = dashDir === 'left' ? 1 : -1;
-  const streaks = 3;
-
-  ctx.save();
-  ctx.fillStyle = '#ffffff';
-  for (let i = 0; i < streaks; i++) {
-    const t = (i + 1) / streaks;
-    const offset = (radius * 1.4 + 10 * t) * dirSign;
-    const sizeScale = 1 - i * 0.15;
-    const alpha = 0.35 * ratio * (1 - i * 0.2);
-
-    ctx.globalAlpha = alpha;
-    ctx.beginPath();
-    ctx.ellipse(centerX - offset, centerY, radius * sizeScale, radius * 0.7 * sizeScale, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.restore();
-}
 
 function renderStoneWall(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   ctx.fillStyle = '#6b7280';
