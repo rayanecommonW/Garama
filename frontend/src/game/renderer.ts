@@ -261,7 +261,9 @@ function renderPlayers(
         radius: player.radius,
         dir: player.attackDir,
         msLeft: player.attackMsLeft,
-        hitbox: { reach: 60, height: 50 },
+        bladeLength: 70,
+        bladeBaseWidth: 20,
+        bladeTipWidth: 6,
       });
     }
 

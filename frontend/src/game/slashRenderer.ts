@@ -7,9 +7,21 @@ type SlashParams = {
   radius: number;
   dir: AttackDirection;
   msLeft: number;
-  hitbox: { reach: number; height: number };
+  durationMs?: number;
+  bladeLength?: number;
+  bladeBaseWidth?: number;
+  bladeTipWidth?: number;
 };
 
+const DEFAULT_DURATION_MS = 140;
+const directionRotation: Record<AttackDirection, number> = {
+  right: 0,
+  down: Math.PI / 2,
+  left: Math.PI,
+  up: -Math.PI / 2,
+};
+
+// Renders a sword slash that swings 90 degrees from up toward a forward/down finish.
 export function renderSlashVfx({
   ctx,
   originX,
@@ -17,44 +29,53 @@ export function renderSlashVfx({
   radius,
   dir,
   msLeft,
-  hitbox,
+  durationMs = DEFAULT_DURATION_MS,
+  bladeLength = 70,
+  bladeBaseWidth = 18,
+  bladeTipWidth = 4,
 }: SlashParams) {
-  const duration = 140;
-  const clamped = Math.max(0, Math.min(1, msLeft / duration));
-  if (clamped <= 0) return;
+  const timeRatio = Math.max(0, Math.min(1, msLeft / durationMs));
+  if (timeRatio <= 0) return;
 
-  const reach = hitbox.reach;
-  const height = hitbox.height;
+  const progress = 1 - timeRatio;
+  const rotationOffset = directionRotation[dir] ?? 0;
+  const startAngle = -Math.PI / 2 + rotationOffset;
+  const endAngle = startAngle + Math.PI / 2;
 
-  let centerX = originX + radius + reach / 2;
-  let centerY = originY;
+  const getRotationForProgress = (progressValue: number) => {
+    return startAngle + (endAngle - startAngle) * progressValue;
+  };
 
-  if (dir === 'left') {
-    centerX = originX - radius - reach / 2;
-    centerY = originY;
-  } else if (dir === 'up') {
-    centerX = originX;
-    centerY = originY - radius - height / 2;
-  } else if (dir === 'down') {
-    centerX = originX;
-    centerY = originY + radius + height / 2;
-  }
-
-  const rx = reach / 2;
-  const ry = height / 2;
+  const rotation = getRotationForProgress(progress);
+  const pivotX = originX + Math.cos(rotationOffset) * radius;
+  const pivotY = originY + Math.sin(rotationOffset) * radius;
 
   ctx.save();
-  ctx.translate(centerX, centerY);
-  ctx.globalAlpha = 1;
+  ctx.translate(pivotX, pivotY);
+  ctx.rotate(rotation);
+  ctx.globalAlpha = 0.4 + 0.6 * (1 - progress);
 
-  ctx.fillStyle = '#cbd5e1';
-  ctx.strokeStyle = '#94a3b8';
+  const gradient = ctx.createLinearGradient(0, 0, bladeLength, 0);
+  gradient.addColorStop(0, '#cbd5e1');
+  gradient.addColorStop(0.3, '#e2e8f0');
+  gradient.addColorStop(1, '#94a3b8');
+
+  const halfBase = bladeBaseWidth / 2;
+  const halfTip = Math.max(1, bladeTipWidth / 2);
+
+  ctx.fillStyle = gradient;
+  ctx.strokeStyle = '#475569';
   ctx.lineWidth = 2;
+
   ctx.beginPath();
-  ctx.rect(-rx, -ry, reach, height);
+  ctx.moveTo(0, -halfBase);
+  ctx.lineTo(bladeLength * 0.85, -halfTip);
+  ctx.lineTo(bladeLength, 0);
+  ctx.lineTo(bladeLength * 0.85, halfTip);
+  ctx.lineTo(0, halfBase);
+  ctx.closePath();
+
   ctx.fill();
   ctx.stroke();
-
   ctx.restore();
 }
-
