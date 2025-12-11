@@ -8,6 +8,7 @@ import reactPlugin from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import unusedImports from 'eslint-plugin-unused-imports';
 import prettierConfig from 'eslint-config-prettier';
+import globals from 'globals';
 
 /**
  * Frontend ESLint configuration.
@@ -30,17 +31,8 @@ const eslintConfig = [
         ecmaFeatures: { jsx: true },
       },
       globals: {
-        window: 'readonly',
-        document: 'readonly',
-        console: 'readonly',
-        navigator: 'readonly',
-        performance: 'readonly',
-        setTimeout: 'readonly',
-        clearTimeout: 'readonly',
-        setInterval: 'readonly',
-        clearInterval: 'readonly',
-        requestAnimationFrame: 'readonly',
-        cancelAnimationFrame: 'readonly',
+        ...globals.browser,
+        ...globals.node,
       },
     },
     plugins: {
@@ -62,6 +54,7 @@ const eslintConfig = [
 
       // Disable base rule in favor of TypeScript/unused-imports
       'no-unused-vars': 'off',
+      'no-undef': 'off',
 
       // TypeScript rules (plugin already registered by next/typescript)
       '@typescript-eslint/no-unused-vars': 'off', // Handled by unused-imports
