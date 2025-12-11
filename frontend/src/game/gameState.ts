@@ -1,6 +1,10 @@
-import { STATIC_OBJECTS } from '@garama/shared';
-
-import type { StaticObject, Point } from '@garama/shared';
+import {
+  STATIC_OBJECTS,
+  PLAYER_MAX_HEALTH,
+  type StaticObject,
+  type Point,
+  type AttackDirection,
+} from '@garama/shared';
 
 export type Player = {
   id: string;
@@ -13,6 +17,16 @@ export type Player = {
   jumpHoldMs: number;
   radius: number;
   color: string;
+  hp: number;
+  isDead: boolean;
+  hitFlashMs?: number;
+  attackMsLeft?: number;
+  attackDir?: AttackDirection;
+  facing?: AttackDirection;
+  dashMsLeft: number;
+  dashCooldownMs: number;
+  dashDir: AttackDirection;
+  canAirDash: boolean;
 };
 
 export type Camera = {
@@ -29,6 +43,13 @@ export interface RenderableObject extends StaticObject {
   };
 }
 
+export type MouseState = {
+  screenX: number;
+  screenY: number;
+  worldX: number;
+  worldY: number;
+};
+
 export type GameStateType = {
   players: Map<string, Player>;
   localPlayerId: string | null;
@@ -37,6 +58,10 @@ export type GameStateType = {
   viewportHeight: number;
   objects: RenderableObject[];
   debugCollisions: boolean;
+  freeCamMode: boolean;
+  freeCamZoom: number;
+  showCoordinates: boolean;
+  mouse: MouseState;
 };
 
 function computeBoundingBox(points: Point[]) {
@@ -66,6 +91,10 @@ export const GameState: GameStateType = {
   viewportHeight: 0,
   objects: objectsWithBounds,
   debugCollisions: false,
+  freeCamMode: false,
+  freeCamZoom: 1,
+  showCoordinates: false,
+  mouse: { screenX: 0, screenY: 0, worldX: 0, worldY: 0 },
 };
 
 export function spawnPlayer(
@@ -90,6 +119,14 @@ export function spawnPlayer(
     jumpHoldMs: 0,
     radius,
     color,
+    hp: PLAYER_MAX_HEALTH,
+    isDead: false,
+    attackMsLeft: 0,
+    facing: 'right',
+    dashMsLeft: 0,
+    dashCooldownMs: 0,
+    dashDir: 'right',
+    canAirDash: true,
   };
 
   GameState.players.set(id, player);

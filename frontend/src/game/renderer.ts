@@ -7,10 +7,13 @@ import {
   MAP_OUTSIDE_COLOR,
   MAP_WIDTH,
   MAP_HEIGHT,
-  DEBUG_HITBOX_COLOR,
-  DEBUG_PLAYER_HITBOX_COLOR,
   PLAYER_Z_INDEX,
+  PLAYER_MAX_HEALTH,
 } from '@garama/shared';
+
+import { renderDashTrail } from './dashRenderer';
+import { renderDebugHitboxes, renderFreeCamIndicator, renderMouseCoordinates } from './debugRenderer';
+import { renderSlashVfx } from './slashRenderer';
 
 import type { GameStateType, RenderableObject } from './gameState';
 import type { Point } from '@garama/shared';
@@ -25,53 +28,47 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
   gameState.viewportWidth = viewportWidth;
   gameState.viewportHeight = viewportHeight;
 
-  const cameraLeft = gameState.camera.x - viewportWidth / 2;
-  const cameraTop = gameState.camera.y - viewportHeight / 2;
-  const cameraRight = cameraLeft + viewportWidth;
-  const cameraBottom = cameraTop + viewportHeight;
+  const zoom = gameState.freeCamMode ? gameState.freeCamZoom : 1;
+  const effectiveWidth = viewportWidth / zoom;
+  const effectiveHeight = viewportHeight / zoom;
+
+  const cameraLeft = gameState.camera.x - effectiveWidth / 2;
+  const cameraTop = gameState.camera.y - effectiveHeight / 2;
+  const cameraRight = cameraLeft + effectiveWidth;
+  const cameraBottom = cameraTop + effectiveHeight;
 
   ctx.fillStyle = MAP_OUTSIDE_COLOR;
   ctx.fillRect(0, 0, viewportWidth, viewportHeight);
 
-  renderMapBackground(ctx, cameraLeft, cameraTop, viewportWidth, viewportHeight);
+  ctx.save();
+  ctx.scale(zoom, zoom);
 
-  renderMapBorders(ctx, cameraLeft, cameraTop, viewportWidth, viewportHeight);
-
-  renderGrid(ctx, cameraLeft, cameraTop, cameraRight, cameraBottom, viewportWidth, viewportHeight);
+  renderMapBackground(ctx, cameraLeft, cameraTop, effectiveWidth, effectiveHeight);
+  renderMapBorders(ctx, cameraLeft, cameraTop, effectiveWidth, effectiveHeight);
+  renderGrid(ctx, cameraLeft, cameraTop, cameraRight, cameraBottom, effectiveWidth, effectiveHeight);
 
   const backgroundObjects = gameState.objects.filter((obj) => obj.zIndex < PLAYER_Z_INDEX);
   const foregroundObjects = gameState.objects.filter((obj) => obj.zIndex >= PLAYER_Z_INDEX);
 
-  // Sort each layer by z-index
   backgroundObjects.sort((a, b) => a.zIndex - b.zIndex);
   foregroundObjects.sort((a, b) => a.zIndex - b.zIndex);
 
-  renderObjectsList(
-    ctx,
-    backgroundObjects,
-    cameraLeft,
-    cameraTop,
-    viewportWidth,
-    viewportHeight,
-    cameraRight,
-    cameraBottom
-  );
-
-  renderPlayers(ctx, gameState, cameraLeft, cameraTop, viewportHeight);
-
-  renderObjectsList(
-    ctx,
-    foregroundObjects,
-    cameraLeft,
-    cameraTop,
-    viewportWidth,
-    viewportHeight,
-    cameraRight,
-    cameraBottom
-  );
+  renderObjectsList(ctx, backgroundObjects, cameraLeft, cameraTop, effectiveWidth, effectiveHeight, cameraRight, cameraBottom);
+  renderPlayers(ctx, gameState, cameraLeft, cameraTop, effectiveHeight);
+  renderObjectsList(ctx, foregroundObjects, cameraLeft, cameraTop, effectiveWidth, effectiveHeight, cameraRight, cameraBottom);
 
   if (gameState.debugCollisions) {
-    renderDebugHitboxes(ctx, gameState, cameraLeft, cameraTop, viewportHeight);
+    renderDebugHitboxes(ctx, gameState, cameraLeft, cameraTop, effectiveHeight);
+  }
+
+  ctx.restore();
+
+  if (gameState.showCoordinates) {
+    renderMouseCoordinates(ctx, gameState);
+  }
+
+  if (gameState.freeCamMode) {
+    renderFreeCamIndicator(ctx, viewportWidth, gameState.freeCamZoom);
   }
 }
 
@@ -175,15 +172,9 @@ function renderGrid(
   ctx.fillStyle = MAP_GRID_COLOR;
 
   const startGridX = Math.max(0, Math.floor(cameraLeft / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
-  const endGridX = Math.min(
-    MAP_WIDTH,
-    Math.ceil(cameraRight / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE
-  );
+  const endGridX = Math.min(MAP_WIDTH, Math.ceil(cameraRight / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
   const startGridY = Math.max(0, Math.floor(cameraTop / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
-  const endGridY = Math.min(
-    MAP_HEIGHT,
-    Math.ceil(cameraBottom / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE
-  );
+  const endGridY = Math.min(MAP_HEIGHT, Math.ceil(cameraBottom / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
 
   for (let x = startGridX; x <= endGridX; x += MAP_GRID_CELL_SIZE) {
     for (let y = startGridY; y <= endGridY; y += MAP_GRID_CELL_SIZE) {
@@ -203,11 +194,11 @@ function renderObjectsList(
   ctx: CanvasRenderingContext2D,
   objects: RenderableObject[],
   cameraLeft: number,
-  cameraTop: number, // Min Y
+  cameraTop: number,
   viewportWidth: number,
   viewportHeight: number,
   cameraRight: number,
-  cameraBottom: number // Max Y
+  cameraBottom: number
 ) {
   objects.forEach((obj: RenderableObject) => {
     const isVisible =
@@ -251,10 +242,46 @@ function renderPlayers(
     const screenX = player.x - cameraLeft;
     const screenY = viewportHeight - (player.y - cameraTop);
 
-    ctx.fillStyle = player.color;
+    if (player.dashMsLeft > 0) {
+      const dashDir = player.dashDir === 'left' ? 'left' : 'right';
+      renderDashTrail(ctx, screenX, screenY, player.radius, dashDir, player.dashMsLeft);
+    }
+
+    const isFlashing = (player.hitFlashMs ?? 0) > 0;
+    let fillColor = player.color;
+    if (player.isDead) {
+      fillColor = '#4b5563';
+    } else if (isFlashing) {
+      fillColor = '#ff4d4d';
+    }
+    ctx.fillStyle = fillColor;
     ctx.beginPath();
     ctx.arc(screenX, screenY, player.radius, 0, Math.PI * 2);
     ctx.fill();
+
+    if (player.attackMsLeft && player.attackMsLeft > 0 && player.attackDir) {
+      renderSlashVfx({
+        ctx,
+        originX: screenX,
+        originY: screenY,
+        radius: player.radius,
+        dir: player.attackDir,
+        msLeft: player.attackMsLeft,
+        bladeLength: 70,
+        bladeBaseWidth: 20,
+        bladeTipWidth: 6,
+      });
+    }
+
+    const barWidth = player.radius * 2;
+    const hpRatio = Math.max(0, Math.min(1, (player.hp ?? PLAYER_MAX_HEALTH) / PLAYER_MAX_HEALTH));
+    const barX = screenX - barWidth / 2;
+    const barY = screenY - player.radius - 10;
+
+    ctx.fillStyle = '#1f2937';
+    ctx.fillRect(barX, barY, barWidth, 4);
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(barX, barY, barWidth * hpRatio, 4);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = '12px sans-serif';
@@ -265,56 +292,6 @@ function renderPlayers(
   });
 }
 
-function renderDebugHitboxes(
-  ctx: CanvasRenderingContext2D,
-  gameState: GameStateType,
-  cameraLeft: number,
-  cameraTop: number,
-  viewportHeight: number
-) {
-  ctx.strokeStyle = DEBUG_HITBOX_COLOR;
-  ctx.lineWidth = 2;
-
-  gameState.objects.forEach((obj: RenderableObject) => {
-    const screenPolygon: Point[] = obj.polygon.map(([x, y]: Point) => {
-      const screenX = x - cameraLeft;
-      const screenY = viewportHeight - (y - cameraTop);
-      return [screenX, screenY] as Point;
-    });
-
-    ctx.beginPath();
-    ctx.moveTo(screenPolygon[0][0], screenPolygon[0][1]);
-    for (let i = 1; i < screenPolygon.length; i++) {
-      ctx.lineTo(screenPolygon[i][0], screenPolygon[i][1]);
-    }
-    ctx.closePath();
-    ctx.stroke();
-
-    ctx.fillStyle = DEBUG_HITBOX_COLOR;
-    screenPolygon.forEach(([x, y]) => {
-      ctx.beginPath();
-      ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  });
-
-  ctx.strokeStyle = DEBUG_PLAYER_HITBOX_COLOR;
-  ctx.lineWidth = 2;
-
-  gameState.players.forEach((player) => {
-    const screenX = player.x - cameraLeft;
-    const screenY = viewportHeight - (player.y - cameraTop);
-
-    ctx.beginPath();
-    ctx.arc(screenX, screenY, player.radius, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.fillStyle = DEBUG_PLAYER_HITBOX_COLOR;
-    ctx.beginPath();
-    ctx.arc(screenX, screenY, 3, 0, Math.PI * 2);
-    ctx.fill();
-  });
-}
 
 function renderStoneWall(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   ctx.fillStyle = '#6b7280';

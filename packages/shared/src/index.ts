@@ -14,6 +14,18 @@ export const MAP_HEIGHT = 10000;
 export const PLAYER_RADIUS = 16;
 export const PLAYER_COLOR = '#3b82f6';
 export const PLAYER_SPEED = 700;
+export const PLAYER_MAX_HEALTH = 100;
+export const SWORD_DAMAGE = 20;
+export const SWORD_COOLDOWN_MS = 500;
+export const SWORD_ATTACK = {
+  totalDuration: 18,
+  damage: SWORD_DAMAGE,
+  phases: [
+    { frame: 0, type: 'startup' as const },
+    { frame: 4, type: 'active' as const, rect: { x: 18, y: -10, w: 34, h: 46 } },
+    { frame: 12, type: 'recovery' as const },
+  ],
+};
 
 export const GRAVITY = 3000;
 export const JUMP_INITIAL_SPEED = 2000;
@@ -36,11 +48,10 @@ export type RawStaticObject = {
   width: number;
   height: number;
   renderStyle: RenderStyle;
-  isCollision?: boolean; 
-  zIndex?: number; 
+  isCollision?: boolean;
+  zIndex?: number;
 };
 
-/** Runtime format with polygon for collision/rendering */
 export type StaticObject = {
   id: string;
   polygon: Point[];
@@ -49,7 +60,6 @@ export type StaticObject = {
   zIndex: number;
 };
 
-/** Converts a raw object (position + dimensions) to polygon format */
 function rawToPolygon(raw: RawStaticObject): StaticObject {
   const [cx, cy] = raw.position;
   const halfW = raw.width / 2;
@@ -58,14 +68,14 @@ function rawToPolygon(raw: RawStaticObject): StaticObject {
   return {
     id: raw.id,
     polygon: [
-      [cx - halfW, cy - halfH], // bottom-left
-      [cx + halfW, cy - halfH], // bottom-right
-      [cx + halfW, cy + halfH], // top-right
-      [cx - halfW, cy + halfH], // top-left
+      [cx - halfW, cy - halfH],
+      [cx + halfW, cy - halfH],
+      [cx + halfW, cy + halfH],
+      [cx - halfW, cy + halfH],
     ],
     renderStyle: raw.renderStyle,
-    isCollision: raw.isCollision !== false, // defaults to true
-    zIndex: raw.zIndex ?? 0, // defaults to 0 (behind player)
+    isCollision: raw.isCollision !== false,
+    zIndex: raw.zIndex ?? 0,
   };
 }
 
@@ -75,20 +85,26 @@ export type PlayerData = {
   x: number;
   y: number;
   color: string;
+  hp: number;
+  isDead?: boolean;
 };
+
+export type AttackDirection = 'left' | 'right' | 'up' | 'down';
 
 export type ClientMessage =
   | { type: 'ok' }
   | { type: 'chat'; message: string }
   | { type: 'join'; name: string }
-  | { type: 'position'; x: number; y: number };
+  | { type: 'position'; x: number; y: number }
+  | { type: 'attack_start'; direction: AttackDirection; isAirborne: boolean; clientTime: number };
 
 export type ServerMessage =
   | { type: 'tick'; timestamp: number }
   | { type: 'chat'; message: string; from?: string }
-  | { type: 'snapshot'; players: PlayerData[]; timestamp: number; serverTick: number };
+  | { type: 'snapshot'; players: PlayerData[]; timestamp: number; serverTick: number }
+  | { type: 'damage'; targetId: string; hp: number }
+  | { type: 'death'; targetId: string };
 
-/** Static objects converted from JSON (position/width/height) to polygon format */
 export const STATIC_OBJECTS: StaticObject[] = (objectsData.objects as RawStaticObject[]).map(rawToPolygon);
 
 export {

@@ -1,19 +1,14 @@
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
+import tsParser from '@typescript-eslint/parser';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
+import nextPlugin from '@next/eslint-plugin-next';
 import importPlugin from 'eslint-plugin-import';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
+import reactPlugin from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
 import unusedImports from 'eslint-plugin-unused-imports';
 import prettierConfig from 'eslint-config-prettier';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+import globals from 'globals';
 
 /**
  * Frontend ESLint configuration.
@@ -21,18 +16,33 @@ const compat = new FlatCompat({
  * Configured for a game project where React is mainly used for UI, not game loop.
  */
 const eslintConfig = [
-  js.configs.recommended,
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
-  prettierConfig,
   {
     ignores: ['node_modules/**', '.next/**', 'out/**', 'build/**', 'next-env.d.ts', '*.d.ts'],
   },
+  js.configs.recommended,
+  prettierConfig,
   {
     files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        ecmaFeatures: { jsx: true },
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
     plugins: {
+      '@next/next': nextPlugin,
+      '@typescript-eslint': tsPlugin,
       import: importPlugin,
-      'unused-imports': unusedImports,
       'jsx-a11y': jsxA11y,
+      react: reactPlugin,
+      'react-hooks': reactHooks,
+      'unused-imports': unusedImports,
     },
     settings: {
       react: {
@@ -40,8 +50,11 @@ const eslintConfig = [
       },
     },
     rules: {
+      ...nextPlugin.configs['core-web-vitals'].rules,
+
       // Disable base rule in favor of TypeScript/unused-imports
       'no-unused-vars': 'off',
+      'no-undef': 'off',
 
       // TypeScript rules (plugin already registered by next/typescript)
       '@typescript-eslint/no-unused-vars': 'off', // Handled by unused-imports

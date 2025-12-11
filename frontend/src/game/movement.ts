@@ -10,6 +10,7 @@ import {
   resolveCirclePolygonCollision,
 } from '@garama/shared';
 
+import { updateDash } from './dash';
 import { GameState, type Player } from './gameState';
 import { Input } from './input';
 import { processJump } from './jump';
@@ -136,14 +137,25 @@ export function updatePlayerMovement(deltaMs: number) {
   if (!GameState.localPlayerId) return;
   const player = GameState.players.get(GameState.localPlayerId) as Player | undefined;
   if (!player) return;
+  if (player.isDead) return;
 
   const dtSec = deltaMs / 1000;
+
+  const isDashing = updateDash(player, deltaMs);
+
   let dirX = 0;
   if (Input.right) dirX += 1;
   if (Input.left) dirX -= 1;
 
-  applyHorizontal(player, dirX);
-  applyGravity(player, dtSec);
+  if (!isDashing) {
+    if (dirX > 0) player.facing = 'right';
+    else if (dirX < 0) player.facing = 'left';
+  }
+
+  if (!isDashing) {
+    applyHorizontal(player, dirX);
+    applyGravity(player, dtSec);
+  }
 
   const pos = integrate(player, dtSec);
   const clamped = clampToMap(pos.x, pos.y);
@@ -155,12 +167,14 @@ export function updatePlayerMovement(deltaMs: number) {
   if (resolved.landed) {
     player.vy = 0;
     player.onGround = true;
+    player.canAirDash = true;
   }
   if (resolved.hitCeil && player.vy > 0) player.vy = 0;
 
   if (fy <= PLAYER_RADIUS + 1e-3 && player.vy <= 0) {
     player.vy = 0;
     player.onGround = true;
+    player.canAirDash = true;
   }
   if (fy >= MAP_HEIGHT - PLAYER_RADIUS - 1e-3 && player.vy > 0) {
     player.vy = 0;
@@ -169,9 +183,12 @@ export function updatePlayerMovement(deltaMs: number) {
   if (!player.onGround && player.vy <= 0 && hasGroundSupport(fx, fy)) {
     player.vy = 0;
     player.onGround = true;
+    player.canAirDash = true;
   }
 
-  processJump(player, deltaMs);
+  if (!isDashing) {
+    processJump(player, deltaMs);
+  }
 
   player.x = fx;
   player.y = fy;

@@ -1,9 +1,9 @@
 'use client';
-import { MAP_WIDTH, MAP_HEIGHT, PLAYER_RADIUS, PLAYER_COLOR } from '@garama/shared';
+import { MAP_WIDTH, MAP_HEIGHT, PLAYER_RADIUS, PLAYER_COLOR, PLAYER_MAX_HEALTH } from '@garama/shared';
 import { useEffect, useState, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
 
-import { setSocket as setGameLoopSocket, setOnMessageSent } from '../game/gameLoop';
+import { setSocket as setGameLoopSocket, setOnMessageSent, resetFreeCamToPlayer } from '../game/gameLoop';
 import { GameState, spawnPlayer } from '../game/gameState';
 import { type KeyBindings } from '../game/input';
 
@@ -30,7 +30,10 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isChatFloating, setIsChatFloating] = useState(false);
   const [playerCoords, setPlayerCoords] = useState<{ x: number; y: number } | null>(null);
+  const [localHealth, setLocalHealth] = useState<number>(PLAYER_MAX_HEALTH);
+  const [isDead, setIsDead] = useState<boolean>(false);
   const hasSpawnedRef = useRef(false);
+  const deathDisconnectTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const socketInstance = io(SERVER_URL);
@@ -39,7 +42,7 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
     setOnMessageSent(() => setMessagesSent((prev) => prev + 1));
 
     socketInstance.on('connect', () => {
-      console.log('Connected to server');
+      console.info('Connected to server');
       setIsConnected(true);
 
       socketInstance.emit('join', {
@@ -59,12 +62,14 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
         );
         GameState.localPlayerId = socketInstance.id;
         hasSpawnedRef.current = true;
-        console.log('Player spawned at:', player.x, player.y);
+          setLocalHealth(PLAYER_MAX_HEALTH);
+          setIsDead(false);
+        console.info('Player spawned at:', player.x, player.y);
       }
     });
 
     socketInstance.on('disconnect', () => {
-      console.log('Disconnected from server');
+      console.info('Disconnected from server');
       setIsConnected(false);
     });
 
@@ -91,21 +96,51 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
               jumpHoldMs: 0,
               radius: PLAYER_RADIUS,
               color: playerData.color,
+              hp: playerData.hp ?? PLAYER_MAX_HEALTH,
+              isDead: playerData.isDead ?? false,
+              hitFlashMs: 0,
+              dashMsLeft: 0,
+              dashCooldownMs: 0,
+              dashDir: 'right',
+              canAirDash: true,
             });
           }
+          const localPlayer = GameState.players.get(playerData.id);
+          if (localPlayer) {
+            // Keep client-side prediction for the local player; only sync health/death.
+            localPlayer.hp = playerData.hp ?? localPlayer.hp;
+            localPlayer.isDead = playerData.isDead ?? localPlayer.isDead;
+            setLocalHealth(localPlayer.hp);
+            setIsDead(localPlayer.isDead);
+          }
         } else {
-          GameState.players.set(playerData.id, {
-            id: playerData.id,
-            name: playerData.name,
-            x: playerData.x,
-            y: playerData.y,
-            vx: 0,
-            vy: 0,
-            onGround: false,
-            jumpHoldMs: 0,
-            radius: PLAYER_RADIUS,
-            color: playerData.color,
-          });
+          const existing = GameState.players.get(playerData.id);
+          if (existing) {
+            existing.x = playerData.x;
+            existing.y = playerData.y;
+            existing.hp = playerData.hp ?? existing.hp;
+            existing.isDead = playerData.isDead ?? existing.isDead;
+          } else {
+            GameState.players.set(playerData.id, {
+              id: playerData.id,
+              name: playerData.name,
+              x: playerData.x,
+              y: playerData.y,
+              vx: 0,
+              vy: 0,
+              onGround: false,
+              jumpHoldMs: 0,
+              radius: PLAYER_RADIUS,
+              color: playerData.color,
+              hp: playerData.hp ?? PLAYER_MAX_HEALTH,
+              isDead: playerData.isDead ?? false,
+              hitFlashMs: 0,
+              dashMsLeft: 0,
+              dashCooldownMs: 0,
+              dashDir: 'right',
+              canAirDash: true,
+            });
+          }
         }
       });
 
@@ -121,12 +156,55 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
       setMessagesReceived((prev) => prev + 1);
     });
 
+    socketInstance.on('damage', (msg: ServerMessage & { type: 'damage'; targetId: string; hp: number }) => {
+      const target = GameState.players.get(msg.targetId);
+      if (target) {
+        target.hp = msg.hp;
+        target.hitFlashMs = 200;
+        if (msg.hp <= 0) {
+          target.isDead = true;
+        }
+        if (msg.targetId === GameState.localPlayerId) {
+          setLocalHealth(msg.hp);
+          if (msg.hp <= 0) {
+            setIsDead(true);
+            if (!deathDisconnectTimer.current && socketInstance.connected) {
+              deathDisconnectTimer.current = setTimeout(() => {
+                socketInstance.disconnect();
+                deathDisconnectTimer.current = null;
+              }, 5000);
+            }
+          }
+        }
+      }
+    });
+
+    socketInstance.on('death', (msg: ServerMessage & { type: 'death'; targetId: string }) => {
+      const target = GameState.players.get(msg.targetId);
+      if (target) {
+        target.isDead = true;
+        if (msg.targetId === GameState.localPlayerId) {
+          setIsDead(true);
+          if (!deathDisconnectTimer.current && socketInstance.connected) {
+            deathDisconnectTimer.current = setTimeout(() => {
+              socketInstance.disconnect();
+              deathDisconnectTimer.current = null;
+            }, 5000);
+          }
+        }
+      }
+    });
+
     setSocket(socketInstance);
 
     return () => {
       setSocket(null);
       setGameLoopSocket(null);
       setOnMessageSent(null);
+      if (deathDisconnectTimer.current) {
+        clearTimeout(deathDisconnectTimer.current);
+        deathDisconnectTimer.current = null;
+      }
       socketInstance.disconnect();
     };
   }, [playerName]);
@@ -169,6 +247,12 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
     return () => clearInterval(interval);
   }, []);
 
+  const handleReturnToLobby = () => {
+    socket?.disconnect();
+    setGameLoopSocket(null);
+    window.location.href = '/';
+  };
+
   return (
     <>
       <Map keyBindings={keyBindings} />
@@ -192,6 +276,17 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
             <p>Last tick: {lastTick ? new Date(lastTick).toLocaleTimeString() : 'None'}</p>
           </div>
         </div>
+      </div>
+
+      <div className="fixed top-[84px] left-4 z-50 flex items-center gap-3 text-sm text-slate-100">
+        <span className="font-semibold">HP</span>
+        <div className="h-3 w-44 overflow-hidden rounded bg-slate-700">
+          <div
+            className="h-full bg-red-500 transition-all"
+            style={{ width: `${Math.max(0, (localHealth / PLAYER_MAX_HEALTH) * 100)}%` }}
+          />
+        </div>
+        <span className="w-10 text-right">{localHealth}</span>
       </div>
 
       <div className="fixed right-4 bottom-4 z-40">
@@ -221,6 +316,19 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
             GameState.debugCollisions = !GameState.debugCollisions;
           }}
           collisionsEnabled={GameState.debugCollisions}
+          onToggleFreeCam={() => {
+            const newValue = !GameState.freeCamMode;
+            GameState.freeCamMode = newValue;
+            if (newValue) {
+              // Initialize free cam position to player location
+              resetFreeCamToPlayer();
+            }
+          }}
+          freeCamEnabled={GameState.freeCamMode}
+          onToggleCoordinates={() => {
+            GameState.showCoordinates = !GameState.showCoordinates;
+          }}
+          coordinatesEnabled={GameState.showCoordinates}
         />
       </div>
 
@@ -239,6 +347,19 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
           />
         )}
       </div>
+
+      {isDead && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70 text-white">
+          <h2 className="mb-4 text-3xl font-bold">You died</h2>
+          <p className="mb-6 text-sm text-slate-200">Return to the lobby to respawn.</p>
+          <button
+            onClick={handleReturnToLobby}
+            className="rounded bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-red-500"
+          >
+            Return to lobby
+          </button>
+        </div>
+      )}
     </>
   );
 }
