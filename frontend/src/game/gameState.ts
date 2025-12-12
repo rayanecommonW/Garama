@@ -28,7 +28,6 @@ export type Player = {
   dashCooldownMs: number;
   dashDir: AttackDirection;
   canAirDash: boolean;
-  isSprinting: boolean;
   sprintJumpBoostMsLeft: number;
   sprintJumpBoostDir: -1 | 1;
 };
@@ -156,7 +155,6 @@ export function spawnPlayer(
     dashCooldownMs: 0,
     dashDir: 'right',
     canAirDash: true,
-    isSprinting: false,
     sprintJumpBoostMsLeft: 0,
     sprintJumpBoostDir: 1,
   };
