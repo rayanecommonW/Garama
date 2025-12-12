@@ -19,6 +19,7 @@ export type Player = {
   color: string;
   hp: number;
   isDead: boolean;
+  isSprinting: boolean;
   hitFlashMs?: number;
   attackMsLeft?: number;
   attackDir?: AttackDirection;
@@ -27,7 +28,6 @@ export type Player = {
   dashCooldownMs: number;
   dashDir: AttackDirection;
   canAirDash: boolean;
-  isSprinting: boolean;
   sprintJumpBoostMsLeft: number;
   sprintJumpBoostDir: -1 | 1;
 };
@@ -53,6 +53,21 @@ export type MouseState = {
   worldY: number;
 };
 
+export type NetState = {
+  clockOffsetMs: number;
+  smoothedRttMs: number;
+  interpDelayMs: number;
+  remoteSnapshots: Map<string, RemoteSnapshotSample[]>;
+  lastSnapshotServerTime: number | null;
+  lastSnapshotClientRecvMs: number | null;
+};
+
+export type RemoteSnapshotSample = {
+  serverTime: number;
+  x: number;
+  y: number;
+};
+
 export type GameStateType = {
   players: Map<string, Player>;
   localPlayerId: string | null;
@@ -65,6 +80,7 @@ export type GameStateType = {
   freeCamZoom: number;
   showCoordinates: boolean;
   mouse: MouseState;
+  net: NetState;
 };
 
 function computeBoundingBox(points: Point[]) {
@@ -98,6 +114,14 @@ export const GameState: GameStateType = {
   freeCamZoom: 1,
   showCoordinates: false,
   mouse: { screenX: 0, screenY: 0, worldX: 0, worldY: 0 },
+  net: {
+    clockOffsetMs: 0,
+    smoothedRttMs: 0,
+    interpDelayMs: 120,
+    remoteSnapshots: new Map<string, RemoteSnapshotSample[]>(),
+    lastSnapshotServerTime: null,
+    lastSnapshotClientRecvMs: null,
+  },
 };
 
 export function spawnPlayer(
@@ -124,13 +148,13 @@ export function spawnPlayer(
     color,
     hp: PLAYER_MAX_HEALTH,
     isDead: false,
+    isSprinting: false,
     attackMsLeft: 0,
     facing: 'right',
     dashMsLeft: 0,
     dashCooldownMs: 0,
     dashDir: 'right',
     canAirDash: true,
-    isSprinting: false,
     sprintJumpBoostMsLeft: 0,
     sprintJumpBoostDir: 1,
   };
