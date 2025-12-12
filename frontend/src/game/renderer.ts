@@ -14,6 +14,7 @@ import {
 import { renderDashTrail } from './dashRenderer';
 import { renderDebugHitboxes, renderFreeCamIndicator, renderMouseCoordinates } from './debugRenderer';
 import { renderSlashVfx } from './slashRenderer';
+import { renderSprintDust } from './sprintDust';
 
 import type { GameStateType, RenderableObject } from './gameState';
 import type { Point } from '@garama/shared';
@@ -54,6 +55,7 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
   foregroundObjects.sort((a, b) => a.zIndex - b.zIndex);
 
   renderObjectsList(ctx, backgroundObjects, cameraLeft, cameraTop, effectiveWidth, effectiveHeight, cameraRight, cameraBottom);
+  renderSprintDust(ctx, cameraLeft, cameraTop, effectiveHeight);
   renderPlayers(ctx, gameState, cameraLeft, cameraTop, effectiveHeight);
   renderObjectsList(ctx, foregroundObjects, cameraLeft, cameraTop, effectiveWidth, effectiveHeight, cameraRight, cameraBottom);
 

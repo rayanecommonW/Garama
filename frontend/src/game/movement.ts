@@ -14,6 +14,7 @@ import { updateDash } from './dash';
 import { GameState, type Player } from './gameState';
 import { Input } from './input';
 import { processJump } from './jump';
+import { updateSprint } from './sprint';
 
 import type { Point } from '@garama/shared';
 
@@ -26,15 +27,19 @@ const FOOT_OFFSETS = [
   PLAYER_RADIUS * 0.8,
 ];
 
+const SPRINT_SPEED_MULT = 2;
+const SPRINT_JUMP_BOOST_MS = 180;
+
 function applyHorizontal(
   player: typeof GameState.players extends Map<string, infer P> ? P : never,
-  dirX: number
+  dirX: number,
+  speed: number
 ) {
   if (player.onGround) {
-    player.vx = dirX ? dirX * PLAYER_SPEED : 0;
+    player.vx = dirX ? dirX * speed : 0;
     return;
   }
-  player.vx = dirX ? dirX * PLAYER_SPEED : 0;
+  player.vx = dirX ? dirX * speed : 0;
 }
 
 function applyGravity(
@@ -142,6 +147,12 @@ export function updatePlayerMovement(deltaMs: number) {
   const dtSec = deltaMs / 1000;
 
   const isDashing = updateDash(player, deltaMs);
+  updateSprint(player, deltaMs, isDashing);
+
+  const isAirBoosting = !player.onGround && player.sprintJumpBoostMsLeft > 0;
+  if (isAirBoosting) {
+    player.sprintJumpBoostMsLeft = Math.max(0, player.sprintJumpBoostMsLeft - deltaMs);
+  }
 
   let dirX = 0;
   if (Input.right) dirX += 1;
@@ -153,7 +164,13 @@ export function updatePlayerMovement(deltaMs: number) {
   }
 
   if (!isDashing) {
-    applyHorizontal(player, dirX);
+    const moveSpeed = PLAYER_SPEED * (player.isSprinting && player.onGround ? SPRINT_SPEED_MULT : 1);
+    applyHorizontal(player, dirX, moveSpeed);
+
+    if (isAirBoosting) {
+      player.vx = player.sprintJumpBoostDir * (PLAYER_SPEED * SPRINT_SPEED_MULT);
+    }
+
     applyGravity(player, dtSec);
   }
 
@@ -186,8 +203,27 @@ export function updatePlayerMovement(deltaMs: number) {
     player.canAirDash = true;
   }
 
-  if (!isDashing) {
-    processJump(player, deltaMs);
+  if (!player.onGround) {
+    player.isSprinting = false;
+  } else {
+    player.sprintJumpBoostMsLeft = 0;
+  }
+
+  const canProcessJump = !isDashing || player.onGround;
+  if (canProcessJump) {
+    const wasSprinting = player.isSprinting && player.onGround;
+    const didStartJump = processJump(player, deltaMs, { isSprinting: wasSprinting });
+    if (didStartJump && isDashing) {
+      player.dashMsLeft = 0;
+    }
+    if (didStartJump && wasSprinting) {
+      const boostDir = dirX !== 0 ? (dirX > 0 ? 1 : -1) : player.facing === 'left' ? -1 : 1;
+      player.sprintJumpBoostDir = boostDir;
+      player.sprintJumpBoostMsLeft = SPRINT_JUMP_BOOST_MS;
+    }
+    if (didStartJump) {
+      player.isSprinting = false;
+    }
   }
 
   player.x = fx;
