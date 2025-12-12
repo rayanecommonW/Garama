@@ -6,6 +6,11 @@ import { createPlayer, handlePositionUpdate, players } from './players';
 
 let serverTick = 0;
 
+function getServerTimeMs() {
+  // Return monotonic server time in ms (relative to process start).
+  return process.uptime() * 1000;
+}
+
 export const createServer = () => {
   const port = Number(process.env.PORT) || 3001;
 
@@ -48,6 +53,15 @@ export const createServer = () => {
       });
     });
 
+    socket.on('ping', (msg: ClientMessage & { type: 'ping' }) => {
+      socket.emit('pong', {
+        type: 'pong',
+        clientSendTime: msg.clientSendTime,
+        serverTime: getServerTimeMs(),
+        serverTick,
+      });
+    });
+
     socket.on('ok', (_msg: ClientMessage) => {
       console.info(`Received 'ok' from client ${socket.id}`);
     });
@@ -75,6 +89,7 @@ export const createServer = () => {
         isDead,
       })),
       timestamp: Date.now(),
+      serverTime: getServerTimeMs(),
       serverTick,
     };
 

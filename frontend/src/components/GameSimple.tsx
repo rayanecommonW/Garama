@@ -6,6 +6,7 @@ import { io, type Socket } from 'socket.io-client';
 import { setSocket as setGameLoopSocket, setOnMessageSent, resetFreeCamToPlayer } from '../game/gameLoop';
 import { GameState, spawnPlayer } from '../game/gameState';
 import { type KeyBindings } from '../game/input';
+import { startClockSync } from '../game/net/clockSync';
 
 import Chat from './Chat';
 import DebugInfo from './DebugInfo';
@@ -35,8 +36,20 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
   const hasSpawnedRef = useRef(false);
   const deathDisconnectTimer = useRef<NodeJS.Timeout | null>(null);
 
+  const transportName = (socket as any)?.io?.engine?.transport?.name as string | undefined;
+  const remoteBufferSizes = Array.from(GameState.net.remoteSnapshots.values()).map((buffer) => buffer.length);
+  const remoteBufferStats =
+    remoteBufferSizes.length > 0
+      ? {
+          min: Math.min(...remoteBufferSizes),
+          max: Math.max(...remoteBufferSizes),
+          avg: remoteBufferSizes.reduce((sum, v) => sum + v, 0) / remoteBufferSizes.length,
+        }
+      : null;
+
   useEffect(() => {
     const socketInstance = io(SERVER_URL);
+    let stopClockSync: (() => void) | null = null;
 
     setGameLoopSocket(socketInstance);
     setOnMessageSent(() => setMessagesSent((prev) => prev + 1));
@@ -44,6 +57,9 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
     socketInstance.on('connect', () => {
       console.info('Connected to server');
       setIsConnected(true);
+
+      stopClockSync?.();
+      stopClockSync = startClockSync(socketInstance).stop;
 
       socketInstance.emit('join', {
         type: 'join',
@@ -71,6 +87,8 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
     socketInstance.on('disconnect', () => {
       console.info('Disconnected from server');
       setIsConnected(false);
+      stopClockSync?.();
+      stopClockSync = null;
     });
 
     socketInstance.on('snapshot', (msg: ServerMessage & { type: 'snapshot' }) => {
@@ -79,6 +97,9 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
       setMessagesReceived((prev) => prev + 1);
 
       const currentPlayers = new Set<string>();
+      const maxSamplesPerRemote = 60;
+      GameState.net.lastSnapshotServerTime = msg.serverTime;
+      GameState.net.lastSnapshotClientRecvMs = performance.now();
 
       msg.players.forEach((playerData: PlayerData) => {
         currentPlayers.add(playerData.id);
@@ -98,6 +119,7 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
               color: playerData.color,
               hp: playerData.hp ?? PLAYER_MAX_HEALTH,
               isDead: playerData.isDead ?? false,
+              isSprinting: false,
               hitFlashMs: 0,
               dashMsLeft: 0,
               dashCooldownMs: 0,
@@ -116,8 +138,6 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
         } else {
           const existing = GameState.players.get(playerData.id);
           if (existing) {
-            existing.x = playerData.x;
-            existing.y = playerData.y;
             existing.hp = playerData.hp ?? existing.hp;
             existing.isDead = playerData.isDead ?? existing.isDead;
           } else {
@@ -134,6 +154,7 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
               color: playerData.color,
               hp: playerData.hp ?? PLAYER_MAX_HEALTH,
               isDead: playerData.isDead ?? false,
+              isSprinting: false,
               hitFlashMs: 0,
               dashMsLeft: 0,
               dashCooldownMs: 0,
@@ -141,12 +162,23 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
               canAirDash: true,
             });
           }
+
+          const samples = GameState.net.remoteSnapshots.get(playerData.id) ?? [];
+          if (!GameState.net.remoteSnapshots.has(playerData.id)) {
+            GameState.net.remoteSnapshots.set(playerData.id, samples);
+          }
+
+          samples.push({ serverTime: msg.serverTime, x: playerData.x, y: playerData.y });
+          if (samples.length > maxSamplesPerRemote) {
+            samples.splice(0, samples.length - maxSamplesPerRemote);
+          }
         }
       });
 
       GameState.players.forEach((player, id) => {
         if (!currentPlayers.has(id)) {
           GameState.players.delete(id);
+          GameState.net.remoteSnapshots.delete(id);
         }
       });
     });
@@ -201,6 +233,8 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
       setSocket(null);
       setGameLoopSocket(null);
       setOnMessageSent(null);
+      stopClockSync?.();
+      stopClockSync = null;
       if (deathDisconnectTimer.current) {
         clearTimeout(deathDisconnectTimer.current);
         deathDisconnectTimer.current = null;
@@ -295,6 +329,24 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
           items={[
             { label: 'Socket ID', value: `${socket?.id?.slice(0, 8)}...` },
             { label: 'Server Tick', value: serverTick, color: 'info' },
+            { label: 'Transport', value: transportName ?? 'N/A' },
+            {
+              label: 'RTT (EMA)',
+              value: GameState.net.smoothedRttMs ? `${Math.round(GameState.net.smoothedRttMs)}ms` : '—',
+            },
+            {
+              label: 'Clock Offset',
+              value: GameState.net.smoothedRttMs ? `${Math.round(GameState.net.clockOffsetMs)}ms` : '—',
+            },
+            { label: 'Interp Delay', value: `${Math.round(GameState.net.interpDelayMs)}ms` },
+            {
+              label: 'Remote Buffers',
+              value: remoteBufferStats
+                ? `n=${remoteBufferSizes.length} min=${remoteBufferStats.min} avg=${remoteBufferStats.avg.toFixed(
+                    1
+                  )} max=${remoteBufferStats.max}`
+                : 'n=0',
+            },
             {
               label: 'Connected At',
               value: socket?.connected ? new Date().toLocaleTimeString() : 'N/A',

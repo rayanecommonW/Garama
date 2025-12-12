@@ -96,12 +96,14 @@ export type ClientMessage =
   | { type: 'chat'; message: string }
   | { type: 'join'; name: string }
   | { type: 'position'; x: number; y: number }
-  | { type: 'attack_start'; direction: AttackDirection; isAirborne: boolean; clientTime: number };
+  | { type: 'attack_start'; direction: AttackDirection; isAirborne: boolean; clientTime: number }
+  | { type: 'ping'; clientSendTime: number };
 
 export type ServerMessage =
   | { type: 'tick'; timestamp: number }
   | { type: 'chat'; message: string; from?: string }
-  | { type: 'snapshot'; players: PlayerData[]; timestamp: number; serverTick: number }
+  | { type: 'snapshot'; players: PlayerData[]; timestamp: number; serverTime: number; serverTick: number }
+  | { type: 'pong'; clientSendTime: number; serverTime: number; serverTick: number }
   | { type: 'damage'; targetId: string; hp: number }
   | { type: 'death'; targetId: string };
 

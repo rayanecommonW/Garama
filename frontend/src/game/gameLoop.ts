@@ -5,6 +5,7 @@ import { updateFreeCam, setupFreeCamHandlers, isDraggingCamera } from './freeCam
 import { GameState } from './gameState';
 import { Input } from './input';
 import { updatePlayerMovement } from './movement';
+import { interpolateRemotePlayers } from './net/interpolateRemotePlayers';
 import { renderFrame } from './renderer';
 
 import type { AttackDirection } from '@garama/shared';
@@ -14,10 +15,10 @@ let rafId: number | null = null;
 let isRunning = false;
 let lastTime = 0;
 let socketRef: Socket | null = null;
-let lastPositionUpdate = 0;
 let onMessageSent: (() => void) | null = null;
 let cleanupHandlers: (() => void) | null = null;
 let lastAttackSent = -Infinity;
+let positionSendTimer: number | null = null;
 
 const POSITION_UPDATE_INTERVAL_MS = 50;
 const ATTACK_COOLDOWN_MS = SWORD_COOLDOWN_MS;
@@ -95,7 +96,7 @@ export function startGameLoop(canvas: HTMLCanvasElement) {
 
   isRunning = true;
   lastTime = performance.now();
-  lastPositionUpdate = performance.now();
+  positionSendTimer = window.setInterval(sendPositionUpdate, POSITION_UPDATE_INTERVAL_MS);
 
   cleanupHandlers = setupFreeCamHandlers(canvas);
 
@@ -107,11 +108,7 @@ export function startGameLoop(canvas: HTMLCanvasElement) {
 
     update(deltaTime, canvas);
 
-    if (currentTime - lastPositionUpdate > POSITION_UPDATE_INTERVAL_MS) {
-      sendPositionUpdate();
-      lastPositionUpdate = currentTime;
-    }
-
+    interpolateRemotePlayers(currentTime);
     renderFrame(canvas, GameState);
 
     rafId = requestAnimationFrame(frame);
@@ -126,6 +123,11 @@ export function stopGameLoop() {
   if (rafId !== null) {
     cancelAnimationFrame(rafId);
     rafId = null;
+  }
+
+  if (positionSendTimer !== null) {
+    clearInterval(positionSendTimer);
+    positionSendTimer = null;
   }
 
   if (cleanupHandlers) {
