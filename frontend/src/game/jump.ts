@@ -1,4 +1,10 @@
-import { JUMP_INITIAL_SPEED, JUMP_HOLD_ACCEL, JUMP_MAX_HOLD_MS } from '@garama/shared';
+import {
+  JUMP_INITIAL_SPEED,
+  JUMP_HOLD_ACCEL,
+  JUMP_MAX_HOLD_MS,
+  SPRINT_JUMP_INITIAL_SPEED,
+  SPRINT_JUMP_MAX_HOLD_MS,
+} from '@garama/shared';
 
 import { Input } from './input';
 
@@ -6,9 +12,6 @@ import type { Player } from './gameState';
 
 const COYOTE_TIME_MS = 120;
 const JUMP_BUFFER_MS = 120;
-
-const SPRINT_JUMP_INITIAL_SPEED_MULT = 0.82;
-const SPRINT_JUMP_MAX_HOLD_MS_MULT = 0.6;
 
 let wasJumpDown = false;
 let coyoteMs = 0;
@@ -27,11 +30,9 @@ export function processJump(player: Player, deltaMs: number, options?: ProcessJu
   const canJumpNow = (player.onGround || coyoteMs > 0) && jumpBufferMs > 0;
   if (canJumpNow) {
     const isSprintJump = options?.isSprinting === true;
-    currentMaxHoldMs = isSprintJump
-      ? Math.round(JUMP_MAX_HOLD_MS * SPRINT_JUMP_MAX_HOLD_MS_MULT)
-      : JUMP_MAX_HOLD_MS;
+    currentMaxHoldMs = isSprintJump ? SPRINT_JUMP_MAX_HOLD_MS : JUMP_MAX_HOLD_MS;
 
-    player.vy = isSprintJump ? JUMP_INITIAL_SPEED * SPRINT_JUMP_INITIAL_SPEED_MULT : JUMP_INITIAL_SPEED;
+    player.vy = isSprintJump ? SPRINT_JUMP_INITIAL_SPEED : JUMP_INITIAL_SPEED;
     player.onGround = false;
     player.jumpHoldMs = 0;
     jumpBufferMs = 0;

@@ -11,10 +11,14 @@ export const MAP_OUTSIDE_COLOR = '#1a1a1a';
 export const MAP_HEADER_HEIGHT = 73;
 export const MAP_WIDTH = 10000;
 export const MAP_HEIGHT = 10000;
+
+
 export const PLAYER_RADIUS = 16;
 export const PLAYER_COLOR = '#3b82f6';
 export const PLAYER_SPEED = 700;
 export const PLAYER_MAX_HEALTH = 100;
+
+
 export const SWORD_DAMAGE = 20;
 export const SWORD_COOLDOWN_MS = 500;
 export const SWORD_ATTACK = {
@@ -27,17 +31,23 @@ export const SWORD_ATTACK = {
   ],
 };
 
-export const GRAVITY = 3000;
-export const JUMP_INITIAL_SPEED = 2000;
-export const JUMP_HOLD_ACCEL = 1800;
-export const JUMP_MAX_HOLD_MS = 180;
-export const MAX_FALL_SPEED = 3000;
+export const GRAVITY = 2000;
+export const JUMP_INITIAL_SPEED = 1000;
+export const JUMP_HOLD_ACCEL = 800;
+export const JUMP_MAX_HOLD_MS = 160;
+export const MAX_FALL_SPEED = 2000;
+
+export const SPRINT_JUMP_INITIAL_SPEED_MULT = 0.82;
+export const SPRINT_JUMP_MAX_HOLD_MS_MULT = 0.6;
+
+export const SPRINT_JUMP_INITIAL_SPEED = JUMP_INITIAL_SPEED * SPRINT_JUMP_INITIAL_SPEED_MULT;
+export const SPRINT_JUMP_MAX_HOLD_MS = Math.round(JUMP_MAX_HOLD_MS * SPRINT_JUMP_MAX_HOLD_MS_MULT);
 
 export const DEBUG_HITBOX_COLOR = '#ff0000';
 export const DEBUG_PLAYER_HITBOX_COLOR = '#ffff00';
 
 export type Point = [number, number];
-
+    
 export type RenderStyle = 'stone-wall' | 'wooden-barrier' | 'metal';
 
 export const PLAYER_Z_INDEX = 50;
