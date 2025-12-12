@@ -1,7 +1,8 @@
+import { GameState } from '../gameState';
+
 import type { ClientMessage, ServerMessage } from '@garama/shared';
 import type { Socket } from 'socket.io-client';
 
-import { GameState } from '../gameState';
 
 type PongMessage = ServerMessage & { type: 'pong' };
 
