@@ -125,6 +125,9 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
               dashCooldownMs: 0,
               dashDir: 'right',
               canAirDash: true,
+              isSprinting: false,
+              sprintJumpBoostMsLeft: 0,
+              sprintJumpBoostDir: 1,
             });
           }
           const localPlayer = GameState.players.get(playerData.id);
@@ -160,6 +163,9 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
               dashCooldownMs: 0,
               dashDir: 'right',
               canAirDash: true,
+              isSprinting: false,
+              sprintJumpBoostMsLeft: 0,
+              sprintJumpBoostDir: 1,
             });
           }
 

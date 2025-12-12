@@ -7,6 +7,7 @@ import { Input } from './input';
 import { updatePlayerMovement } from './movement';
 import { interpolateRemotePlayers } from './net/interpolateRemotePlayers';
 import { renderFrame } from './renderer';
+import { updateSprintDust } from './sprintDust';
 
 import type { AttackDirection } from '@garama/shared';
 import type { Socket } from 'socket.io-client';
@@ -142,6 +143,8 @@ function update(deltaMs: number, canvas: HTMLCanvasElement) {
   } else {
     updatePlayerMovement(deltaMs);
   }
+
+  updateSprintDust(deltaMs);
 
   sendAttack(performance.now());
   decayHitFlashes(deltaMs);
