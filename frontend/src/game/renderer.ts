@@ -1,4 +1,7 @@
 import {
+  CHARGED_HITBOX_SCALE,
+  CHARGED_VFX_SCALE,
+  CHARGE_HOLD_MS,
   MAP_GRID_CELL_SIZE,
   MAP_GRID_DOT_SIZE,
   MAP_GRID_COLOR,
@@ -11,6 +14,7 @@ import {
   PLAYER_MAX_HEALTH,
 } from '@garama/shared';
 
+import { CHAT_BUBBLE_FLOAT_PX, CHAT_BUBBLE_HOLD_MS, CHAT_BUBBLE_LIFE_MS } from './chatBubbles';
 import { renderDashTrail } from './dashRenderer';
 import { renderDebugHitboxes, renderFreeCamIndicator, renderMouseCoordinates } from './debugRenderer';
 import { renderSlashVfx } from './slashRenderer';
@@ -19,9 +23,25 @@ import { renderSprintDust } from './sprintDust';
 import type { GameStateType, RenderableObject } from './gameState';
 import type { Point } from '@garama/shared';
 
+function clamp(min: number, value: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function estimateServerNowMs(clientNowMs: number, gameState: GameStateType) {
+  if (gameState.net.smoothedRttMs > 0) {
+    return clientNowMs + gameState.net.clockOffsetMs;
+  }
+  if (gameState.net.lastSnapshotServerTime === null || gameState.net.lastSnapshotClientRecvMs === null) {
+    return null;
+  }
+  return gameState.net.lastSnapshotServerTime + (clientNowMs - gameState.net.lastSnapshotClientRecvMs);
+}
+
 export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
+
+  const nowMs = performance.now();
 
   const viewportWidth = canvas.width;
   const viewportHeight = canvas.height;
@@ -56,7 +76,7 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
 
   renderObjectsList(ctx, backgroundObjects, cameraLeft, cameraTop, effectiveWidth, effectiveHeight, cameraRight, cameraBottom);
   renderSprintDust(ctx, cameraLeft, cameraTop, effectiveHeight);
-  renderPlayers(ctx, gameState, cameraLeft, cameraTop, effectiveHeight);
+  renderPlayers(ctx, gameState, cameraLeft, cameraTop, effectiveHeight, nowMs);
   renderObjectsList(ctx, foregroundObjects, cameraLeft, cameraTop, effectiveWidth, effectiveHeight, cameraRight, cameraBottom);
 
   if (gameState.debugCollisions) {
@@ -238,8 +258,12 @@ function renderPlayers(
   gameState: GameStateType,
   cameraLeft: number,
   cameraTop: number,
-  viewportHeight: number
+  viewportHeight: number,
+  nowMs: number
 ) {
+  const estimatedServerNow = estimateServerNowMs(nowMs, gameState);
+  const chargeParticleStartDelayMs = 250;
+
   gameState.players.forEach((player) => {
     const screenX = player.x - cameraLeft;
     const screenY = viewportHeight - (player.y - cameraTop);
@@ -247,6 +271,95 @@ function renderPlayers(
     if (player.dashMsLeft > 0) {
       const dashDir = player.dashDir === 'left' ? 'left' : 'right';
       renderDashTrail(ctx, screenX, screenY, player.radius, dashDir, player.dashMsLeft);
+    }
+
+    const attackHoldStartedAtServerTime = player.attackHoldStartedAtServerTime ?? null;
+    const hasChargeHold = attackHoldStartedAtServerTime !== null && !player.isDead;
+    const holdMs =
+      hasChargeHold && estimatedServerNow !== null ? Math.max(0, estimatedServerNow - attackHoldStartedAtServerTime) : 0;
+    const chargeProgress = CHARGE_HOLD_MS > 0 ? clamp(0, holdMs / CHARGE_HOLD_MS, 1) : 0;
+
+    if (hasChargeHold && !player.isCharging && holdMs >= chargeParticleStartDelayMs) {
+      const seed = (player.id.charCodeAt(0) ?? 0) + (player.id.charCodeAt(player.id.length - 1) ?? 0);
+      const particleProgress =
+        CHARGE_HOLD_MS > chargeParticleStartDelayMs
+          ? clamp(0, (holdMs - chargeParticleStartDelayMs) / (CHARGE_HOLD_MS - chargeParticleStartDelayMs), 1)
+          : chargeProgress;
+      const particleCount = Math.round(10 + 12 * particleProgress);
+      const spin = nowMs / 350;
+      const outerR = player.radius + 28;
+      const innerR = player.radius + 6;
+      const baseR = outerR - (outerR - innerR) * particleProgress;
+      const fadeOut = clamp(0, (1 - particleProgress) / 0.12, 1);
+
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 10;
+
+      for (let i = 0; i < particleCount; i++) {
+        const a = (i / particleCount) * Math.PI * 2 + spin + seed * 0.01;
+        const wobble = Math.sin(nowMs / 140 + i * 1.7 + seed) * 4;
+        const r = baseR + wobble;
+        const px = screenX + Math.cos(a) * r;
+        const py = screenY + Math.sin(a) * r;
+
+        const pulse = (Math.sin(nowMs / 120 + i * 2.3 + seed) + 1) / 2;
+        const alpha = (0.08 + 0.22 * pulse) * fadeOut;
+        if (alpha <= 0) continue;
+
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.arc(px, py, 1.2 + pulse * 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    if (player.isCharging && !player.isDead) {
+      const seed = (player.id.charCodeAt(0) ?? 0) + (player.id.charCodeAt(player.id.length - 1) ?? 0);
+      const rayCount = 12;
+      const spin = nowMs / 900;
+      const innerR = player.radius + 6;
+
+      ctx.save();
+      ctx.strokeStyle = '#fbbf24';
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 20;
+
+      for (let i = 0; i < rayCount; i++) {
+        const a = (i / rayCount) * Math.PI * 2 + spin + seed * 0.01;
+        const pulse = (Math.sin(nowMs / 160 + i * 1.9 + seed) + 1) / 2;
+        const outerR = player.radius + 44 + pulse * 18;
+
+        const x0 = screenX + Math.cos(a) * outerR;
+        const y0 = screenY + Math.sin(a) * outerR;
+        const x1 = screenX + Math.cos(a) * innerR;
+        const y1 = screenY + Math.sin(a) * innerR;
+
+        ctx.globalAlpha = 0.08 + 0.22 * pulse;
+        ctx.lineWidth = 1 + 3 * pulse;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+      }
+
+      const pulse = (Math.sin(nowMs / 120) + 1) / 2;
+      const glowRadius = player.radius + 6 + pulse * 4;
+
+      ctx.save();
+      ctx.globalAlpha = 0.25 + pulse * 0.25;
+      ctx.fillStyle = '#fbbf24';
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 18 + pulse * 10;
+      ctx.beginPath();
+      ctx.arc(screenX, screenY, glowRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.restore();
     }
 
     const isFlashing = (player.hitFlashMs ?? 0) > 0;
@@ -262,16 +375,23 @@ function renderPlayers(
     ctx.fill();
 
     if (player.attackMsLeft && player.attackMsLeft > 0 && player.attackDir) {
+      const variant = player.attackVariant === 'charged' ? 'charged' : 'normal';
+      const vfxScale = variant === 'charged' ? CHARGED_VFX_SCALE : 1;
+      const slashRadius = variant === 'charged' ? player.radius * CHARGED_HITBOX_SCALE : player.radius;
+      const durationMs = variant === 'charged' ? 220 : 140;
+
       renderSlashVfx({
         ctx,
         originX: screenX,
         originY: screenY,
-        radius: player.radius,
+        radius: slashRadius,
         dir: player.attackDir,
         msLeft: player.attackMsLeft,
-        bladeLength: 70,
-        bladeBaseWidth: 20,
-        bladeTipWidth: 6,
+        variant,
+        durationMs,
+        bladeLength: 70 * vfxScale,
+        bladeBaseWidth: 20 * vfxScale,
+        bladeTipWidth: 6 * vfxScale,
       });
     }
 
@@ -291,7 +411,69 @@ function renderPlayers(
     ctx.textBaseline = 'bottom';
     const nameY = screenY - player.radius - 4;
     ctx.fillText(player.name, screenX, nameY);
+
+    renderChatBubbles(ctx, gameState, player.id, screenX, nameY, nowMs);
   });
+}
+
+function renderChatBubbles(
+  ctx: CanvasRenderingContext2D,
+  gameState: GameStateType,
+  playerId: string,
+  screenX: number,
+  nameBaselineY: number,
+  nowMs: number
+) {
+  const chatState = gameState.chat.get(playerId);
+  if (!chatState || chatState.visible.length === 0) return;
+
+  const fontSizePx = 16;
+  const lineHeightPx = 20;
+  const paddingX = 8;
+  const paddingY = 6;
+  const bubbleGapPx = 4;
+
+  // Position bubbles above the player's name.
+  const baseY = nameBaselineY - 18;
+
+  ctx.save();
+  ctx.font = `${fontSizePx}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+
+  // Draw newest bubble closest to the player, older ones above it.
+  for (let i = chatState.visible.length - 1; i >= 0; i--) {
+    const bubble = chatState.visible[i];
+    if (!bubble) continue;
+
+    const stackIndex = chatState.visible.length - 1 - i;
+    const ageMs = nowMs - bubble.shownAtMs;
+    const moveDurationMs = Math.max(1, CHAT_BUBBLE_LIFE_MS - CHAT_BUBBLE_HOLD_MS);
+    const moveAgeMs = Math.max(0, ageMs - CHAT_BUBBLE_HOLD_MS);
+    const t = clamp(0, moveAgeMs / moveDurationMs, 1);
+    const alpha = ageMs < CHAT_BUBBLE_HOLD_MS ? 1 : 1 - t;
+    if (alpha <= 0) continue;
+
+    const floatUpPx = ageMs < CHAT_BUBBLE_HOLD_MS ? 0 : CHAT_BUBBLE_FLOAT_PX * t;
+    const y = baseY - stackIndex * (lineHeightPx + bubbleGapPx) - floatUpPx;
+
+    const text = bubble.text;
+    const textWidth = ctx.measureText(text).width;
+    const w = textWidth + paddingX * 2;
+    const h = lineHeightPx + paddingY;
+    const rectX = screenX - w / 2;
+    const rectY = y - lineHeightPx - paddingY;
+
+    ctx.globalAlpha = alpha * 0.75;
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(rectX, rectY, w, h);
+
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(text, screenX, y);
+  }
+
+  ctx.restore();
 }
 
 

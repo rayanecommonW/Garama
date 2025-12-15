@@ -3,6 +3,7 @@ import { MAP_WIDTH, MAP_HEIGHT, PLAYER_RADIUS, PLAYER_COLOR, PLAYER_MAX_HEALTH }
 import { useEffect, useState, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
 
+import { enqueueChatMessage, clearPlayerChat } from '../game/chatBubbles';
 import { setSocket as setGameLoopSocket, setOnMessageSent, resetFreeCamToPlayer } from '../game/gameLoop';
 import { GameState, spawnPlayer } from '../game/gameState';
 import { type KeyBindings } from '../game/input';
@@ -31,7 +32,6 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
   const [messagesReceived, setMessagesReceived] = useState(0);
   const [messagesSent, setMessagesSent] = useState(0);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isChatFloating, setIsChatFloating] = useState(false);
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [playerCoords, setPlayerCoords] = useState<{ x: number; y: number } | null>(null);
   const [localHealth, setLocalHealth] = useState<number>(PLAYER_MAX_HEALTH);
@@ -94,6 +94,13 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
       stopClockSync = null;
     });
 
+    socketInstance.on('chat', (msg: ServerMessage & { type: 'chat' }) => {
+      // Render remote players' chat above their character (local sender is handled client-side).
+      if (!msg.from) return;
+      enqueueChatMessage(msg.from, msg.message, performance.now());
+      setMessagesReceived((prev) => prev + 1);
+    });
+
     socketInstance.on('snapshot', (msg: ServerMessage & { type: 'snapshot' }) => {
       setLastTick(msg.timestamp);
       setServerTick(msg.serverTick);
@@ -125,6 +132,9 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
               isDead: playerData.isDead ?? false,
               isSprinting: false,
               hitFlashMs: 0,
+              isCharging: playerData.isCharging ?? false,
+              attackHoldStartedAtServerTime: playerData.attackHoldStartedAtServerTime ?? null,
+              attackVariant: 'normal',
               dashMsLeft: 0,
               dashCooldownMs: 0,
               dashDir: 'right',
@@ -139,6 +149,8 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
             localPlayer.hp = playerData.hp ?? localPlayer.hp;
             localPlayer.score = playerData.score;
             localPlayer.isDead = playerData.isDead ?? localPlayer.isDead;
+            localPlayer.isCharging = playerData.isCharging ?? localPlayer.isCharging ?? false;
+            localPlayer.attackHoldStartedAtServerTime = playerData.attackHoldStartedAtServerTime ?? null;
             setLocalHealth(localPlayer.hp);
             setIsDead(localPlayer.isDead);
           }
@@ -148,6 +160,8 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
             existing.hp = playerData.hp ?? existing.hp;
             existing.score = playerData.score;
             existing.isDead = playerData.isDead ?? existing.isDead;
+            existing.isCharging = playerData.isCharging ?? existing.isCharging ?? false;
+            existing.attackHoldStartedAtServerTime = playerData.attackHoldStartedAtServerTime ?? null;
           } else {
             GameState.players.set(playerData.id, {
               id: playerData.id,
@@ -165,6 +179,9 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
               isDead: playerData.isDead ?? false,
               isSprinting: false,
               hitFlashMs: 0,
+              isCharging: playerData.isCharging ?? false,
+              attackHoldStartedAtServerTime: playerData.attackHoldStartedAtServerTime ?? null,
+              attackVariant: 'normal',
               dashMsLeft: 0,
               dashCooldownMs: 0,
               dashDir: 'right',
@@ -190,8 +207,19 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
         if (!currentPlayers.has(id)) {
           GameState.players.delete(id);
           GameState.net.remoteSnapshots.delete(id);
+          clearPlayerChat(id);
         }
       });
+    });
+
+    socketInstance.on('attack_vfx', (msg: ServerMessage & { type: 'attack_vfx' }) => {
+      setMessagesReceived((prev) => prev + 1);
+      const attacker = GameState.players.get(msg.attackerId);
+      if (!attacker) return;
+
+      attacker.attackMsLeft = msg.isCharged ? 220 : 140;
+      attacker.attackDir = msg.direction;
+      attacker.attackVariant = msg.isCharged ? 'charged' : 'normal';
     });
 
     socketInstance.on('tick', (msg: ServerMessage & { type: 'tick' }) => {
@@ -291,6 +319,15 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
 
     return () => clearInterval(interval);
   }, []);
+
+  const handleSendChatMessage = (text: string) => {
+    if (!socket || !isConnected) return;
+    if (!GameState.localPlayerId) return;
+
+    enqueueChatMessage(GameState.localPlayerId, text, performance.now());
+    socket.emit('chat', { type: 'chat', message: text });
+    setMessagesSent((prev) => prev + 1);
+  };
 
   const handleReturnToLobby = () => {
     socket?.disconnect();
@@ -415,17 +452,12 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
       )}
 
       <div className="fixed top-1/4 left-1/2 z-40 -translate-x-1/2">
-        {(isChatOpen || isChatFloating) && (
+        {isChatOpen && (
           <Chat
             isOpen={isChatOpen}
-            isFloating={isChatFloating}
-            socket={socket}
             isConnected={isConnected}
             onClose={() => setIsChatOpen(false)}
-            onStateChange={(newIsOpen, newIsFloating) => {
-              setIsChatOpen(newIsOpen);
-              setIsChatFloating(newIsFloating);
-            }}
+            onSendMessage={handleSendChatMessage}
           />
         )}
       </div>

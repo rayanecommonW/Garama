@@ -22,6 +22,10 @@ export const PLAYER_MAX_HEALTH = 100;
 export const SWORD_DAMAGE = 20;
 export const SWORD_COOLDOWN_MS = 500;
 export const SCORE_PER_KILL = 1000;
+export const CHARGE_HOLD_MS = 3000;
+export const CHARGED_DAMAGE_MULT = 2;
+export const CHARGED_HITBOX_SCALE = 2;
+export const CHARGED_VFX_SCALE = 5;
 export const SWORD_ATTACK = {
   totalDuration: 18,
   damage: SWORD_DAMAGE,
@@ -99,6 +103,8 @@ export type PlayerData = {
   hp: number;
   score: number;
   isDead?: boolean;
+  isCharging?: boolean;
+  attackHoldStartedAtServerTime?: number | null;
 };
 
 export type AttackDirection = 'left' | 'right' | 'up' | 'down';
@@ -109,13 +115,16 @@ export type ClientMessage =
   | { type: 'join'; name: string }
   | { type: 'position'; x: number; y: number }
   | { type: 'attack_start'; direction: AttackDirection; isAirborne: boolean; clientTime: number }
+  | { type: 'attack_hold_start' }
+  | { type: 'attack_release'; direction: AttackDirection; isAirborne: boolean; clientTime: number }
   | { type: 'ping'; clientSendTime: number };
 
 export type ServerMessage =
   | { type: 'tick'; timestamp: number }
-  | { type: 'chat'; message: string; from?: string }
+  | { type: 'chat'; message: string; from: string }
   | { type: 'snapshot'; players: PlayerData[]; timestamp: number; serverTime: number; serverTick: number }
   | { type: 'pong'; clientSendTime: number; serverTime: number; serverTick: number }
+  | { type: 'attack_vfx'; attackerId: string; direction: AttackDirection; isCharged: boolean }
   | { type: 'damage'; targetId: string; hp: number }
   | { type: 'death'; targetId: string };
 

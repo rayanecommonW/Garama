@@ -1,4 +1,6 @@
 import {
+  CHARGED_DAMAGE_MULT,
+  CHARGED_HITBOX_SCALE,
   PLAYER_RADIUS,
   SWORD_COOLDOWN_MS,
   SWORD_DAMAGE,
@@ -9,9 +11,9 @@ import type { PlayerState } from './players';
 
 type Hitbox = { x: number; y: number; w: number; h: number };
 
-function attackHitbox(origin: PlayerState, direction: AttackDirection): Hitbox {
-  const reach = 60;
-  const height = 50;
+function attackHitbox(origin: PlayerState, direction: AttackDirection, hitboxScale = 1): Hitbox {
+  const reach = 60 * hitboxScale;
+  const height = 50 * hitboxScale;
 
   if (direction === 'right') {
     return { x: origin.x + PLAYER_RADIUS, y: origin.y - height / 2, w: reach, h: height };
@@ -48,12 +50,15 @@ export function resolveAttack(
   attacker: PlayerState,
   direction: AttackDirection,
   isAirborne: boolean,
-  players: Map<string, PlayerState>
+  players: Map<string, PlayerState>,
+  isCharged = false
 ) {
   if (!canStartAttack(attacker, direction, isAirborne)) return [];
 
   attacker.lastAttackAt = Date.now();
-  const hitbox = attackHitbox(attacker, direction);
+  const hitboxScale = isCharged ? CHARGED_HITBOX_SCALE : 1;
+  const damage = isCharged ? SWORD_DAMAGE * CHARGED_DAMAGE_MULT : SWORD_DAMAGE;
+  const hitbox = attackHitbox(attacker, direction, hitboxScale);
 
   const hits: { targetId: string; nextHp: number; isKill: boolean }[] = [];
 
@@ -69,7 +74,7 @@ export function resolveAttack(
 
     if (!overlaps) return;
 
-    const nextHp = Math.max(0, target.hp - SWORD_DAMAGE);
+    const nextHp = Math.max(0, target.hp - damage);
     hits.push({ targetId, nextHp, isKill: nextHp === 0 });
   });
 

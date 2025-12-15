@@ -22,8 +22,11 @@ export type Player = {
   isDead: boolean;
   isSprinting: boolean;
   hitFlashMs?: number;
+  isCharging?: boolean;
+  attackHoldStartedAtServerTime?: number | null;
   attackMsLeft?: number;
   attackDir?: AttackDirection;
+  attackVariant?: 'normal' | 'charged';
   facing?: AttackDirection;
   dashMsLeft: number;
   dashCooldownMs: number;
@@ -69,6 +72,25 @@ export type RemoteSnapshotSample = {
   y: number;
 };
 
+export type ChatBubble = {
+  id: number;
+  text: string;
+  shownAtMs: number;
+};
+
+export type QueuedChatMessage = {
+  id: number;
+  text: string;
+  enqueuedAtMs: number;
+};
+
+export type PlayerChatState = {
+  queue: QueuedChatMessage[];
+  visible: ChatBubble[];
+  nextDequeueAtMs: number;
+  idCounter: number;
+};
+
 export type GameStateType = {
   players: Map<string, Player>;
   localPlayerId: string | null;
@@ -82,6 +104,7 @@ export type GameStateType = {
   showCoordinates: boolean;
   mouse: MouseState;
   net: NetState;
+  chat: Map<string, PlayerChatState>;
 };
 
 function computeBoundingBox(points: Point[]) {
@@ -123,6 +146,7 @@ export const GameState: GameStateType = {
     lastSnapshotServerTime: null,
     lastSnapshotClientRecvMs: null,
   },
+  chat: new Map<string, PlayerChatState>(),
 };
 
 export function spawnPlayer(
@@ -151,7 +175,10 @@ export function spawnPlayer(
     score: 0,
     isDead: false,
     isSprinting: false,
+    isCharging: false,
+    attackHoldStartedAtServerTime: null,
     attackMsLeft: 0,
+    attackVariant: 'normal',
     facing: 'right',
     dashMsLeft: 0,
     dashCooldownMs: 0,

@@ -7,6 +7,7 @@ type SlashParams = {
   radius: number;
   dir: AttackDirection;
   msLeft: number;
+  variant?: 'normal' | 'charged';
   durationMs?: number;
   bladeLength?: number;
   bladeBaseWidth?: number;
@@ -29,6 +30,7 @@ export function renderSlashVfx({
   radius,
   dir,
   msLeft,
+  variant = 'normal',
   durationMs = DEFAULT_DURATION_MS,
   bladeLength = 70,
   bladeBaseWidth = 18,
@@ -40,7 +42,8 @@ export function renderSlashVfx({
   const progress = 1 - timeRatio;
   const rotationOffset = directionRotation[dir] ?? 0;
   const startAngle = -Math.PI / 2 + rotationOffset;
-  const endAngle = startAngle + Math.PI / 2;
+  const swingAngle = variant === 'charged' ? (Math.PI * 3) / 4 : Math.PI / 2;
+  const endAngle = startAngle + swingAngle;
 
   const getRotationForProgress = (progressValue: number) => {
     return startAngle + (endAngle - startAngle) * progressValue;
@@ -56,16 +59,22 @@ export function renderSlashVfx({
   ctx.globalAlpha = 0.4 + 0.6 * (1 - progress);
 
   const gradient = ctx.createLinearGradient(0, 0, bladeLength, 0);
-  gradient.addColorStop(0, '#cbd5e1');
-  gradient.addColorStop(0.3, '#e2e8f0');
-  gradient.addColorStop(1, '#94a3b8');
+  if (variant === 'charged') {
+    gradient.addColorStop(0, '#7f1d1d');
+    gradient.addColorStop(0.3, '#ef4444');
+    gradient.addColorStop(1, '#fecaca');
+  } else {
+    gradient.addColorStop(0, '#cbd5e1');
+    gradient.addColorStop(0.3, '#e2e8f0');
+    gradient.addColorStop(1, '#94a3b8');
+  }
 
   const halfBase = bladeBaseWidth / 2;
   const halfTip = Math.max(1, bladeTipWidth / 2);
 
   ctx.fillStyle = gradient;
-  ctx.strokeStyle = '#475569';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = variant === 'charged' ? '#450a0a' : '#475569';
+  ctx.lineWidth = variant === 'charged' ? 4 : 2;
 
   ctx.beginPath();
   ctx.moveTo(0, -halfBase);
