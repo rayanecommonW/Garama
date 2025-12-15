@@ -1,4 +1,4 @@
-import { TICK_RATE, STATIC_OBJECTS, type ClientMessage, type ServerMessage } from '@garama/shared';
+import { SCORE_PER_KILL, TICK_RATE, STATIC_OBJECTS, type ClientMessage, type ServerMessage } from '@garama/shared';
 import { Server } from 'socket.io';
 
 import { resolveAttack } from './combat';
@@ -46,6 +46,7 @@ export const createServer = () => {
         if (!target) return;
         target.hp = nextHp;
         if (isKill) {
+          attacker.score += SCORE_PER_KILL;
           target.isDead = true;
           io.emit('death', { type: 'death', targetId });
         }
@@ -79,13 +80,14 @@ export const createServer = () => {
   const tickInterval = setInterval(() => {
     const snapshot: ServerMessage = {
       type: 'snapshot',
-      players: Array.from(players.values()).map(({ id, name, x, y, color, hp, isDead }) => ({
+      players: Array.from(players.values()).map(({ id, name, x, y, color, hp, score, isDead }) => ({
         id,
         name,
         x,
         y,
         color,
         hp,
+        score,
         isDead,
       })),
       timestamp: Date.now(),
