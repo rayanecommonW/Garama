@@ -14,6 +14,7 @@ import {
 
 export type PlayerState = PlayerData & {
   lastAttackAt: number;
+  attackHoldStartedAtMs: number | null;
 };
 
 export const players = new Map<string, PlayerState>();
@@ -35,6 +36,7 @@ export function createPlayer(id: string, name: string): PlayerState {
     score: 0,
     isDead: false,
     lastAttackAt: -Infinity,
+    attackHoldStartedAtMs: null,
   };
 }
 

@@ -22,8 +22,11 @@ export type Player = {
   isDead: boolean;
   isSprinting: boolean;
   hitFlashMs?: number;
+  isCharging?: boolean;
+  attackHoldStartedAtServerTime?: number | null;
   attackMsLeft?: number;
   attackDir?: AttackDirection;
+  attackVariant?: 'normal' | 'charged';
   facing?: AttackDirection;
   dashMsLeft: number;
   dashCooldownMs: number;
@@ -172,7 +175,10 @@ export function spawnPlayer(
     score: 0,
     isDead: false,
     isSprinting: false,
+    isCharging: false,
+    attackHoldStartedAtServerTime: null,
     attackMsLeft: 0,
+    attackVariant: 'normal',
     facing: 'right',
     dashMsLeft: 0,
     dashCooldownMs: 0,

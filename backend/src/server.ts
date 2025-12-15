@@ -1,7 +1,7 @@
-import { SCORE_PER_KILL, TICK_RATE, STATIC_OBJECTS, type ClientMessage, type ServerMessage } from '@garama/shared';
+import { CHARGE_HOLD_MS, SCORE_PER_KILL, TICK_RATE, STATIC_OBJECTS, type ClientMessage, type ServerMessage } from '@garama/shared';
 import { Server } from 'socket.io';
 
-import { resolveAttack } from './combat';
+import { canStartAttack, resolveAttack } from './combat';
 import { createPlayer, handlePositionUpdate, players } from './players';
 
 let serverTick = 0;
@@ -35,6 +35,48 @@ export const createServer = () => {
     socket.on('position', (msg: ClientMessage & { type: 'position' }) => {
       const player = players.get(socket.id);
       if (player) handlePositionUpdate(player, msg, STATIC_OBJECTS);
+    });
+
+    socket.on('attack_hold_start', (_msg: ClientMessage & { type: 'attack_hold_start' }) => {
+      const attacker = players.get(socket.id);
+      if (!attacker || attacker.isDead) return;
+
+      attacker.attackHoldStartedAtMs = getServerTimeMs();
+    });
+
+    socket.on('attack_release', (msg: ClientMessage & { type: 'attack_release' }) => {
+      const attacker = players.get(socket.id);
+      if (!attacker || attacker.isDead) return;
+
+      const serverNowMs = getServerTimeMs();
+      const holdStartedAtMs = attacker.attackHoldStartedAtMs;
+      attacker.attackHoldStartedAtMs = null;
+
+      const holdMs = holdStartedAtMs === null ? 0 : serverNowMs - holdStartedAtMs;
+      const isCharged = holdMs >= CHARGE_HOLD_MS;
+
+      if (!canStartAttack(attacker, msg.direction, msg.isAirborne)) return;
+
+      io.emit('attack_vfx', {
+        type: 'attack_vfx',
+        attackerId: attacker.id,
+        direction: msg.direction,
+        isCharged,
+      });
+
+      const hits = resolveAttack(attacker, msg.direction, msg.isAirborne, players, isCharged);
+
+      hits.forEach(({ targetId, nextHp, isKill }) => {
+        const target = players.get(targetId);
+        if (!target) return;
+        target.hp = nextHp;
+        if (isKill) {
+          attacker.score += SCORE_PER_KILL;
+          target.isDead = true;
+          io.emit('death', { type: 'death', targetId });
+        }
+        io.emit('damage', { type: 'damage', targetId, hp: target.hp });
+      });
     });
 
     socket.on('attack_start', (msg: ClientMessage & { type: 'attack_start' }) => {
@@ -84,9 +126,10 @@ export const createServer = () => {
   });
 
   const tickInterval = setInterval(() => {
+    const serverTime = getServerTimeMs();
     const snapshot: ServerMessage = {
       type: 'snapshot',
-      players: Array.from(players.values()).map(({ id, name, x, y, color, hp, score, isDead }) => ({
+      players: Array.from(players.values()).map(({ id, name, x, y, color, hp, score, isDead, attackHoldStartedAtMs }) => ({
         id,
         name,
         x,
@@ -95,9 +138,14 @@ export const createServer = () => {
         hp,
         score,
         isDead,
+        attackHoldStartedAtServerTime: attackHoldStartedAtMs,
+        isCharging:
+          !isDead &&
+          attackHoldStartedAtMs !== null &&
+          serverTime - attackHoldStartedAtMs >= CHARGE_HOLD_MS,
       })),
       timestamp: Date.now(),
-      serverTime: getServerTimeMs(),
+      serverTime,
       serverTick,
     };
 

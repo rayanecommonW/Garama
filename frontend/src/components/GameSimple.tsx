@@ -132,6 +132,9 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
               isDead: playerData.isDead ?? false,
               isSprinting: false,
               hitFlashMs: 0,
+              isCharging: playerData.isCharging ?? false,
+              attackHoldStartedAtServerTime: playerData.attackHoldStartedAtServerTime ?? null,
+              attackVariant: 'normal',
               dashMsLeft: 0,
               dashCooldownMs: 0,
               dashDir: 'right',
@@ -146,6 +149,8 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
             localPlayer.hp = playerData.hp ?? localPlayer.hp;
             localPlayer.score = playerData.score;
             localPlayer.isDead = playerData.isDead ?? localPlayer.isDead;
+            localPlayer.isCharging = playerData.isCharging ?? localPlayer.isCharging ?? false;
+            localPlayer.attackHoldStartedAtServerTime = playerData.attackHoldStartedAtServerTime ?? null;
             setLocalHealth(localPlayer.hp);
             setIsDead(localPlayer.isDead);
           }
@@ -155,6 +160,8 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
             existing.hp = playerData.hp ?? existing.hp;
             existing.score = playerData.score;
             existing.isDead = playerData.isDead ?? existing.isDead;
+            existing.isCharging = playerData.isCharging ?? existing.isCharging ?? false;
+            existing.attackHoldStartedAtServerTime = playerData.attackHoldStartedAtServerTime ?? null;
           } else {
             GameState.players.set(playerData.id, {
               id: playerData.id,
@@ -172,6 +179,9 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
               isDead: playerData.isDead ?? false,
               isSprinting: false,
               hitFlashMs: 0,
+              isCharging: playerData.isCharging ?? false,
+              attackHoldStartedAtServerTime: playerData.attackHoldStartedAtServerTime ?? null,
+              attackVariant: 'normal',
               dashMsLeft: 0,
               dashCooldownMs: 0,
               dashDir: 'right',
@@ -200,6 +210,16 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
           clearPlayerChat(id);
         }
       });
+    });
+
+    socketInstance.on('attack_vfx', (msg: ServerMessage & { type: 'attack_vfx' }) => {
+      setMessagesReceived((prev) => prev + 1);
+      const attacker = GameState.players.get(msg.attackerId);
+      if (!attacker) return;
+
+      attacker.attackMsLeft = 140;
+      attacker.attackDir = msg.direction;
+      attacker.attackVariant = msg.isCharged ? 'charged' : 'normal';
     });
 
     socketInstance.on('tick', (msg: ServerMessage & { type: 'tick' }) => {

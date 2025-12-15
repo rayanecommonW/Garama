@@ -1,5 +1,3 @@
-import { SWORD_COOLDOWN_MS } from '@garama/shared';
-
 import { updateCamera, updateCursor } from './camera';
 import { updateChatBubbles } from './chatBubbles';
 import { updateFreeCam, setupFreeCamHandlers, isDraggingCamera } from './freeCam';
@@ -19,11 +17,11 @@ let lastTime = 0;
 let socketRef: Socket | null = null;
 let onMessageSent: (() => void) | null = null;
 let cleanupHandlers: (() => void) | null = null;
-let lastAttackSent = -Infinity;
 let positionSendTimer: number | null = null;
+let wasAttackHeld = false;
+let hasSentAttackHoldStart = false;
 
 const POSITION_UPDATE_INTERVAL_MS = 50;
-const ATTACK_COOLDOWN_MS = SWORD_COOLDOWN_MS;
 
 export function setSocket(socket: Socket | null) {
   socketRef = socket;
@@ -55,28 +53,41 @@ function resolveAttackDirection(player: { onGround: boolean; vx: number; facing?
   return player.facing ?? (player.vx < 0 ? 'left' : 'right');
 }
 
-function sendAttack(currentTime: number) {
-  if (!socketRef || !GameState.localPlayerId) return;
-  if (!Input.attack) return;
+function handleAttackInput() {
+  const isHeldNow = Input.attack;
+  const pressed = isHeldNow && !wasAttackHeld;
+  const released = !isHeldNow && wasAttackHeld;
+  wasAttackHeld = isHeldNow;
 
+  if (pressed) {
+    hasSentAttackHoldStart = false;
+  }
+
+  if (isHeldNow && !hasSentAttackHoldStart) {
+    if (!socketRef || !GameState.localPlayerId) return;
+    const player = GameState.players.get(GameState.localPlayerId);
+    if (!player || player.isDead) return;
+
+    socketRef.emit('attack_hold_start', { type: 'attack_hold_start' });
+    onMessageSent?.();
+    hasSentAttackHoldStart = true;
+  }
+
+  if (!released) return;
+
+  hasSentAttackHoldStart = false;
+  if (!socketRef || !GameState.localPlayerId) return;
   const player = GameState.players.get(GameState.localPlayerId);
   if (!player || player.isDead) return;
 
-  if (currentTime - lastAttackSent < ATTACK_COOLDOWN_MS) return;
-
   const direction = resolveAttackDirection(player);
-
-  socketRef.emit('attack_start', {
-    type: 'attack_start',
+  socketRef.emit('attack_release', {
+    type: 'attack_release',
     direction,
     isAirborne: !player.onGround,
     clientTime: performance.now(),
   });
   onMessageSent?.();
-  lastAttackSent = currentTime;
-
-  player.attackMsLeft = 140;
-  player.attackDir = direction;
 }
 
 function decayHitFlashes(deltaMs: number) {
@@ -121,6 +132,8 @@ export function startGameLoop(canvas: HTMLCanvasElement) {
 
 export function stopGameLoop() {
   isRunning = false;
+  wasAttackHeld = false;
+  hasSentAttackHoldStart = false;
 
   if (rafId !== null) {
     cancelAnimationFrame(rafId);
@@ -149,7 +162,7 @@ function update(deltaMs: number, canvas: HTMLCanvasElement) {
 
   updateSprintDust(deltaMs);
 
-  sendAttack(nowMs);
+  handleAttackInput();
   updateChatBubbles(nowMs);
   decayHitFlashes(deltaMs);
   decayAttackVfx(deltaMs);

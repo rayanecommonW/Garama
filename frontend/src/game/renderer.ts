@@ -1,4 +1,7 @@
 import {
+  CHARGED_HITBOX_SCALE,
+  CHARGED_VFX_SCALE,
+  CHARGE_HOLD_MS,
   MAP_GRID_CELL_SIZE,
   MAP_GRID_DOT_SIZE,
   MAP_GRID_COLOR,
@@ -22,6 +25,16 @@ import type { Point } from '@garama/shared';
 
 function clamp(min: number, value: number, max: number) {
   return Math.max(min, Math.min(max, value));
+}
+
+function estimateServerNowMs(clientNowMs: number, gameState: GameStateType) {
+  if (gameState.net.smoothedRttMs > 0) {
+    return clientNowMs + gameState.net.clockOffsetMs;
+  }
+  if (gameState.net.lastSnapshotServerTime === null || gameState.net.lastSnapshotClientRecvMs === null) {
+    return null;
+  }
+  return gameState.net.lastSnapshotServerTime + (clientNowMs - gameState.net.lastSnapshotClientRecvMs);
 }
 
 export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType) {
@@ -248,6 +261,8 @@ function renderPlayers(
   viewportHeight: number,
   nowMs: number
 ) {
+  const estimatedServerNow = estimateServerNowMs(nowMs, gameState);
+
   gameState.players.forEach((player) => {
     const screenX = player.x - cameraLeft;
     const screenY = viewportHeight - (player.y - cameraTop);
@@ -255,6 +270,92 @@ function renderPlayers(
     if (player.dashMsLeft > 0) {
       const dashDir = player.dashDir === 'left' ? 'left' : 'right';
       renderDashTrail(ctx, screenX, screenY, player.radius, dashDir, player.dashMsLeft);
+    }
+
+    const attackHoldStartedAtServerTime = player.attackHoldStartedAtServerTime ?? null;
+    const hasChargeHold = attackHoldStartedAtServerTime !== null && !player.isDead;
+    const chargeProgress =
+      hasChargeHold && estimatedServerNow !== null
+        ? clamp(0, (estimatedServerNow - attackHoldStartedAtServerTime) / CHARGE_HOLD_MS, 1)
+        : 0;
+
+    if (hasChargeHold && !player.isCharging) {
+      const seed = (player.id.charCodeAt(0) ?? 0) + (player.id.charCodeAt(player.id.length - 1) ?? 0);
+      const particleCount = Math.round(10 + 12 * chargeProgress);
+      const spin = nowMs / 350;
+      const outerR = player.radius + 28;
+      const innerR = player.radius + 6;
+      const baseR = outerR - (outerR - innerR) * chargeProgress;
+      const fadeOut = clamp(0, (1 - chargeProgress) / 0.12, 1);
+
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 10;
+
+      for (let i = 0; i < particleCount; i++) {
+        const a = (i / particleCount) * Math.PI * 2 + spin + seed * 0.01;
+        const wobble = Math.sin(nowMs / 140 + i * 1.7 + seed) * 4;
+        const r = baseR + wobble;
+        const px = screenX + Math.cos(a) * r;
+        const py = screenY + Math.sin(a) * r;
+
+        const pulse = (Math.sin(nowMs / 120 + i * 2.3 + seed) + 1) / 2;
+        const alpha = (0.08 + 0.22 * pulse) * fadeOut;
+        if (alpha <= 0) continue;
+
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.arc(px, py, 1.2 + pulse * 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    if (player.isCharging && !player.isDead) {
+      const seed = (player.id.charCodeAt(0) ?? 0) + (player.id.charCodeAt(player.id.length - 1) ?? 0);
+      const rayCount = 12;
+      const spin = nowMs / 900;
+      const innerR = player.radius + 6;
+
+      ctx.save();
+      ctx.strokeStyle = '#fbbf24';
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 20;
+
+      for (let i = 0; i < rayCount; i++) {
+        const a = (i / rayCount) * Math.PI * 2 + spin + seed * 0.01;
+        const pulse = (Math.sin(nowMs / 160 + i * 1.9 + seed) + 1) / 2;
+        const outerR = player.radius + 44 + pulse * 18;
+
+        const x0 = screenX + Math.cos(a) * outerR;
+        const y0 = screenY + Math.sin(a) * outerR;
+        const x1 = screenX + Math.cos(a) * innerR;
+        const y1 = screenY + Math.sin(a) * innerR;
+
+        ctx.globalAlpha = 0.08 + 0.22 * pulse;
+        ctx.lineWidth = 1 + 3 * pulse;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+      }
+
+      const pulse = (Math.sin(nowMs / 120) + 1) / 2;
+      const glowRadius = player.radius + 6 + pulse * 4;
+
+      ctx.save();
+      ctx.globalAlpha = 0.25 + pulse * 0.25;
+      ctx.fillStyle = '#fbbf24';
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 18 + pulse * 10;
+      ctx.beginPath();
+      ctx.arc(screenX, screenY, glowRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.restore();
     }
 
     const isFlashing = (player.hitFlashMs ?? 0) > 0;
@@ -270,16 +371,21 @@ function renderPlayers(
     ctx.fill();
 
     if (player.attackMsLeft && player.attackMsLeft > 0 && player.attackDir) {
+      const variant = player.attackVariant === 'charged' ? 'charged' : 'normal';
+      const vfxScale = variant === 'charged' ? CHARGED_VFX_SCALE : 1;
+      const slashRadius = variant === 'charged' ? player.radius * CHARGED_HITBOX_SCALE : player.radius;
+
       renderSlashVfx({
         ctx,
         originX: screenX,
         originY: screenY,
-        radius: player.radius,
+        radius: slashRadius,
         dir: player.attackDir,
         msLeft: player.attackMsLeft,
-        bladeLength: 70,
-        bladeBaseWidth: 20,
-        bladeTipWidth: 6,
+        variant,
+        bladeLength: 70 * vfxScale,
+        bladeBaseWidth: 20 * vfxScale,
+        bladeTipWidth: 6 * vfxScale,
       });
     }
 
