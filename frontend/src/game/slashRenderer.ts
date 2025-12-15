@@ -42,7 +42,8 @@ export function renderSlashVfx({
   const progress = 1 - timeRatio;
   const rotationOffset = directionRotation[dir] ?? 0;
   const startAngle = -Math.PI / 2 + rotationOffset;
-  const endAngle = startAngle + Math.PI / 2;
+  const swingAngle = variant === 'charged' ? (Math.PI * 3) / 4 : Math.PI / 2;
+  const endAngle = startAngle + swingAngle;
 
   const getRotationForProgress = (progressValue: number) => {
     return startAngle + (endAngle - startAngle) * progressValue;

@@ -262,6 +262,7 @@ function renderPlayers(
   nowMs: number
 ) {
   const estimatedServerNow = estimateServerNowMs(nowMs, gameState);
+  const chargeParticleStartDelayMs = 250;
 
   gameState.players.forEach((player) => {
     const screenX = player.x - cameraLeft;
@@ -274,19 +275,22 @@ function renderPlayers(
 
     const attackHoldStartedAtServerTime = player.attackHoldStartedAtServerTime ?? null;
     const hasChargeHold = attackHoldStartedAtServerTime !== null && !player.isDead;
-    const chargeProgress =
-      hasChargeHold && estimatedServerNow !== null
-        ? clamp(0, (estimatedServerNow - attackHoldStartedAtServerTime) / CHARGE_HOLD_MS, 1)
-        : 0;
+    const holdMs =
+      hasChargeHold && estimatedServerNow !== null ? Math.max(0, estimatedServerNow - attackHoldStartedAtServerTime) : 0;
+    const chargeProgress = CHARGE_HOLD_MS > 0 ? clamp(0, holdMs / CHARGE_HOLD_MS, 1) : 0;
 
-    if (hasChargeHold && !player.isCharging) {
+    if (hasChargeHold && !player.isCharging && holdMs >= chargeParticleStartDelayMs) {
       const seed = (player.id.charCodeAt(0) ?? 0) + (player.id.charCodeAt(player.id.length - 1) ?? 0);
-      const particleCount = Math.round(10 + 12 * chargeProgress);
+      const particleProgress =
+        CHARGE_HOLD_MS > chargeParticleStartDelayMs
+          ? clamp(0, (holdMs - chargeParticleStartDelayMs) / (CHARGE_HOLD_MS - chargeParticleStartDelayMs), 1)
+          : chargeProgress;
+      const particleCount = Math.round(10 + 12 * particleProgress);
       const spin = nowMs / 350;
       const outerR = player.radius + 28;
       const innerR = player.radius + 6;
-      const baseR = outerR - (outerR - innerR) * chargeProgress;
-      const fadeOut = clamp(0, (1 - chargeProgress) / 0.12, 1);
+      const baseR = outerR - (outerR - innerR) * particleProgress;
+      const fadeOut = clamp(0, (1 - particleProgress) / 0.12, 1);
 
       ctx.save();
       ctx.fillStyle = '#ffffff';
@@ -374,6 +378,7 @@ function renderPlayers(
       const variant = player.attackVariant === 'charged' ? 'charged' : 'normal';
       const vfxScale = variant === 'charged' ? CHARGED_VFX_SCALE : 1;
       const slashRadius = variant === 'charged' ? player.radius * CHARGED_HITBOX_SCALE : player.radius;
+      const durationMs = variant === 'charged' ? 220 : 140;
 
       renderSlashVfx({
         ctx,
@@ -383,6 +388,7 @@ function renderPlayers(
         dir: player.attackDir,
         msLeft: player.attackMsLeft,
         variant,
+        durationMs,
         bladeLength: 70 * vfxScale,
         bladeBaseWidth: 20 * vfxScale,
         bladeTipWidth: 6 * vfxScale,

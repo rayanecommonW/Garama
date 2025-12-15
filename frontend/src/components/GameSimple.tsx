@@ -217,7 +217,7 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
       const attacker = GameState.players.get(msg.attackerId);
       if (!attacker) return;
 
-      attacker.attackMsLeft = 140;
+      attacker.attackMsLeft = msg.isCharged ? 220 : 140;
       attacker.attackDir = msg.direction;
       attacker.attackVariant = msg.isCharged ? 'charged' : 'normal';
     });
