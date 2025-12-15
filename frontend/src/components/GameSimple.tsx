@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
 
 import { setSocket as setGameLoopSocket, setOnMessageSent, resetFreeCamToPlayer } from '../game/gameLoop';
+import { enqueueChatMessage, clearPlayerChat } from '../game/chatBubbles';
 import { GameState, spawnPlayer } from '../game/gameState';
 import { type KeyBindings } from '../game/input';
 import { startClockSync } from '../game/net/clockSync';
@@ -31,7 +32,6 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
   const [messagesReceived, setMessagesReceived] = useState(0);
   const [messagesSent, setMessagesSent] = useState(0);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isChatFloating, setIsChatFloating] = useState(false);
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [playerCoords, setPlayerCoords] = useState<{ x: number; y: number } | null>(null);
   const [localHealth, setLocalHealth] = useState<number>(PLAYER_MAX_HEALTH);
@@ -92,6 +92,13 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
       setIsConnected(false);
       stopClockSync?.();
       stopClockSync = null;
+    });
+
+    socketInstance.on('chat', (msg: ServerMessage & { type: 'chat' }) => {
+      // Render remote players' chat above their character (local sender is handled client-side).
+      if (!msg.from) return;
+      enqueueChatMessage(msg.from, msg.message, performance.now());
+      setMessagesReceived((prev) => prev + 1);
     });
 
     socketInstance.on('snapshot', (msg: ServerMessage & { type: 'snapshot' }) => {
@@ -190,6 +197,7 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
         if (!currentPlayers.has(id)) {
           GameState.players.delete(id);
           GameState.net.remoteSnapshots.delete(id);
+          clearPlayerChat(id);
         }
       });
     });
@@ -291,6 +299,15 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
 
     return () => clearInterval(interval);
   }, []);
+
+  const handleSendChatMessage = (text: string) => {
+    if (!socket || !isConnected) return;
+    if (!GameState.localPlayerId) return;
+
+    enqueueChatMessage(GameState.localPlayerId, text, performance.now());
+    socket.emit('chat', { type: 'chat', message: text });
+    setMessagesSent((prev) => prev + 1);
+  };
 
   const handleReturnToLobby = () => {
     socket?.disconnect();
@@ -415,17 +432,12 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
       )}
 
       <div className="fixed top-1/4 left-1/2 z-40 -translate-x-1/2">
-        {(isChatOpen || isChatFloating) && (
+        {isChatOpen && (
           <Chat
             isOpen={isChatOpen}
-            isFloating={isChatFloating}
-            socket={socket}
             isConnected={isConnected}
             onClose={() => setIsChatOpen(false)}
-            onStateChange={(newIsOpen, newIsFloating) => {
-              setIsChatOpen(newIsOpen);
-              setIsChatFloating(newIsFloating);
-            }}
+            onSendMessage={handleSendChatMessage}
           />
         )}
       </div>

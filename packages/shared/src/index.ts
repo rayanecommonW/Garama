@@ -113,7 +113,7 @@ export type ClientMessage =
 
 export type ServerMessage =
   | { type: 'tick'; timestamp: number }
-  | { type: 'chat'; message: string; from?: string }
+  | { type: 'chat'; message: string; from: string }
   | { type: 'snapshot'; players: PlayerData[]; timestamp: number; serverTime: number; serverTick: number }
   | { type: 'pong'; clientSendTime: number; serverTime: number; serverTick: number }
   | { type: 'damage'; targetId: string; hp: number }

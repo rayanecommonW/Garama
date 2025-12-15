@@ -1,6 +1,7 @@
 import { SWORD_COOLDOWN_MS } from '@garama/shared';
 
 import { updateCamera, updateCursor } from './camera';
+import { updateChatBubbles } from './chatBubbles';
 import { updateFreeCam, setupFreeCamHandlers, isDraggingCamera } from './freeCam';
 import { GameState } from './gameState';
 import { Input } from './input';
@@ -138,6 +139,8 @@ export function stopGameLoop() {
 }
 
 function update(deltaMs: number, canvas: HTMLCanvasElement) {
+  const nowMs = performance.now();
+
   if (GameState.freeCamMode) {
     updateFreeCam(deltaMs);
   } else {
@@ -146,7 +149,8 @@ function update(deltaMs: number, canvas: HTMLCanvasElement) {
 
   updateSprintDust(deltaMs);
 
-  sendAttack(performance.now());
+  sendAttack(nowMs);
+  updateChatBubbles(nowMs);
   decayHitFlashes(deltaMs);
   decayAttackVfx(deltaMs);
 

@@ -15,13 +15,20 @@ import { renderDashTrail } from './dashRenderer';
 import { renderDebugHitboxes, renderFreeCamIndicator, renderMouseCoordinates } from './debugRenderer';
 import { renderSlashVfx } from './slashRenderer';
 import { renderSprintDust } from './sprintDust';
+import { CHAT_BUBBLE_FLOAT_PX, CHAT_BUBBLE_HOLD_MS, CHAT_BUBBLE_LIFE_MS } from './chatBubbles';
 
 import type { GameStateType, RenderableObject } from './gameState';
 import type { Point } from '@garama/shared';
 
+function clamp(min: number, value: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
 export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
+
+  const nowMs = performance.now();
 
   const viewportWidth = canvas.width;
   const viewportHeight = canvas.height;
@@ -56,7 +63,7 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
 
   renderObjectsList(ctx, backgroundObjects, cameraLeft, cameraTop, effectiveWidth, effectiveHeight, cameraRight, cameraBottom);
   renderSprintDust(ctx, cameraLeft, cameraTop, effectiveHeight);
-  renderPlayers(ctx, gameState, cameraLeft, cameraTop, effectiveHeight);
+  renderPlayers(ctx, gameState, cameraLeft, cameraTop, effectiveHeight, nowMs);
   renderObjectsList(ctx, foregroundObjects, cameraLeft, cameraTop, effectiveWidth, effectiveHeight, cameraRight, cameraBottom);
 
   if (gameState.debugCollisions) {
@@ -238,7 +245,8 @@ function renderPlayers(
   gameState: GameStateType,
   cameraLeft: number,
   cameraTop: number,
-  viewportHeight: number
+  viewportHeight: number,
+  nowMs: number
 ) {
   gameState.players.forEach((player) => {
     const screenX = player.x - cameraLeft;
@@ -291,7 +299,69 @@ function renderPlayers(
     ctx.textBaseline = 'bottom';
     const nameY = screenY - player.radius - 4;
     ctx.fillText(player.name, screenX, nameY);
+
+    renderChatBubbles(ctx, gameState, player.id, screenX, nameY, nowMs);
   });
+}
+
+function renderChatBubbles(
+  ctx: CanvasRenderingContext2D,
+  gameState: GameStateType,
+  playerId: string,
+  screenX: number,
+  nameBaselineY: number,
+  nowMs: number
+) {
+  const chatState = gameState.chat.get(playerId);
+  if (!chatState || chatState.visible.length === 0) return;
+
+  const fontSizePx = 16;
+  const lineHeightPx = 20;
+  const paddingX = 8;
+  const paddingY = 6;
+  const bubbleGapPx = 4;
+
+  // Position bubbles above the player's name.
+  const baseY = nameBaselineY - 18;
+
+  ctx.save();
+  ctx.font = `${fontSizePx}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+
+  // Draw newest bubble closest to the player, older ones above it.
+  for (let i = chatState.visible.length - 1; i >= 0; i--) {
+    const bubble = chatState.visible[i];
+    if (!bubble) continue;
+
+    const stackIndex = chatState.visible.length - 1 - i;
+    const ageMs = nowMs - bubble.shownAtMs;
+    const moveDurationMs = Math.max(1, CHAT_BUBBLE_LIFE_MS - CHAT_BUBBLE_HOLD_MS);
+    const moveAgeMs = Math.max(0, ageMs - CHAT_BUBBLE_HOLD_MS);
+    const t = clamp(0, moveAgeMs / moveDurationMs, 1);
+    const alpha = ageMs < CHAT_BUBBLE_HOLD_MS ? 1 : 1 - t;
+    if (alpha <= 0) continue;
+
+    const floatUpPx = ageMs < CHAT_BUBBLE_HOLD_MS ? 0 : CHAT_BUBBLE_FLOAT_PX * t;
+    const y = baseY - stackIndex * (lineHeightPx + bubbleGapPx) - floatUpPx;
+
+    const text = bubble.text;
+    const textWidth = ctx.measureText(text).width;
+    const w = textWidth + paddingX * 2;
+    const h = lineHeightPx + paddingY;
+    const rectX = screenX - w / 2;
+    const rectY = y - lineHeightPx - paddingY;
+
+    ctx.globalAlpha = alpha * 0.75;
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(rectX, rectY, w, h);
+
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(text, screenX, y);
+  }
+
+  ctx.restore();
 }
 
 

@@ -5,6 +5,7 @@ import { resolveAttack } from './combat';
 import { createPlayer, handlePositionUpdate, players } from './players';
 
 let serverTick = 0;
+const ROOM_ID = 'match';
 
 function getServerTimeMs() {
   // Return monotonic server time in ms (relative to process start).
@@ -25,6 +26,7 @@ export const createServer = () => {
     console.info(`Client connected: ${socket.id}`);
 
     socket.on('join', (msg: ClientMessage & { type: 'join' }) => {
+      socket.join(ROOM_ID);
       const player = createPlayer(socket.id, msg.name);
       players.set(socket.id, player);
       console.info(`Player ${msg.name} joined at (0, 0)`);
@@ -68,7 +70,11 @@ export const createServer = () => {
     });
 
     socket.on('chat', (msg: ClientMessage & { type: 'chat' }) => {
-      console.info(`Chat from client ${socket.id}: "${msg.message}"`);
+      const text = msg.message.trim().slice(0, 120);
+      if (!text) return;
+
+      console.info(`Chat from client ${socket.id}: "${text}"`);
+      socket.to(ROOM_ID).emit('chat', { type: 'chat', message: text, from: socket.id });
     });
 
     socket.on('disconnect', () => {
