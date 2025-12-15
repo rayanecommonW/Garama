@@ -133,6 +133,12 @@ export default function Home({ onStart }: Props) {
               {keyBindings.jump === ' ' ? 'SPACE' : keyBindings.jump.toUpperCase()} Jump
             </span>
             <span className="rounded-lg border border-slate-700/50 bg-slate-800/50 px-3 py-1">
+              {keyBindings.dash.toUpperCase()} Dash
+            </span>
+            <span className="rounded-lg border border-slate-700/50 bg-slate-800/50 px-3 py-1">
+              {keyBindings.attack.toUpperCase()} Attack
+            </span>
+            <span className="rounded-lg border border-slate-700/50 bg-slate-800/50 px-3 py-1">
               Enter Chat
             </span>
           </div>
@@ -145,7 +151,7 @@ export default function Home({ onStart }: Props) {
             <h2 className="text-2xl font-bold text-white">Control Settings</h2>
 
             <div className="space-y-4">
-              {(['left', 'right', 'jump'] as const).map((action) => (
+              {(['left', 'right', 'jump', 'dash', 'attack'] as const).map((action) => (
                 <div key={action} className="flex items-center justify-between">
                   <label className="text-sm font-bold text-slate-400 uppercase">{action}</label>
                   <input
