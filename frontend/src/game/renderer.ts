@@ -11,11 +11,11 @@ import {
   PLAYER_MAX_HEALTH,
 } from '@garama/shared';
 
+import { CHAT_BUBBLE_FLOAT_PX, CHAT_BUBBLE_HOLD_MS, CHAT_BUBBLE_LIFE_MS } from './chatBubbles';
 import { renderDashTrail } from './dashRenderer';
 import { renderDebugHitboxes, renderFreeCamIndicator, renderMouseCoordinates } from './debugRenderer';
 import { renderSlashVfx } from './slashRenderer';
 import { renderSprintDust } from './sprintDust';
-import { CHAT_BUBBLE_FLOAT_PX, CHAT_BUBBLE_HOLD_MS, CHAT_BUBBLE_LIFE_MS } from './chatBubbles';
 
 import type { GameStateType, RenderableObject } from './gameState';
 import type { Point } from '@garama/shared';

@@ -3,8 +3,8 @@ import { MAP_WIDTH, MAP_HEIGHT, PLAYER_RADIUS, PLAYER_COLOR, PLAYER_MAX_HEALTH }
 import { useEffect, useState, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
 
-import { setSocket as setGameLoopSocket, setOnMessageSent, resetFreeCamToPlayer } from '../game/gameLoop';
 import { enqueueChatMessage, clearPlayerChat } from '../game/chatBubbles';
+import { setSocket as setGameLoopSocket, setOnMessageSent, resetFreeCamToPlayer } from '../game/gameLoop';
 import { GameState, spawnPlayer } from '../game/gameState';
 import { type KeyBindings } from '../game/input';
 import { startClockSync } from '../game/net/clockSync';
