@@ -32,6 +32,7 @@ export function createPlayer(id: string, name: string): PlayerState {
     y: 0,
     color: PLAYER_COLOR,
     hp: PLAYER_MAX_HEALTH,
+    score: 0,
     isDead: false,
     lastAttackAt: -Infinity,
   };

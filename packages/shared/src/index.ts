@@ -21,6 +21,7 @@ export const PLAYER_MAX_HEALTH = 100;
 
 export const SWORD_DAMAGE = 20;
 export const SWORD_COOLDOWN_MS = 500;
+export const SCORE_PER_KILL = 1000;
 export const SWORD_ATTACK = {
   totalDuration: 18,
   damage: SWORD_DAMAGE,
@@ -96,6 +97,7 @@ export type PlayerData = {
   y: number;
   color: string;
   hp: number;
+  score: number;
   isDead?: boolean;
 };
 

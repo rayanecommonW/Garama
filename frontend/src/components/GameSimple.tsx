@@ -10,7 +10,9 @@ import { startClockSync } from '../game/net/clockSync';
 
 import Chat from './Chat';
 import DebugInfo from './DebugInfo';
+import Leaderboard from './Leaderboard';
 import Map from './Map';
+import MiniMap from './MiniMap';
 
 import type { ServerMessage, PlayerData } from '@garama/shared';
 
@@ -30,6 +32,7 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
   const [messagesSent, setMessagesSent] = useState(0);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isChatFloating, setIsChatFloating] = useState(false);
+  const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [playerCoords, setPlayerCoords] = useState<{ x: number; y: number } | null>(null);
   const [localHealth, setLocalHealth] = useState<number>(PLAYER_MAX_HEALTH);
   const [isDead, setIsDead] = useState<boolean>(false);
@@ -118,6 +121,7 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
               radius: PLAYER_RADIUS,
               color: playerData.color,
               hp: playerData.hp ?? PLAYER_MAX_HEALTH,
+              score: playerData.score,
               isDead: playerData.isDead ?? false,
               isSprinting: false,
               hitFlashMs: 0,
@@ -133,6 +137,7 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
           if (localPlayer) {
             // Keep client-side prediction for the local player; only sync health/death.
             localPlayer.hp = playerData.hp ?? localPlayer.hp;
+            localPlayer.score = playerData.score;
             localPlayer.isDead = playerData.isDead ?? localPlayer.isDead;
             setLocalHealth(localPlayer.hp);
             setIsDead(localPlayer.isDead);
@@ -141,6 +146,7 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
           const existing = GameState.players.get(playerData.id);
           if (existing) {
             existing.hp = playerData.hp ?? existing.hp;
+            existing.score = playerData.score;
             existing.isDead = playerData.isDead ?? existing.isDead;
           } else {
             GameState.players.set(playerData.id, {
@@ -155,6 +161,7 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
               radius: PLAYER_RADIUS,
               color: playerData.color,
               hp: playerData.hp ?? PLAYER_MAX_HEALTH,
+              score: playerData.score,
               isDead: playerData.isDead ?? false,
               isSprinting: false,
               hitFlashMs: 0,
@@ -306,6 +313,15 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
                 {isConnected ? 'Connected' : 'Disconnected'}
               </span>
             </span>
+            <button
+              onClick={() => setIsDebugOpen((prev) => !prev)}
+              className={`rounded px-3 py-1 text-xs font-semibold transition-colors ${
+                isDebugOpen ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-blue-600 text-white hover:bg-blue-500'
+              }`}
+              type="button"
+            >
+              {isDebugOpen ? 'Hide Debug' : 'Show Debug'}
+            </button>
           </div>
           <div className="text-center">
             <h2 className="text-xl font-semibold">Socket.IO Connection</h2>
@@ -327,66 +343,76 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
         <span className="w-10 text-right">{localHealth}</span>
       </div>
 
-      <div className="fixed right-4 bottom-4 z-40">
-        <DebugInfo
-          title="Connection Details"
-          items={[
-            { label: 'Socket ID', value: `${socket?.id?.slice(0, 8)}...` },
-            { label: 'Server Tick', value: serverTick, color: 'info' },
-            { label: 'Transport', value: transportName ?? 'N/A' },
-            {
-              label: 'RTT (EMA)',
-              value: GameState.net.smoothedRttMs ? `${Math.round(GameState.net.smoothedRttMs)}ms` : '—',
-            },
-            {
-              label: 'Clock Offset',
-              value: GameState.net.smoothedRttMs ? `${Math.round(GameState.net.clockOffsetMs)}ms` : '—',
-            },
-            { label: 'Interp Delay', value: `${Math.round(GameState.net.interpDelayMs)}ms` },
-            {
-              label: 'Remote Buffers',
-              value: remoteBufferStats
-                ? `n=${remoteBufferSizes.length} min=${remoteBufferStats.min} avg=${remoteBufferStats.avg.toFixed(
-                    1
-                  )} max=${remoteBufferStats.max}`
-                : 'n=0',
-            },
-            {
-              label: 'Connected At',
-              value: socket?.connected ? new Date().toLocaleTimeString() : 'N/A',
-            },
-            { label: 'Messages Received', value: messagesReceived },
-            { label: 'Messages Sent', value: messagesSent },
-            {
-              label: 'Chat Status',
-              value: isChatOpen ? 'Open' : 'Closed',
-              color: isChatOpen ? 'success' : 'default',
-            },
-            { label: 'Tick Rate', value: '20Hz' },
-            {
-              label: 'Player Position',
-              value: playerCoords ? `(${playerCoords.x}, ${playerCoords.y})` : 'N/A',
-            },
-          ]}
-          onToggleCollisions={() => {
-            GameState.debugCollisions = !GameState.debugCollisions;
-          }}
-          collisionsEnabled={GameState.debugCollisions}
-          onToggleFreeCam={() => {
-            const newValue = !GameState.freeCamMode;
-            GameState.freeCamMode = newValue;
-            if (newValue) {
-              // Initialize free cam position to player location
-              resetFreeCamToPlayer();
-            }
-          }}
-          freeCamEnabled={GameState.freeCamMode}
-          onToggleCoordinates={() => {
-            GameState.showCoordinates = !GameState.showCoordinates;
-          }}
-          coordinatesEnabled={GameState.showCoordinates}
-        />
+      <div className="fixed top-[124px] left-4 z-40">
+        <Leaderboard />
       </div>
+
+      <div className="pointer-events-none fixed bottom-4 left-4 z-40">
+        <MiniMap />
+      </div>
+
+      {isDebugOpen && (
+        <div className="fixed right-4 bottom-4 z-40">
+          <DebugInfo
+            title="Connection Details"
+            items={[
+              { label: 'Socket ID', value: `${socket?.id?.slice(0, 8)}...` },
+              { label: 'Server Tick', value: serverTick, color: 'info' },
+              { label: 'Transport', value: transportName ?? 'N/A' },
+              {
+                label: 'RTT (EMA)',
+                value: GameState.net.smoothedRttMs ? `${Math.round(GameState.net.smoothedRttMs)}ms` : '—',
+              },
+              {
+                label: 'Clock Offset',
+                value: GameState.net.smoothedRttMs ? `${Math.round(GameState.net.clockOffsetMs)}ms` : '—',
+              },
+              { label: 'Interp Delay', value: `${Math.round(GameState.net.interpDelayMs)}ms` },
+              {
+                label: 'Remote Buffers',
+                value: remoteBufferStats
+                  ? `n=${remoteBufferSizes.length} min=${remoteBufferStats.min} avg=${remoteBufferStats.avg.toFixed(
+                      1
+                    )} max=${remoteBufferStats.max}`
+                  : 'n=0',
+              },
+              {
+                label: 'Connected At',
+                value: socket?.connected ? new Date().toLocaleTimeString() : 'N/A',
+              },
+              { label: 'Messages Received', value: messagesReceived },
+              { label: 'Messages Sent', value: messagesSent },
+              {
+                label: 'Chat Status',
+                value: isChatOpen ? 'Open' : 'Closed',
+                color: isChatOpen ? 'success' : 'default',
+              },
+              { label: 'Tick Rate', value: '20Hz' },
+              {
+                label: 'Player Position',
+                value: playerCoords ? `(${playerCoords.x}, ${playerCoords.y})` : 'N/A',
+              },
+            ]}
+            onToggleCollisions={() => {
+              GameState.debugCollisions = !GameState.debugCollisions;
+            }}
+            collisionsEnabled={GameState.debugCollisions}
+            onToggleFreeCam={() => {
+              const newValue = !GameState.freeCamMode;
+              GameState.freeCamMode = newValue;
+              if (newValue) {
+                // Initialize free cam position to player location
+                resetFreeCamToPlayer();
+              }
+            }}
+            freeCamEnabled={GameState.freeCamMode}
+            onToggleCoordinates={() => {
+              GameState.showCoordinates = !GameState.showCoordinates;
+            }}
+            coordinatesEnabled={GameState.showCoordinates}
+          />
+        </div>
+      )}
 
       <div className="fixed top-1/4 left-1/2 z-40 -translate-x-1/2">
         {(isChatOpen || isChatFloating) && (

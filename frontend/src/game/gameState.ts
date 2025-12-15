@@ -18,6 +18,7 @@ export type Player = {
   radius: number;
   color: string;
   hp: number;
+  score: number;
   isDead: boolean;
   isSprinting: boolean;
   hitFlashMs?: number;
@@ -147,6 +148,7 @@ export function spawnPlayer(
     radius,
     color,
     hp: PLAYER_MAX_HEALTH,
+    score: 0,
     isDead: false,
     isSprinting: false,
     attackMsLeft: 0,
