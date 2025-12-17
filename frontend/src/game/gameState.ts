@@ -39,6 +39,9 @@ export type Player = {
 export type Camera = {
   x: number;
   y: number;
+  focusX: number;
+  focusY: number;
+  lookAheadOffset: number; // Current lerped look-ahead offset in pixels
 };
 
 export interface RenderableObject extends StaticObject {
@@ -129,7 +132,7 @@ const objectsWithBounds: RenderableObject[] = STATIC_OBJECTS.map((obj) => ({
 export const GameState: GameStateType = {
   players: new Map<string, Player>(),
   localPlayerId: null,
-  camera: { x: 0, y: 0 },
+  camera: { x: 0, y: 0, focusX: 0, focusY: 0, lookAheadOffset: 0 },
   viewportWidth: 0,
   viewportHeight: 0,
   objects: objectsWithBounds,
@@ -192,6 +195,9 @@ export function spawnPlayer(
 
   GameState.camera.x = x;
   GameState.camera.y = y;
+  GameState.camera.focusX = x;
+  GameState.camera.focusY = y;
+  GameState.camera.lookAheadOffset = 0;
 
   return player;
 }
