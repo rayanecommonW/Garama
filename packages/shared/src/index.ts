@@ -1,4 +1,5 @@
 import forestRuinsProject from '../levels/forest_ruins.ldtk.json';
+
 import { parseWorldObjectsFromLdtk } from './ldtk/parseWorld';
 
 export const TICK_RATE = 20;
