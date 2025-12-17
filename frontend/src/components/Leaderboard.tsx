@@ -52,17 +52,19 @@ export default function Leaderboard({ className = '' }: Props) {
   if (entries.length === 0) return null;
 
   return (
-    <div className={`w-56 rounded border border-slate-700 bg-black/80 p-3 text-sm text-slate-200 ${className}`}>
-      <h3 className="mb-2 text-xs font-semibold tracking-wide text-slate-400 uppercase">Leaderboard</h3>
+    <div
+      className={`w-56 rounded border border-[#1f3b2b]/80 bg-[#020b06]/75 p-3 text-sm text-[#e7fdf5]/90 shadow-lg backdrop-blur-sm ${className}`}
+    >
+      <h3 className="mb-2 text-xs font-semibold tracking-wide text-[#7bb59a] uppercase">Leaderboard</h3>
       <div className="space-y-1">
         {entries.map((entry, index) => {
-          const nameClassName = entry.isLocal ? 'font-semibold text-green-400' : 'text-slate-200';
+          const nameClassName = entry.isLocal ? 'font-semibold text-green-400' : 'text-[#e7fdf5]/90';
           return (
             <div key={entry.id} className="flex items-center justify-between gap-3">
               <span className={`min-w-0 flex-1 truncate ${nameClassName}`}>
                 {index + 1}. {entry.name}
               </span>
-              <span className="shrink-0 text-slate-300">{entry.score} pts</span>
+              <span className="shrink-0 text-[#c9f4e2]/70">{entry.score} pts</span>
             </div>
           );
         })}

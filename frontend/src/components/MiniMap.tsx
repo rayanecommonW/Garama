@@ -52,7 +52,7 @@ export default function MiniMap({
 
       ctx.clearRect(0, 0, sizePx, sizePx);
 
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+      ctx.fillStyle = 'rgba(2, 11, 6, 0.78)';
       ctx.fillRect(0, 0, sizePx, sizePx);
 
       ctx.save();
@@ -60,10 +60,10 @@ export default function MiniMap({
       ctx.rect(left, top, innerSize, innerSize);
       ctx.clip();
 
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
+      ctx.fillStyle = 'rgba(6, 20, 13, 0.7)';
       ctx.fillRect(left, top, innerSize, innerSize);
 
-      ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+      ctx.strokeStyle = 'rgba(231, 253, 245, 0.12)';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(cx, top);
@@ -89,18 +89,18 @@ export default function MiniMap({
           const x = cx + dx * scale;
           const y = cy - dy * scale;
 
-          ctx.fillStyle = '#ef4444';
+          ctx.fillStyle = '#fb7185';
           ctx.beginPath();
           ctx.arc(x, y, 3, 0, Math.PI * 2);
           ctx.fill();
         });
 
-        ctx.fillStyle = '#22c55e';
+        ctx.fillStyle = '#34d399';
         ctx.beginPath();
         ctx.arc(cx, cy, 4, 0, Math.PI * 2);
         ctx.fill();
       } else {
-        ctx.fillStyle = 'rgba(148, 163, 184, 0.7)';
+        ctx.fillStyle = 'rgba(231, 253, 245, 0.7)';
         ctx.font = '12px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -109,7 +109,7 @@ export default function MiniMap({
 
       ctx.restore();
 
-      ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
+      ctx.strokeStyle = 'rgba(31, 59, 43, 0.9)';
       ctx.lineWidth = 2;
       ctx.strokeRect(left, top, innerSize, innerSize);
 
@@ -123,7 +123,7 @@ export default function MiniMap({
     };
   }, [sizePx, worldRadius]);
 
-  return <canvas ref={canvasRef} className={`border border-slate-700 shadow-lg ${className}`} />;
+  return <canvas ref={canvasRef} className={`border border-[#1f3b2b]/80 shadow-lg ${className}`} />;
 }
 
 

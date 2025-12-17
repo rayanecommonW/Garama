@@ -1,0 +1,3186 @@
+{
+  "jsonVersion": "generated",
+  "identifier": "GaramaForestRuins",
+  "levels": [
+    {
+      "identifier": "ForestRuins",
+      "uid": 1,
+      "worldX": 0,
+      "worldY": 0,
+      "pxWid": 10000,
+      "pxHei": 10000,
+      "layerInstances": [
+        {
+          "__identifier": "Entities",
+          "__type": "Entities",
+          "entityInstances": [
+            {
+              "__identifier": "WorldObject",
+              "iid": "ground-start",
+              "px": [
+                0,
+                9950
+              ],
+              "width": 800,
+              "height": 50,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "ground-start"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "ground-2",
+              "px": [
+                900,
+                9950
+              ],
+              "width": 400,
+              "height": 50,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "ground-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 100
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "ground-3",
+              "px": [
+                1400,
+                9950
+              ],
+              "width": 600,
+              "height": 50,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "ground-3"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 100
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "plat-easy-1",
+              "px": [
+                400,
+                9838
+              ],
+              "width": 200,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "plat-easy-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "plat-easy-2",
+              "px": [
+                700,
+                9738
+              ],
+              "width": 200,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "plat-easy-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "plat-easy-3",
+              "px": [
+                1000,
+                9638
+              ],
+              "width": 200,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "plat-easy-3"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "plat-easy-4",
+              "px": [
+                1300,
+                9538
+              ],
+              "width": 200,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "plat-easy-4"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "plat-easy-5",
+              "px": [
+                1600,
+                9438
+              ],
+              "width": 200,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "plat-easy-5"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "first-rest",
+              "px": [
+                1900,
+                9425
+              ],
+              "width": 400,
+              "height": 50,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "first-rest"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "crate-1",
+              "px": [
+                1980,
+                9355
+              ],
+              "width": 40,
+              "height": 40,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "crate-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "plat-up-1",
+              "px": [
+                2310,
+                9288
+              ],
+              "width": 180,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "plat-up-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "plat-up-2",
+              "px": [
+                2560,
+                9138
+              ],
+              "width": 180,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "plat-up-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "plat-up-3",
+              "px": [
+                2310,
+                8988
+              ],
+              "width": 180,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "plat-up-3"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "plat-up-4",
+              "px": [
+                2060,
+                8838
+              ],
+              "width": 180,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "plat-up-4"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "plat-up-5",
+              "px": [
+                2310,
+                8688
+              ],
+              "width": 180,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "plat-up-5"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "tower-1-base",
+              "px": [
+                2650,
+                8600
+              ],
+              "width": 300,
+              "height": 400,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "tower-1-base"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "tower-1-top",
+              "px": [
+                2600,
+                8525
+              ],
+              "width": 400,
+              "height": 50,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "tower-1-top"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "bridge-1-start",
+              "px": [
+                3125,
+                8538
+              ],
+              "width": 150,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "bridge-1-start"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "bridge-1-mid",
+              "px": [
+                3375,
+                8588
+              ],
+              "width": 150,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "bridge-1-mid"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "bridge-1-end",
+              "px": [
+                3625,
+                8538
+              ],
+              "width": 150,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "bridge-1-end"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "fortress-floor",
+              "px": [
+                3900,
+                8520
+              ],
+              "width": 600,
+              "height": 60,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "fortress-floor"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "fortress-left-wall",
+              "px": [
+                3900,
+                8080
+              ],
+              "width": 50,
+              "height": 440,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "fortress-left-wall"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "fortress-right-wall",
+              "px": [
+                4450,
+                8080
+              ],
+              "width": 50,
+              "height": 440,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "fortress-right-wall"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "crate-2",
+              "px": [
+                4080,
+                8450
+              ],
+              "width": 40,
+              "height": 40,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "crate-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "crate-3",
+              "px": [
+                4280,
+                8450
+              ],
+              "width": 40,
+              "height": 40,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "crate-3"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "fort-plat-1",
+              "px": [
+                3975,
+                8388
+              ],
+              "width": 150,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "fort-plat-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "fort-plat-2",
+              "px": [
+                4275,
+                8288
+              ],
+              "width": 150,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "fort-plat-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "fort-plat-3",
+              "px": [
+                3975,
+                8188
+              ],
+              "width": 150,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "fort-plat-3"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "fort-plat-4",
+              "px": [
+                4100,
+                8065
+              ],
+              "width": 200,
+              "height": 30,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "fort-plat-4"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "exit-plat-1",
+              "px": [
+                4475,
+                7988
+              ],
+              "width": 150,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "exit-plat-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "exit-plat-2",
+              "px": [
+                4775,
+                7888
+              ],
+              "width": 150,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "exit-plat-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "exit-plat-3",
+              "px": [
+                5075,
+                7788
+              ],
+              "width": 150,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "exit-plat-3"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "mid-ground",
+              "px": [
+                5350,
+                7770
+              ],
+              "width": 500,
+              "height": 60,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "mid-ground"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "crate-4",
+              "px": [
+                5480,
+                7700
+              ],
+              "width": 40,
+              "height": 40,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "crate-4"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "zigzag-1",
+              "px": [
+                5325,
+                7588
+              ],
+              "width": 150,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "zigzag-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "zigzag-2",
+              "px": [
+                5625,
+                7438
+              ],
+              "width": 150,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "zigzag-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "zigzag-3",
+              "px": [
+                5325,
+                7288
+              ],
+              "width": 150,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "zigzag-3"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "zigzag-4",
+              "px": [
+                5625,
+                7138
+              ],
+              "width": 150,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "zigzag-4"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "zigzag-5",
+              "px": [
+                5325,
+                6988
+              ],
+              "width": 150,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "zigzag-5"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "pillar-1",
+              "px": [
+                5060,
+                7000
+              ],
+              "width": 80,
+              "height": 400,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "pillar-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "pillar-2",
+              "px": [
+                5960,
+                7000
+              ],
+              "width": 80,
+              "height": 400,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "pillar-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "pillar-1-front",
+              "px": [
+                5060,
+                7000
+              ],
+              "width": 80,
+              "height": 400,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "pillar-1-front"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 60
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "pillar-2-front",
+              "px": [
+                5960,
+                7000
+              ],
+              "width": 80,
+              "height": 400,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "pillar-2-front"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 60
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "upper-rest",
+              "px": [
+                5300,
+                6875
+              ],
+              "width": 500,
+              "height": 50,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "upper-rest"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "jump-gap-1",
+              "px": [
+                5140,
+                6738
+              ],
+              "width": 120,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "jump-gap-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "jump-gap-2",
+              "px": [
+                4840,
+                6638
+              ],
+              "width": 120,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "jump-gap-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "jump-gap-3",
+              "px": [
+                4540,
+                6538
+              ],
+              "width": 120,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "jump-gap-3"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "jump-gap-4",
+              "px": [
+                4240,
+                6438
+              ],
+              "width": 120,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "jump-gap-4"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "ruins-base",
+              "px": [
+                3700,
+                6420
+              ],
+              "width": 400,
+              "height": 60,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "ruins-base"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "ruins-pillar-left",
+              "px": [
+                3720,
+                5980
+              ],
+              "width": 60,
+              "height": 440,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "ruins-pillar-left"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 60
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "ruins-pillar-right",
+              "px": [
+                4020,
+                5980
+              ],
+              "width": 60,
+              "height": 440,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "ruins-pillar-right"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 60
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "crate-5",
+              "px": [
+                3875,
+                6345
+              ],
+              "width": 50,
+              "height": 50,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "crate-5"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "ruins-plat-1",
+              "px": [
+                3800,
+                6288
+              ],
+              "width": 200,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "ruins-plat-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "ruins-plat-2",
+              "px": [
+                3580,
+                6138
+              ],
+              "width": 140,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "ruins-plat-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "ruins-plat-3",
+              "px": [
+                4080,
+                6138
+              ],
+              "width": 140,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "ruins-plat-3"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "ruins-plat-4",
+              "px": [
+                3810,
+                5988
+              ],
+              "width": 180,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "ruins-plat-4"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "ruins-roof",
+              "px": [
+                3650,
+                5880
+              ],
+              "width": 500,
+              "height": 40,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "ruins-roof"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "sky-1",
+              "px": [
+                4180,
+                5738
+              ],
+              "width": 140,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "sky-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "sky-2",
+              "px": [
+                4480,
+                5588
+              ],
+              "width": 140,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "sky-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "sky-3",
+              "px": [
+                4780,
+                5438
+              ],
+              "width": 140,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "sky-3"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "sky-4",
+              "px": [
+                5080,
+                5288
+              ],
+              "width": 140,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "sky-4"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "sky-5",
+              "px": [
+                5380,
+                5138
+              ],
+              "width": 140,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "sky-5"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "sky-island",
+              "px": [
+                5600,
+                5010
+              ],
+              "width": 400,
+              "height": 80,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "sky-island"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "crate-6",
+              "px": [
+                5680,
+                4940
+              ],
+              "width": 40,
+              "height": 40,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "crate-6"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "crate-7",
+              "px": [
+                5880,
+                4940
+              ],
+              "width": 40,
+              "height": 40,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "crate-7"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "hard-1",
+              "px": [
+                6100,
+                4888
+              ],
+              "width": 100,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "hard-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "hard-2",
+              "px": [
+                6350,
+                4788
+              ],
+              "width": 100,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "hard-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "hard-3",
+              "px": [
+                6600,
+                4888
+              ],
+              "width": 100,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "hard-3"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "hard-4",
+              "px": [
+                6850,
+                4788
+              ],
+              "width": 100,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "hard-4"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "hard-5",
+              "px": [
+                7100,
+                4888
+              ],
+              "width": 100,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "hard-5"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "tower-2-base",
+              "px": [
+                7350,
+                4750
+              ],
+              "width": 300,
+              "height": 500,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "tower-2-base"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "tower-2-ledge",
+              "px": [
+                7300,
+                4675
+              ],
+              "width": 400,
+              "height": 50,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "tower-2-ledge"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "tower-climb-1",
+              "px": [
+                7130,
+                4538
+              ],
+              "width": 140,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "tower-climb-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "tower-climb-2",
+              "px": [
+                7430,
+                4388
+              ],
+              "width": 140,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "tower-climb-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "tower-climb-3",
+              "px": [
+                7730,
+                4238
+              ],
+              "width": 140,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "tower-climb-3"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "tower-climb-4",
+              "px": [
+                7430,
+                4088
+              ],
+              "width": 140,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "tower-climb-4"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "tower-climb-5",
+              "px": [
+                7130,
+                3938
+              ],
+              "width": 140,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "tower-climb-5"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "tower-2-top",
+              "px": [
+                7250,
+                3770
+              ],
+              "width": 500,
+              "height": 60,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "tower-2-top"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "tower-2-spire-left",
+              "px": [
+                7270,
+                3230
+              ],
+              "width": 60,
+              "height": 540,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "tower-2-spire-left"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 60
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "tower-2-spire-right",
+              "px": [
+                7670,
+                3230
+              ],
+              "width": 60,
+              "height": 540,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "tower-2-spire-right"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 60
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "final-bridge-1",
+              "px": [
+                7040,
+                3638
+              ],
+              "width": 120,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "final-bridge-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "final-bridge-2",
+              "px": [
+                6740,
+                3538
+              ],
+              "width": 120,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "final-bridge-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "final-bridge-3",
+              "px": [
+                6440,
+                3438
+              ],
+              "width": 120,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "final-bridge-3"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "final-bridge-4",
+              "px": [
+                6140,
+                3338
+              ],
+              "width": 120,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "final-bridge-4"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "final-bridge-5",
+              "px": [
+                5840,
+                3238
+              ],
+              "width": 120,
+              "height": 25,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "final-bridge-5"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "wooden-barrier"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "throne-platform",
+              "px": [
+                5200,
+                3110
+              ],
+              "width": 600,
+              "height": 80,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "throne-platform"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "throne-back",
+              "px": [
+                5300,
+                2800
+              ],
+              "width": 400,
+              "height": 200,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "throne-back"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": true
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 0
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "throne-pillar-left",
+              "px": [
+                5160,
+                2600
+              ],
+              "width": 80,
+              "height": 500,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "throne-pillar-left"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 60
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "throne-pillar-right",
+              "px": [
+                5760,
+                2600
+              ],
+              "width": 80,
+              "height": 500,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "throne-pillar-right"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 60
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "throne-crown",
+              "px": [
+                5400,
+                2975
+              ],
+              "width": 200,
+              "height": 50,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "throne-crown"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 60
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-start-stone-1",
+              "px": [
+                90,
+                9950
+              ],
+              "width": 60,
+              "height": 30,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-start-stone-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 5
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-start-stone-2",
+              "px": [
+                645,
+                9949
+              ],
+              "width": 70,
+              "height": 32,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-start-stone-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 5
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-first-rest-crate-2",
+              "px": [
+                2203,
+                9358
+              ],
+              "width": 34,
+              "height": 34,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-first-rest-crate-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 5
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-tower1-ivy-1",
+              "px": [
+                2580,
+                8550
+              ],
+              "width": 40,
+              "height": 260,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-tower1-ivy-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 60
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-tower1-ivy-2",
+              "px": [
+                2980,
+                8550
+              ],
+              "width": 40,
+              "height": 260,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-tower1-ivy-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 60
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-fortress-rubble-1",
+              "px": [
+                3997,
+                8490
+              ],
+              "width": 46,
+              "height": 20,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-fortress-rubble-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 8
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-fortress-rubble-2",
+              "px": [
+                4360,
+                8491
+              ],
+              "width": 40,
+              "height": 18,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-fortress-rubble-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 8
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-fortress-banner-1",
+              "px": [
+                3905,
+                8040
+              ],
+              "width": 40,
+              "height": 120,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-fortress-banner-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 20
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-fortress-banner-2",
+              "px": [
+                4455,
+                8040
+              ],
+              "width": 40,
+              "height": 120,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-fortress-banner-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 20
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-upper-rest-crate-1",
+              "px": [
+                5382,
+                6839
+              ],
+              "width": 36,
+              "height": 36,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-upper-rest-crate-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 10
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-upper-rest-crate-2",
+              "px": [
+                5682,
+                6839
+              ],
+              "width": 36,
+              "height": 36,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-upper-rest-crate-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 10
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-throne-torch-left",
+              "px": [
+                5340,
+                2910
+              ],
+              "width": 20,
+              "height": 80,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-throne-torch-left"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 60
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-throne-torch-right",
+              "px": [
+                5640,
+                2910
+              ],
+              "width": 20,
+              "height": 80,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-throne-torch-right"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 60
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "spikes-fortress-floor-1",
+              "px": [
+                4110,
+                8496
+              ],
+              "width": 180,
+              "height": 24,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "spikes-fortress-floor-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "spikes"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 40
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "spikes-upper-rest-1",
+              "px": [
+                5475,
+                6851
+              ],
+              "width": 150,
+              "height": 24,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "spikes-upper-rest-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "spikes"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 40
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "spikes-sky-island-1",
+              "px": [
+                5840,
+                4986
+              ],
+              "width": 120,
+              "height": 24,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "spikes-sky-island-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "spikes"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 40
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-ruins-shard-1",
+              "px": [
+                3759,
+                6402
+              ],
+              "width": 42,
+              "height": 18,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-ruins-shard-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 8
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-ruins-shard-2",
+              "px": [
+                4001,
+                6403
+              ],
+              "width": 38,
+              "height": 16,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-ruins-shard-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 8
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-sky-crate-8",
+              "px": [
+                5703,
+                4976
+              ],
+              "width": 34,
+              "height": 34,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-sky-crate-8"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 10
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-sky-crate-9",
+              "px": [
+                5983,
+                4976
+              ],
+              "width": 34,
+              "height": 34,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-sky-crate-9"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "metal"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 10
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-throne-rubble-1",
+              "px": [
+                5297,
+                3090
+              ],
+              "width": 46,
+              "height": 20,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-throne-rubble-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 8
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "deco-throne-rubble-2",
+              "px": [
+                5660,
+                3091
+              ],
+              "width": 40,
+              "height": 18,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "deco-throne-rubble-2"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "stone-wall"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 8
+                }
+              ]
+            },
+            {
+              "__identifier": "WorldObject",
+              "iid": "spikes-throne-platform-1",
+              "px": [
+                5620,
+                3086
+              ],
+              "width": 160,
+              "height": 24,
+              "fieldInstances": [
+                {
+                  "__identifier": "id",
+                  "__value": "spikes-throne-platform-1"
+                },
+                {
+                  "__identifier": "renderStyle",
+                  "__value": "spikes"
+                },
+                {
+                  "__identifier": "isCollision",
+                  "__value": false
+                },
+                {
+                  "__identifier": "zIndex",
+                  "__value": 40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

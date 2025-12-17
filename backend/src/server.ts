@@ -1,4 +1,14 @@
-import { CHARGE_HOLD_MS, SCORE_PER_KILL, TICK_RATE, STATIC_OBJECTS, type ClientMessage, type ServerMessage } from '@garama/shared';
+import {
+  CHARGE_HOLD_MS,
+  PLAYER_RADIUS,
+  SCORE_PER_KILL,
+  TICK_RATE,
+  STATIC_OBJECTS,
+  circlePolygonCollision,
+  type ClientMessage,
+  type ServerMessage,
+  type Point,
+} from '@garama/shared';
 import { Server } from 'socket.io';
 
 import { canStartAttack, resolveAttack } from './combat';
@@ -7,9 +17,39 @@ import { createPlayer, handlePositionUpdate, players } from './players';
 let serverTick = 0;
 const ROOM_ID = 'match';
 
+const SPIKE_DAMAGE = 10;
+const SPIKE_COOLDOWN_MS = 400;
+const SPIKE_OBJECTS = STATIC_OBJECTS.filter((obj) => obj.renderStyle === 'spikes');
+
 function getServerTimeMs() {
   // Return monotonic server time in ms (relative to process start).
   return process.uptime() * 1000;
+}
+
+function applySpikeDamage(io: Server, serverNowMs: number) {
+  if (SPIKE_OBJECTS.length === 0) return;
+
+  players.forEach((player) => {
+    if (player.isDead) return;
+    if (serverNowMs - player.lastSpikeDamageAtMs < SPIKE_COOLDOWN_MS) return;
+
+    const center: Point = [player.x, player.y];
+
+    for (const spike of SPIKE_OBJECTS) {
+      if (!circlePolygonCollision(center, PLAYER_RADIUS, spike.polygon)) continue;
+
+      player.lastSpikeDamageAtMs = serverNowMs;
+      player.hp = Math.max(0, player.hp - SPIKE_DAMAGE);
+
+      if (player.hp === 0) {
+        player.isDead = true;
+        io.emit('death', { type: 'death', targetId: player.id });
+      }
+
+      io.emit('damage', { type: 'damage', targetId: player.id, hp: player.hp });
+      break;
+    }
+  });
 }
 
 export const createServer = () => {
@@ -127,6 +167,7 @@ export const createServer = () => {
 
   const tickInterval = setInterval(() => {
     const serverTime = getServerTimeMs();
+    applySpikeDamage(io, serverTime);
     const snapshot: ServerMessage = {
       type: 'snapshot',
       players: Array.from(players.values()).map(({ id, name, x, y, color, hp, score, isDead, attackHoldStartedAtMs }) => ({

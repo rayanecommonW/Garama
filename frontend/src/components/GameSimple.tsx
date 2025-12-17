@@ -338,8 +338,8 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
   return (
     <>
       <Map keyBindings={keyBindings} />
-      <div className="fixed top-0 right-0 left-0 z-50 border-b border-slate-700 bg-slate-800 p-4">
-        <div className="mx-auto grid max-w-6xl grid-cols-3 gap-4 text-sm text-slate-200">
+      <div className="fixed top-0 right-0 left-0 z-50 border-b border-[#1f3b2b]/80 bg-[#020b06]/90 p-4 backdrop-blur-md">
+        <div className="mx-auto grid max-w-6xl grid-cols-3 gap-4 text-sm text-[#e7fdf5]/90">
           <div className="flex items-center gap-4">
             <span>
               Player: <strong>{playerName}</strong>
@@ -353,7 +353,9 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
             <button
               onClick={() => setIsDebugOpen((prev) => !prev)}
               className={`rounded px-3 py-1 text-xs font-semibold transition-colors ${
-                isDebugOpen ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-blue-600 text-white hover:bg-blue-500'
+                isDebugOpen
+                  ? 'bg-[#0b1a12]/80 text-[#e7fdf5] hover:bg-[#0b1a12]'
+                  : 'bg-[#1f3b2b] text-[#e7fdf5] hover:bg-[#2a523c]'
               }`}
               type="button"
             >
@@ -369,9 +371,9 @@ export default function GameSimple({ playerName, keyBindings }: Props) {
         </div>
       </div>
 
-      <div className="fixed top-[84px] left-4 z-50 flex items-center gap-3 text-sm text-slate-100">
+      <div className="fixed top-[84px] left-4 z-50 flex items-center gap-3 text-sm text-[#e7fdf5]">
         <span className="font-semibold">HP</span>
-        <div className="h-3 w-44 overflow-hidden rounded bg-slate-700">
+        <div className="h-3 w-44 overflow-hidden rounded border border-[#1f3b2b]/60 bg-[#0b1a12]/80">
           <div
             className="h-full bg-red-500 transition-all"
             style={{ width: `${Math.max(0, (localHealth / PLAYER_MAX_HEALTH) * 100)}%` }}

@@ -73,7 +73,7 @@ export default function Chat({
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyPress}
           placeholder="Type message..."
-          className="rounded border-none bg-black/80 px-3 py-2 text-center text-white outline-none"
+          className="w-[340px] rounded border border-[#1f3b2b]/80 bg-[#020b06]/80 px-3 py-2 text-center text-[#e7fdf5] outline-none placeholder:text-[#7bb59a]/70 focus:border-[#2a523c] focus:ring-2 focus:ring-[#1f3b2b]/40 disabled:opacity-60"
           disabled={!isConnected}
         />
       </div>
