@@ -1,4 +1,5 @@
 import { MAP_WIDTH, MAP_HEIGHT } from '@garama/shared';
+
 import { getFreeCamPosition } from './freeCam';
 import { GameState } from './gameState';
 
