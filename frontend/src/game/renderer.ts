@@ -2,12 +2,6 @@ import {
   CHARGED_HITBOX_SCALE,
   CHARGED_VFX_SCALE,
   CHARGE_HOLD_MS,
-  MAP_GRID_CELL_SIZE,
-  MAP_GRID_DOT_SIZE,
-  MAP_GRID_COLOR,
-  MAP_BORDER_COLOR,
-  MAP_BORDER_WIDTH,
-  MAP_OUTSIDE_COLOR,
   MAP_WIDTH,
   MAP_HEIGHT,
   PLAYER_Z_INDEX,
@@ -17,8 +11,10 @@ import {
 import { CHAT_BUBBLE_FLOAT_PX, CHAT_BUBBLE_HOLD_MS, CHAT_BUBBLE_LIFE_MS } from './chatBubbles';
 import { renderDashTrail } from './dashRenderer';
 import { renderDebugHitboxes, renderFreeCamIndicator, renderMouseCoordinates } from './debugRenderer';
+import { renderParallaxBackground, renderParallaxForeground } from './parallax/parallaxRenderer';
 import { renderSlashVfx } from './slashRenderer';
 import { renderSprintDust } from './sprintDust';
+import { renderWorldBorder } from './worldBorder/borderRenderer';
 
 import type { GameStateType, RenderableObject } from './gameState';
 import type { Point } from '@garama/shared';
@@ -58,15 +54,11 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
   const cameraRight = cameraLeft + effectiveWidth;
   const cameraBottom = cameraTop + effectiveHeight;
 
-  ctx.fillStyle = MAP_OUTSIDE_COLOR;
-  ctx.fillRect(0, 0, viewportWidth, viewportHeight);
-
   ctx.save();
   ctx.scale(zoom, zoom);
 
-  renderMapBackground(ctx, cameraLeft, cameraTop, effectiveWidth, effectiveHeight);
-  renderMapBorders(ctx, cameraLeft, cameraTop, effectiveWidth, effectiveHeight);
-  renderGrid(ctx, cameraLeft, cameraTop, cameraRight, cameraBottom, effectiveWidth, effectiveHeight);
+  // Render parallax background layers (replaces old black + grid dots)
+  renderParallaxBackground(ctx, gameState.camera.x, gameState.camera.y, effectiveWidth, effectiveHeight);
 
   const backgroundObjects = gameState.objects.filter((obj) => obj.zIndex < PLAYER_Z_INDEX);
   const foregroundObjects = gameState.objects.filter((obj) => obj.zIndex >= PLAYER_Z_INDEX);
@@ -78,6 +70,12 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
   renderSprintDust(ctx, cameraLeft, cameraTop, effectiveHeight);
   renderPlayers(ctx, gameState, cameraLeft, cameraTop, effectiveHeight, nowMs);
   renderObjectsList(ctx, foregroundObjects, cameraLeft, cameraTop, effectiveWidth, effectiveHeight, cameraRight, cameraBottom);
+
+  // Render parallax foreground (vine overlay)
+  renderParallaxForeground(ctx, gameState.camera.x, gameState.camera.y, effectiveWidth, effectiveHeight);
+
+  // Render world border (max z-index - rendered last in game world)
+  renderWorldBorder(ctx, gameState.camera.x, gameState.camera.y, effectiveWidth, effectiveHeight);
 
   if (gameState.debugCollisions) {
     renderDebugHitboxes(ctx, gameState, cameraLeft, cameraTop, effectiveHeight);
@@ -94,123 +92,6 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
   }
 }
 
-function renderMapBackground(
-  ctx: CanvasRenderingContext2D,
-  cameraLeft: number,
-  cameraTop: number,
-  viewportWidth: number,
-  viewportHeight: number
-) {
-  const worldLeft = 0 - cameraLeft;
-  const worldTop = viewportHeight - (MAP_HEIGHT - cameraTop);
-  const worldRight = MAP_WIDTH - cameraLeft;
-  const worldBottom = viewportHeight - (0 - cameraTop);
-
-  ctx.fillStyle = '#000000';
-  const visibleWorldLeft = Math.max(0, worldLeft);
-  const visibleWorldTop = Math.max(0, worldTop);
-  const visibleWorldRight = Math.min(viewportWidth, worldRight);
-  const visibleWorldBottom = Math.min(viewportHeight, worldBottom);
-
-  if (visibleWorldRight > visibleWorldLeft && visibleWorldBottom > visibleWorldTop) {
-    ctx.fillRect(
-      visibleWorldLeft,
-      visibleWorldTop,
-      visibleWorldRight - visibleWorldLeft,
-      visibleWorldBottom - visibleWorldTop
-    );
-  }
-}
-
-function renderMapBorders(
-  ctx: CanvasRenderingContext2D,
-  cameraLeft: number,
-  cameraTop: number,
-  viewportWidth: number,
-  viewportHeight: number
-) {
-  ctx.strokeStyle = MAP_BORDER_COLOR;
-  ctx.lineWidth = MAP_BORDER_WIDTH;
-
-  const worldLeft = 0 - cameraLeft;
-  const worldTop = viewportHeight - (MAP_HEIGHT - cameraTop);
-  const worldRight = MAP_WIDTH - cameraLeft;
-  const worldBottom = viewportHeight - (0 - cameraTop);
-
-  if (worldLeft >= 0 && worldLeft <= viewportWidth) {
-    const visibleTop = Math.max(0, worldTop);
-    const visibleBottom = Math.min(viewportHeight, worldBottom);
-    if (visibleBottom > visibleTop) {
-      ctx.beginPath();
-      ctx.moveTo(worldLeft, visibleTop);
-      ctx.lineTo(worldLeft, visibleBottom);
-      ctx.stroke();
-    }
-  }
-
-  if (worldRight >= 0 && worldRight <= viewportWidth) {
-    const visibleTop = Math.max(0, worldTop);
-    const visibleBottom = Math.min(viewportHeight, worldBottom);
-    if (visibleBottom > visibleTop) {
-      ctx.beginPath();
-      ctx.moveTo(worldRight, visibleTop);
-      ctx.lineTo(worldRight, visibleBottom);
-      ctx.stroke();
-    }
-  }
-
-  if (worldTop >= 0 && worldTop <= viewportHeight) {
-    const visibleLeft = Math.max(0, worldLeft);
-    const visibleRight = Math.min(viewportWidth, worldRight);
-    if (visibleRight > visibleLeft) {
-      ctx.beginPath();
-      ctx.moveTo(visibleLeft, worldTop);
-      ctx.lineTo(visibleRight, worldTop);
-      ctx.stroke();
-    }
-  }
-
-  if (worldBottom >= 0 && worldBottom <= viewportHeight) {
-    const visibleLeft = Math.max(0, worldLeft);
-    const visibleRight = Math.min(viewportWidth, worldRight);
-    if (visibleRight > visibleLeft) {
-      ctx.beginPath();
-      ctx.moveTo(visibleLeft, worldBottom);
-      ctx.lineTo(visibleRight, worldBottom);
-      ctx.stroke();
-    }
-  }
-}
-
-function renderGrid(
-  ctx: CanvasRenderingContext2D,
-  cameraLeft: number,
-  cameraTop: number,
-  cameraRight: number,
-  cameraBottom: number,
-  viewportWidth: number,
-  viewportHeight: number
-) {
-  ctx.fillStyle = MAP_GRID_COLOR;
-
-  const startGridX = Math.max(0, Math.floor(cameraLeft / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
-  const endGridX = Math.min(MAP_WIDTH, Math.ceil(cameraRight / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
-  const startGridY = Math.max(0, Math.floor(cameraTop / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
-  const endGridY = Math.min(MAP_HEIGHT, Math.ceil(cameraBottom / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
-
-  for (let x = startGridX; x <= endGridX; x += MAP_GRID_CELL_SIZE) {
-    for (let y = startGridY; y <= endGridY; y += MAP_GRID_CELL_SIZE) {
-      const screenX = x - cameraLeft;
-      const screenY = viewportHeight - (y - cameraTop);
-
-      if (screenX >= 0 && screenX <= viewportWidth && screenY >= 0 && screenY <= viewportHeight) {
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, MAP_GRID_DOT_SIZE / 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-  }
-}
 
 function renderObjectsList(
   ctx: CanvasRenderingContext2D,
