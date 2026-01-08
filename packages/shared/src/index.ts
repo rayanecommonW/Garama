@@ -1,13 +1,15 @@
-import objectsData from '../objects.json';
+import forestRuinsProject from '../levels/forest_ruins.ldtk.json';
+
+import { parseWorldObjectsFromLdtk } from './ldtk/parseWorld';
 
 export const TICK_RATE = 20;
 
 export const MAP_GRID_CELL_SIZE = 32;
 export const MAP_GRID_DOT_SIZE = 2;
-export const MAP_GRID_COLOR = '#ffffff';
-export const MAP_BORDER_COLOR = '#ffffff';
+export const MAP_GRID_COLOR = 'rgba(231, 253, 245, 0.22)';
+export const MAP_BORDER_COLOR = '#1f3b2b';
 export const MAP_BORDER_WIDTH = 2;
-export const MAP_OUTSIDE_COLOR = '#1a1a1a';
+export const MAP_OUTSIDE_COLOR = '#020b06';
 export const MAP_HEADER_HEIGHT = 73;
 export const MAP_WIDTH = 10000;
 export const MAP_HEIGHT = 10000;
@@ -53,7 +55,7 @@ export const DEBUG_PLAYER_HITBOX_COLOR = '#ffff00';
 
 export type Point = [number, number];
     
-export type RenderStyle = 'stone-wall' | 'wooden-barrier' | 'metal';
+export type RenderStyle = 'stone-wall' | 'wooden-barrier' | 'metal' | 'spikes';
 
 export const PLAYER_Z_INDEX = 50;
 
@@ -128,7 +130,25 @@ export type ServerMessage =
   | { type: 'damage'; targetId: string; hp: number }
   | { type: 'death'; targetId: string };
 
-export const STATIC_OBJECTS: StaticObject[] = (objectsData.objects as RawStaticObject[]).map(rawToPolygon);
+function normalizeRenderStyle(value: string): RenderStyle {
+  if (value === 'stone-wall') return value;
+  if (value === 'wooden-barrier') return value;
+  if (value === 'metal') return value;
+  if (value === 'spikes') return value;
+  return 'stone-wall';
+}
+
+const rawObjectsFromLdtk = parseWorldObjectsFromLdtk(forestRuinsProject).map((obj) => ({
+  id: obj.id,
+  position: obj.position,
+  width: obj.width,
+  height: obj.height,
+  renderStyle: normalizeRenderStyle(obj.renderStyle),
+  isCollision: obj.isCollision,
+  zIndex: obj.zIndex,
+})) satisfies RawStaticObject[];
+
+export const STATIC_OBJECTS: StaticObject[] = rawObjectsFromLdtk.map(rawToPolygon);
 
 export {
   pointInPolygon,

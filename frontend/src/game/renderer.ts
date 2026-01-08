@@ -5,8 +5,6 @@ import {
   MAP_GRID_CELL_SIZE,
   MAP_GRID_DOT_SIZE,
   MAP_GRID_COLOR,
-  MAP_BORDER_COLOR,
-  MAP_BORDER_WIDTH,
   MAP_OUTSIDE_COLOR,
   MAP_WIDTH,
   MAP_HEIGHT,
@@ -22,6 +20,46 @@ import { renderSprintDust } from './sprintDust';
 
 import type { GameStateType, RenderableObject } from './gameState';
 import type { Point } from '@garama/shared';
+
+let backgroundNoisePattern: CanvasPattern | null = null;
+
+function getBackgroundNoisePattern(ctx: CanvasRenderingContext2D) {
+  if (backgroundNoisePattern) return backgroundNoisePattern;
+
+  const tileSize = 96;
+  const tile = document.createElement('canvas');
+  tile.width = tileSize;
+  tile.height = tileSize;
+
+  const tctx = tile.getContext('2d');
+  if (!tctx) return null;
+
+  tctx.clearRect(0, 0, tileSize, tileSize);
+  tctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+  for (let i = 0; i < 220; i++) {
+    const x = Math.floor(Math.random() * tileSize);
+    const y = Math.floor(Math.random() * tileSize);
+    const r = Math.random() < 0.85 ? 1 : 2;
+    tctx.beginPath();
+    tctx.arc(x, y, r, 0, Math.PI * 2);
+    tctx.fill();
+  }
+
+  // Slight diagonal streaks for depth.
+  tctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+  tctx.lineWidth = 1;
+  for (let i = 0; i < 10; i++) {
+    const x0 = Math.random() * tileSize;
+    const y0 = Math.random() * tileSize;
+    tctx.beginPath();
+    tctx.moveTo(x0, y0);
+    tctx.lineTo(x0 + 24, y0 - 18);
+    tctx.stroke();
+  }
+
+  backgroundNoisePattern = ctx.createPattern(tile, 'repeat');
+  return backgroundNoisePattern;
+}
 
 function clamp(min: number, value: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -66,7 +104,9 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
 
   renderMapBackground(ctx, cameraLeft, cameraTop, effectiveWidth, effectiveHeight);
   renderMapBorders(ctx, cameraLeft, cameraTop, effectiveWidth, effectiveHeight);
-  renderGrid(ctx, cameraLeft, cameraTop, cameraRight, cameraBottom, effectiveWidth, effectiveHeight);
+  if (gameState.debugCollisions) {
+    renderGrid(ctx, cameraLeft, cameraTop, cameraRight, cameraBottom, effectiveWidth, effectiveHeight);
+  }
 
   const backgroundObjects = gameState.objects.filter((obj) => obj.zIndex < PLAYER_Z_INDEX);
   const foregroundObjects = gameState.objects.filter((obj) => obj.zIndex >= PLAYER_Z_INDEX);
@@ -106,20 +146,207 @@ function renderMapBackground(
   const worldRight = MAP_WIDTH - cameraLeft;
   const worldBottom = viewportHeight - (0 - cameraTop);
 
-  ctx.fillStyle = '#000000';
   const visibleWorldLeft = Math.max(0, worldLeft);
   const visibleWorldTop = Math.max(0, worldTop);
   const visibleWorldRight = Math.min(viewportWidth, worldRight);
   const visibleWorldBottom = Math.min(viewportHeight, worldBottom);
 
-  if (visibleWorldRight > visibleWorldLeft && visibleWorldBottom > visibleWorldTop) {
-    ctx.fillRect(
-      visibleWorldLeft,
-      visibleWorldTop,
-      visibleWorldRight - visibleWorldLeft,
-      visibleWorldBottom - visibleWorldTop
-    );
+  if (visibleWorldRight <= visibleWorldLeft || visibleWorldBottom <= visibleWorldTop) return;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(
+    visibleWorldLeft,
+    visibleWorldTop,
+    visibleWorldRight - visibleWorldLeft,
+    visibleWorldBottom - visibleWorldTop
+  );
+  ctx.clip();
+
+  renderForestRuinsParallax(ctx, cameraLeft, cameraTop, viewportWidth, viewportHeight);
+
+  ctx.restore();
+}
+
+function renderForestRuinsParallax(
+  ctx: CanvasRenderingContext2D,
+  cameraLeft: number,
+  cameraTop: number,
+  viewportWidth: number,
+  viewportHeight: number
+) {
+  // Base sky/canopy gradient.
+  const sky = ctx.createLinearGradient(0, 0, 0, viewportHeight);
+  sky.addColorStop(0, '#0b2418');
+  sky.addColorStop(0.45, '#06140d');
+  sky.addColorStop(1, '#040906');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, viewportWidth, viewportHeight);
+
+  // Distant haze.
+  const haze = ctx.createLinearGradient(0, 0, 0, viewportHeight * 0.8);
+  haze.addColorStop(0, 'rgba(255, 255, 255, 0.06)');
+  haze.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = haze;
+  ctx.fillRect(0, 0, viewportWidth, viewportHeight * 0.8);
+
+  // Parallax layers (far -> near).
+  const farX = -cameraLeft * 0.06;
+  const farY = cameraTop * 0.02;
+  renderSilhouetteWave(ctx, {
+    xOffset: farX,
+    yBase: viewportHeight * 0.28 + farY,
+    amp: 26,
+    freq: 0.0022,
+    step: 220,
+    viewportWidth,
+    viewportHeight,
+    fillStyle: 'rgba(10, 41, 27, 0.95)',
+  });
+
+  const midX = -cameraLeft * 0.12;
+  const midY = cameraTop * 0.045;
+  renderSilhouetteWave(ctx, {
+    xOffset: midX,
+    yBase: viewportHeight * 0.36 + midY,
+    amp: 34,
+    freq: 0.0045,
+    step: 160,
+    viewportWidth,
+    viewportHeight,
+    fillStyle: 'rgba(7, 30, 19, 0.95)',
+  });
+
+  const treeX = -cameraLeft * 0.18;
+  const treeY = cameraTop * 0.065;
+  renderTreeLine(ctx, {
+    xOffset: treeX,
+    yBase: viewportHeight * 0.44 + treeY,
+    viewportWidth,
+    viewportHeight,
+  });
+
+  // Near fog layer for depth and motion.
+  const fogX = -cameraLeft * 0.26;
+  const fogY = cameraTop * 0.09;
+  renderFogBands(ctx, {
+    xOffset: fogX,
+    yOffset: fogY,
+    viewportWidth,
+    viewportHeight,
+  });
+
+  // Subtle texture overlay (cached).
+  const noise = getBackgroundNoisePattern(ctx);
+  if (noise) {
+    ctx.save();
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = noise;
+    ctx.fillRect(0, 0, viewportWidth, viewportHeight);
+    ctx.restore();
   }
+
+  // Vignette to keep focus on characters/platforms.
+  const vignette = ctx.createRadialGradient(
+    viewportWidth / 2,
+    viewportHeight * 0.55,
+    viewportHeight * 0.2,
+    viewportWidth / 2,
+    viewportHeight * 0.55,
+    viewportHeight * 0.95
+  );
+  vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  vignette.addColorStop(1, 'rgba(0, 0, 0, 0.55)');
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, viewportWidth, viewportHeight);
+}
+
+function renderSilhouetteWave(
+  ctx: CanvasRenderingContext2D,
+  opts: {
+    xOffset: number;
+    yBase: number;
+    amp: number;
+    freq: number;
+    step: number;
+    viewportWidth: number;
+    viewportHeight: number;
+    fillStyle: string;
+  }
+) {
+  const { xOffset, yBase, amp, freq, step, viewportWidth, viewportHeight, fillStyle } = opts;
+
+  const startX = -step * 2;
+  const endX = viewportWidth + step * 2;
+
+  ctx.fillStyle = fillStyle;
+  ctx.beginPath();
+  ctx.moveTo(startX, viewportHeight + 200);
+  ctx.lineTo(startX, yBase);
+
+  for (let x = startX; x <= endX; x += step) {
+    const wx = x - xOffset;
+    const wobble = Math.sin(wx * freq) * amp + Math.sin(wx * freq * 0.55) * (amp * 0.35);
+    ctx.lineTo(x, yBase + wobble);
+  }
+
+  ctx.lineTo(endX, viewportHeight + 200);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function renderTreeLine(
+  ctx: CanvasRenderingContext2D,
+  opts: { xOffset: number; yBase: number; viewportWidth: number; viewportHeight: number }
+) {
+  const { xOffset, yBase, viewportWidth, viewportHeight } = opts;
+  const step = 90;
+  const startX = -step * 4;
+  const endX = viewportWidth + step * 4;
+
+  ctx.fillStyle = 'rgba(4, 20, 12, 0.98)';
+  ctx.beginPath();
+  ctx.moveTo(startX, viewportHeight + 240);
+  ctx.lineTo(startX, yBase);
+
+  for (let x = startX; x <= endX; x += step) {
+    const wx = x - xOffset;
+    const height = 40 + (Math.sin(wx * 0.015) + 1) * 55 + (Math.sin(wx * 0.05) + 1) * 10;
+    const spike = (Math.sin(wx * 0.09) + 1) * 12;
+    ctx.lineTo(x + step * 0.35, yBase - height - spike);
+    ctx.lineTo(x + step * 0.7, yBase - height * 0.72);
+    ctx.lineTo(x + step, yBase - height * 0.92);
+  }
+
+  ctx.lineTo(endX, viewportHeight + 240);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function renderFogBands(
+  ctx: CanvasRenderingContext2D,
+  opts: { xOffset: number; yOffset: number; viewportWidth: number; viewportHeight: number }
+) {
+  const { xOffset, yOffset, viewportWidth, viewportHeight } = opts;
+  const bandH = 160;
+  const bands = 4;
+
+  ctx.save();
+  ctx.globalAlpha = 0.28;
+
+  for (let i = 0; i < bands; i++) {
+    const y = viewportHeight * 0.55 + i * (bandH * 0.62) + yOffset * 0.25;
+    const grad = ctx.createLinearGradient(0, y, 0, y + bandH);
+    grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    grad.addColorStop(0.5, 'rgba(231, 253, 245, 0.14)');
+    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = grad;
+
+    const x = (xOffset * 0.4 + i * 120) % 260;
+    ctx.fillRect(-260 + x, y, viewportWidth + 520, bandH);
+  }
+
+  ctx.restore();
 }
 
 function renderMapBorders(
@@ -129,22 +356,24 @@ function renderMapBorders(
   viewportWidth: number,
   viewportHeight: number
 ) {
-  ctx.strokeStyle = MAP_BORDER_COLOR;
-  ctx.lineWidth = MAP_BORDER_WIDTH;
-
   const worldLeft = 0 - cameraLeft;
   const worldTop = viewportHeight - (MAP_HEIGHT - cameraTop);
   const worldRight = MAP_WIDTH - cameraLeft;
   const worldBottom = viewportHeight - (0 - cameraTop);
 
+  const outerStroke = '#0b1a12';
+  const midStroke = '#1f3b2b';
+  const innerStroke = 'rgba(255, 255, 255, 0.08)';
+
   if (worldLeft >= 0 && worldLeft <= viewportWidth) {
     const visibleTop = Math.max(0, worldTop);
     const visibleBottom = Math.min(viewportHeight, worldBottom);
     if (visibleBottom > visibleTop) {
-      ctx.beginPath();
-      ctx.moveTo(worldLeft, visibleTop);
-      ctx.lineTo(worldLeft, visibleBottom);
-      ctx.stroke();
+      renderBorderEdge(ctx, [worldLeft, visibleTop], [worldLeft, visibleBottom], {
+        outerStroke,
+        midStroke,
+        innerStroke,
+      });
     }
   }
 
@@ -152,10 +381,11 @@ function renderMapBorders(
     const visibleTop = Math.max(0, worldTop);
     const visibleBottom = Math.min(viewportHeight, worldBottom);
     if (visibleBottom > visibleTop) {
-      ctx.beginPath();
-      ctx.moveTo(worldRight, visibleTop);
-      ctx.lineTo(worldRight, visibleBottom);
-      ctx.stroke();
+      renderBorderEdge(ctx, [worldRight, visibleTop], [worldRight, visibleBottom], {
+        outerStroke,
+        midStroke,
+        innerStroke,
+      });
     }
   }
 
@@ -163,10 +393,11 @@ function renderMapBorders(
     const visibleLeft = Math.max(0, worldLeft);
     const visibleRight = Math.min(viewportWidth, worldRight);
     if (visibleRight > visibleLeft) {
-      ctx.beginPath();
-      ctx.moveTo(visibleLeft, worldTop);
-      ctx.lineTo(visibleRight, worldTop);
-      ctx.stroke();
+      renderBorderEdge(ctx, [visibleLeft, worldTop], [visibleRight, worldTop], {
+        outerStroke,
+        midStroke,
+        innerStroke,
+      });
     }
   }
 
@@ -174,12 +405,77 @@ function renderMapBorders(
     const visibleLeft = Math.max(0, worldLeft);
     const visibleRight = Math.min(viewportWidth, worldRight);
     if (visibleRight > visibleLeft) {
-      ctx.beginPath();
-      ctx.moveTo(visibleLeft, worldBottom);
-      ctx.lineTo(visibleRight, worldBottom);
-      ctx.stroke();
+      renderBorderEdge(ctx, [visibleLeft, worldBottom], [visibleRight, worldBottom], {
+        outerStroke,
+        midStroke,
+        innerStroke,
+      });
     }
   }
+}
+
+function renderBorderEdge(
+  ctx: CanvasRenderingContext2D,
+  start: Point,
+  end: Point,
+  palette: { outerStroke: string; midStroke: string; innerStroke: string }
+) {
+  // Outer shadow stroke.
+  ctx.strokeStyle = palette.outerStroke;
+  ctx.lineWidth = 10;
+  ctx.lineCap = 'butt';
+  ctx.beginPath();
+  ctx.moveTo(start[0], start[1]);
+  ctx.lineTo(end[0], end[1]);
+  ctx.stroke();
+
+  // Main mossy stroke.
+  ctx.strokeStyle = palette.midStroke;
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(start[0], start[1]);
+  ctx.lineTo(end[0], end[1]);
+  ctx.stroke();
+
+  // Inner highlight.
+  ctx.strokeStyle = palette.innerStroke;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(start[0], start[1]);
+  ctx.lineTo(end[0], end[1]);
+  ctx.stroke();
+
+  // Vines/roots accents (deterministic sine wiggles).
+  const dx = end[0] - start[0];
+  const dy = end[1] - start[1];
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len <= 0) return;
+
+  const nx = -dy / len;
+  const ny = dx / len;
+  const step = 220;
+  const count = Math.floor(len / step);
+  if (count <= 0) return;
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(34, 197, 94, 0.22)';
+  ctx.lineWidth = 1.5;
+
+  for (let i = 1; i <= count; i++) {
+    const t = i / (count + 1);
+    const bx = start[0] + dx * t;
+    const by = start[1] + dy * t;
+    const swing = Math.sin((bx + by) * 0.02) * 10;
+    const ox = nx * swing;
+    const oy = ny * swing;
+
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.quadraticCurveTo(bx + ox, by + oy, bx + ox * 0.2, by + oy * 0.2);
+    ctx.stroke();
+  }
+
+  ctx.restore();
 }
 
 function renderGrid(
@@ -247,6 +543,9 @@ function renderObjectsList(
         break;
       case 'metal':
         renderMetal(ctx, screenPolygon);
+        break;
+      case 'spikes':
+        renderSpikes(ctx, screenPolygon);
         break;
     }
     ctx.restore();
@@ -478,7 +777,19 @@ function renderChatBubbles(
 
 
 function renderStoneWall(ctx: CanvasRenderingContext2D, polygon: Point[]) {
-  ctx.fillStyle = '#6b7280';
+  const xs = polygon.map((p) => p[0]);
+  const ys = polygon.map((p) => p[1]);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+
+  const base = ctx.createLinearGradient(minX, minY, maxX, maxY);
+  base.addColorStop(0, '#4b5d52');
+  base.addColorStop(0.55, '#36463d');
+  base.addColorStop(1, '#1f2b26');
+
+  ctx.fillStyle = base;
   ctx.beginPath();
   ctx.moveTo(polygon[0][0], polygon[0][1]);
   for (let i = 1; i < polygon.length; i++) {
@@ -487,21 +798,19 @@ function renderStoneWall(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = '#374151';
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#0b1a12';
+  ctx.lineWidth = 4;
   ctx.stroke();
 
-  ctx.strokeStyle = '#4b5563';
+  ctx.strokeStyle = 'rgba(231, 253, 245, 0.08)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Stone blocks (subtle).
+  ctx.strokeStyle = 'rgba(231, 253, 245, 0.06)';
   ctx.lineWidth = 1;
 
-  const xs = polygon.map((p) => p[0]);
-  const ys = polygon.map((p) => p[1]);
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-
-  for (let y = minY; y < maxY; y += 15) {
+  for (let y = minY; y < maxY; y += 18) {
     ctx.beginPath();
     ctx.moveTo(minX, y);
     ctx.lineTo(maxX, y);
@@ -509,12 +818,13 @@ function renderStoneWall(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   }
 
   let offsetToggle = false;
-  for (let y = minY; y < maxY; y += 15) {
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.22)';
+  for (let y = minY; y < maxY; y += 18) {
     const offset = offsetToggle ? 20 : 0;
-    for (let x = minX + offset; x < maxX; x += 40) {
+    for (let x = minX + offset; x < maxX; x += 44) {
       ctx.beginPath();
       ctx.moveTo(x, y);
-      ctx.lineTo(x, y + 15);
+      ctx.lineTo(x, y + 18);
       ctx.stroke();
     }
     offsetToggle = !offsetToggle;
@@ -522,7 +832,18 @@ function renderStoneWall(ctx: CanvasRenderingContext2D, polygon: Point[]) {
 }
 
 function renderWoodenBarrier(ctx: CanvasRenderingContext2D, polygon: Point[]) {
-  ctx.fillStyle = '#92400e';
+  const xs = polygon.map((p) => p[0]);
+  const ys = polygon.map((p) => p[1]);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+
+  const wood = ctx.createLinearGradient(minX, minY, minX, maxY);
+  wood.addColorStop(0, '#6f4a2c');
+  wood.addColorStop(1, '#3a2414');
+
+  ctx.fillStyle = wood;
   ctx.beginPath();
   ctx.moveTo(polygon[0][0], polygon[0][1]);
   for (let i = 1; i < polygon.length; i++) {
@@ -531,21 +852,15 @@ function renderWoodenBarrier(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = '#78350f';
+  ctx.strokeStyle = '#0b1a12';
   ctx.lineWidth = 4;
   ctx.stroke();
 
-  ctx.strokeStyle = '#78350f';
+  ctx.strokeStyle = 'rgba(231, 253, 245, 0.06)';
   ctx.lineWidth = 2;
 
-  const xs = polygon.map((p) => p[0]);
-  const ys = polygon.map((p) => p[1]);
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-
-  for (let x = minX; x < maxX; x += 25) {
+  // Planks.
+  for (let x = minX; x < maxX; x += 26) {
     ctx.beginPath();
     ctx.moveTo(x, minY);
     ctx.lineTo(x, maxY);
@@ -553,6 +868,7 @@ function renderWoodenBarrier(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   }
 
   const midY = (minY + maxY) / 2;
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(minX, midY);
@@ -569,9 +885,9 @@ function renderMetal(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   const maxY = Math.max(...ys);
 
   const gradient = ctx.createLinearGradient(minX, minY, maxX, maxY);
-  gradient.addColorStop(0, '#94a3b8');
-  gradient.addColorStop(0.5, '#cbd5e1');
-  gradient.addColorStop(1, '#64748b');
+  gradient.addColorStop(0, '#5b7a6f');
+  gradient.addColorStop(0.45, '#b6c7bf');
+  gradient.addColorStop(1, '#2a3b35');
 
   ctx.fillStyle = gradient;
   ctx.beginPath();
@@ -582,14 +898,71 @@ function renderMetal(ctx: CanvasRenderingContext2D, polygon: Point[]) {
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = '#475569';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#0b1a12';
+  ctx.lineWidth = 3;
   ctx.stroke();
 
-  ctx.fillStyle = '#334155';
+  ctx.fillStyle = '#12211b';
   polygon.forEach(([x, y]) => {
     ctx.beginPath();
     ctx.arc(x, y, 3, 0, Math.PI * 2);
     ctx.fill();
   });
+}
+
+function renderSpikes(ctx: CanvasRenderingContext2D, polygon: Point[]) {
+  const xs = polygon.map((p) => p[0]);
+  const ys = polygon.map((p) => p[1]);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+
+  const w = maxX - minX;
+  const h = maxY - minY;
+  if (w <= 0 || h <= 0) return;
+
+  // Backplate to keep spikes readable on any background.
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+  ctx.fillRect(minX, minY, w, h);
+
+  const spikeGrad = ctx.createLinearGradient(minX, minY, minX, maxY);
+  spikeGrad.addColorStop(0, '#fb7185');
+  spikeGrad.addColorStop(0.6, '#7f1d1d');
+  spikeGrad.addColorStop(1, '#1f0a0f');
+
+  const spikeBaseY = maxY;
+  const spikeTipY = minY + Math.max(2, h * 0.1);
+
+  const desiredSpikeW = 22;
+  const spikeCount = Math.max(1, Math.floor(w / desiredSpikeW));
+  const spikeW = w / spikeCount;
+
+  ctx.fillStyle = spikeGrad;
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.65)';
+  ctx.lineWidth = 2;
+
+  for (let i = 0; i < spikeCount; i++) {
+    const x0 = minX + i * spikeW;
+    const x1 = x0 + spikeW;
+    const xm = (x0 + x1) / 2;
+
+    ctx.beginPath();
+    ctx.moveTo(x0, spikeBaseY);
+    ctx.lineTo(xm, spikeTipY);
+    ctx.lineTo(x1, spikeBaseY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Tiny highlight on the left edge.
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x0 + spikeW * 0.12, spikeBaseY - 1);
+    ctx.lineTo(xm - spikeW * 0.06, spikeTipY + 1);
+    ctx.stroke();
+    ctx.restore();
+  }
 }

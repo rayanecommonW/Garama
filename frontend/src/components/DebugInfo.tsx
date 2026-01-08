@@ -20,11 +20,11 @@ type DebugInfoProps = {
 };
 
 const colorClasses = {
-  default: 'text-slate-300',
-  success: 'text-green-400',
-  error: 'text-red-400',
-  warning: 'text-yellow-400',
-  info: 'text-blue-400',
+  default: 'text-[#c9f4e2]/80',
+  success: 'text-emerald-400',
+  error: 'text-rose-400',
+  warning: 'text-amber-300',
+  info: 'text-sky-300',
 };
 
 export default function DebugInfo({
@@ -47,13 +47,13 @@ export default function DebugInfo({
       }));
 
   const containerClasses = compact
-    ? 'text-xs text-slate-400'
-    : 'text-sm text-slate-300 border-t border-slate-700 pt-3';
+    ? 'text-xs text-[#7bb59a]/80'
+    : 'text-sm text-[#c9f4e2]/80 border-t border-[#1f3b2b]/60 pt-3';
 
   return (
-    <div className={`rounded bg-black p-4 ${containerClasses} ${className}`}>
+    <div className={`rounded border border-[#1f3b2b]/80 bg-[#020b06]/80 p-4 backdrop-blur-sm ${containerClasses} ${className}`}>
       {title && !compact && (
-        <h3 className="mb-2 text-xs font-semibold tracking-wide text-slate-400 uppercase">
+        <h3 className="mb-2 text-xs font-semibold tracking-wide text-[#7bb59a] uppercase">
           {title}
         </h3>
       )}
@@ -64,21 +64,21 @@ export default function DebugInfo({
             key={index}
             className={compact ? 'flex justify-between' : 'flex items-center justify-between'}
           >
-            <span className="text-slate-400">{item.label}:</span>
+            <span className="text-[#7bb59a]/80">{item.label}:</span>
             <span className={colorClasses[item.color || 'default']}>{item.value ?? '—'}</span>
           </div>
         ))}
       </div>
 
       {(onToggleCollisions || onToggleFreeCam || onToggleCoordinates) && (
-        <div className="mt-3 border-t border-slate-700 pt-3 space-y-2">
+        <div className="mt-3 border-t border-[#1f3b2b]/60 pt-3 space-y-2">
           {onToggleCollisions && (
             <button
               onClick={onToggleCollisions}
               className={`w-full rounded px-3 py-2 text-sm font-medium transition-colors ${
                 collisionsEnabled
                   ? 'bg-red-600 text-white hover:bg-red-700'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  : 'bg-[#0b1a12]/80 text-[#c9f4e2]/80 hover:bg-[#0b1a12]'
               }`}
             >
               {collisionsEnabled ? '🔲 Hide Hitboxes' : '🔲 Show Hitboxes'}
@@ -90,7 +90,7 @@ export default function DebugInfo({
               className={`w-full rounded px-3 py-2 text-sm font-medium transition-colors ${
                 freeCamEnabled
                   ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  : 'bg-[#0b1a12]/80 text-[#c9f4e2]/80 hover:bg-[#0b1a12]'
               }`}
             >
               {freeCamEnabled ? '📷 Exit Free Cam' : '📷 Free Cam Mode'}
@@ -102,7 +102,7 @@ export default function DebugInfo({
               className={`w-full rounded px-3 py-2 text-sm font-medium transition-colors ${
                 coordinatesEnabled
                   ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  : 'bg-[#0b1a12]/80 text-[#c9f4e2]/80 hover:bg-[#0b1a12]'
               }`}
             >
               {coordinatesEnabled ? '📍 Hide Coordinates' : '📍 Show Coordinates'}
