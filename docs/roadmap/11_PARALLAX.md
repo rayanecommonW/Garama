@@ -80,18 +80,53 @@ layer.
 
 A scene is just an array of layers ordered far → near. A layer is one of:
 
-- **`gradient`** — vertical gradient, anchored to the top of the visible map
-  area. No tiling. Cheapest layer.
-- **`silhouette`** — a mountain/canopy silhouette generated from layered sine
-  waves with a deterministic seed. Tiled horizontally.
-- **`treeline`** — pointy tree-shaped silhouette. Tiled horizontally.
-- **`fog`** — soft horizontal band gradient with low alpha. Tiled.
-- **`noise`** — sparse dot/streak texture. Tiled both axes.
+- **`sky`** — vertical 3-stop gradient, viewport-anchored. No tiling, no scroll.
+- **`concreteWall`** — solid base + mossy patches + rust streaks + cracks.
+  Tiled horizontally. Built for back-wall reads in confined-space scenes.
+- **`silhouette`** — a soft wave silhouette generated from layered sine waves
+  with deterministic seed. Tiled horizontally. Useful for canopies, ridges,
+  organic skylines.
+- **`arch`** — solid concrete strip with arched openings cut out via
+  destination-out. Round-topped. Used for tunnel/pipe ribs at varied scroll
+  factors to read as a receding corridor.
+- **`grate`** — vertical bars + horizontal cross-bars + sparse rust spots.
+  The "jail" reading.
+- **`fog`** — soft horizontal band gradient with overlapping radial puffs.
+  Reused for ground fog, slime drips, mist.
+- **`water`** — animated, multi-frame strip. Dark base + bright surface
+  highlights + 5 ripple bands; phase advances per frame. Tiled both axes.
+- **`noise`** — sparse dot texture, used as a low-alpha pattern overlay.
 
 All procedural pieces use a **seeded PRNG** (mulberry32) so the same scene
 looks the same on every client and across reloads. No `Math.random()` in
 content generation — that produced different backgrounds on each tile in the
 old attempt.
+
+For sprite/asset-backed layers (planned, not implemented), see
+[12_PARALLAX_ASSETS.md](./12_PARALLAX_ASSETS.md).
+
+## 5a. Animation
+
+Layers may be animated by baking multiple frames instead of one. The cache
+stores `frames: HTMLCanvasElement[]`; for static layers `frames.length === 1`.
+At draw time the engine picks the active frame:
+
+```
+idx = floor(performance.now() / frameDurationMs) % frames.length
+```
+
+Currently only `water` opts in (8 frames × 110 ms = ~0.9 s flow loop). The
+mechanism is generic — any baker that returns more than one canvas
+participates automatically. To make a new layer animated:
+
+1. Give its type a `frameCount: number` and `frameDurationMs: number`.
+2. Make the baker return an array of canvases (one per frame), with the
+   visual variation encoded by a per-frame phase value.
+3. That's it — the cache, frame-picking, and draw paths already handle it.
+
+For seamless looping the baker's frame-N+1 must equal frame-0, which falls
+out naturally if you parameterise variation as `phase = (f / frameCount) * 2π`
+and feed it into a sine.
 
 ## 4. Anchoring
 

@@ -15,7 +15,7 @@ import { CHAT_BUBBLE_FLOAT_PX, CHAT_BUBBLE_HOLD_MS, CHAT_BUBBLE_LIFE_MS } from '
 import { renderDashTrail } from './dashRenderer';
 import { renderDebugHitboxes, renderFreeCamIndicator, renderMouseCoordinates } from './debugRenderer';
 import { renderParallax } from './parallax';
-import { FOREST_PARALLAX_SCENE } from './parallaxScene';
+import { SEWER_PARALLAX_SCENE } from './parallaxScene';
 import { renderSlashVfx } from './slashRenderer';
 import { renderSprintDust } from './sprintDust';
 
@@ -126,7 +126,7 @@ function renderMapBackground(
 
   renderParallax(
     ctx,
-    FOREST_PARALLAX_SCENE,
+    SEWER_PARALLAX_SCENE,
     { left: cameraLeft, top: cameraTop },
     { width: viewportWidth, height: viewportHeight }
   );

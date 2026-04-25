@@ -9,8 +9,14 @@ Use this skill when the user asks to add, change, or debug parallax
 backgrounds in `frontend/src/game/`.
 
 Read first: [docs/roadmap/11_PARALLAX.md](../../../docs/roadmap/11_PARALLAX.md).
+Sprite-asset extension (design only):
+[docs/roadmap/12_PARALLAX_ASSETS.md](../../../docs/roadmap/12_PARALLAX_ASSETS.md).
 Engine entry point: `frontend/src/game/parallax.ts`. Scene data:
 `frontend/src/game/parallaxScene.ts`.
+
+Layer kinds available today: `sky`, `concreteWall`, `silhouette`, `arch`,
+`grate`, `fog`, `water` (animated), `noise`. The `water` kind is the
+reference animated layer — multi-frame, ripple-based, deterministic.
 
 ## What "parallax" means here
 
@@ -43,9 +49,10 @@ screenY =  cameraTop  * sy + anchorY     // note: + because world is Y-up
 
 1. Pick a scroll factor from §2 of `11_PARALLAX.md`.
 2. Add a `ParallaxLayer` object to the scene array in `parallaxScene.ts`.
-3. If it's a new *kind* of layer (not gradient/silhouette/treeline/fog/noise),
+3. If it's a new *kind* of layer (not one of the eight already defined),
    add a baker in `parallax.ts` and a discriminator in the `ParallaxLayer`
-   union.
+   union. If the layer is animated, return an array of canvases from the
+   baker — the cache and frame picker handle the rest.
 
 ## Adding a whole new biome
 

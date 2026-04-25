@@ -43,6 +43,11 @@ This directory contains the architectural guidelines and implementation roadmap 
     - Multi-layer scroll-factor model
     - Offscreen-canvas baking
     - Safe modulo wrap & seeded PRNG
+    - Per-frame animation for moving layers (water, etc.)
+12. [Parallax Sprite Assets](./12_PARALLAX_ASSETS.md) (design only)
+    - `sprite` and `spriteSheet` layer kinds
+    - Asset folder layout, async load contract
+    - When to prefer procedural vs sprite
 
 ## Usage
 
