@@ -14,9 +14,14 @@ Sprite-asset extension (design only):
 Engine entry point: `frontend/src/game/parallax.ts`. Scene data:
 `frontend/src/game/parallaxScene.ts`.
 
-Layer kinds available today: `sky`, `concreteWall`, `silhouette`, `arch`,
-`grate`, `fog`, `water` (animated), `noise`. The `water` kind is the
-reference animated layer — multi-frame, ripple-based, deterministic.
+Layer kinds available today: `sky`, `concreteWall`, `brickWall`,
+`silhouette`, `arch`, `grate`, `fog`, `water` (animated), `noise`.
+The `water` kind is the reference animated layer — multi-frame,
+ripple-based, deterministic.
+
+The map border / beyond-the-world frame is a separate concern — see
+[mapBorder.ts](../../../frontend/src/game/mapBorder.ts) and
+[docs/roadmap/13_MAP_BORDER.md](../../../docs/roadmap/13_MAP_BORDER.md).
 
 ## What "parallax" means here
 

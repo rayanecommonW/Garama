@@ -2,9 +2,6 @@ import objectsData from '../objects.json';
 
 export const TICK_RATE = 20;
 
-export const MAP_BORDER_COLOR = '#ffffff';
-export const MAP_BORDER_WIDTH = 2;
-export const MAP_OUTSIDE_COLOR = '#1a1a1a';
 export const MAP_HEADER_HEIGHT = 73;
 export const MAP_WIDTH = 10000;
 export const MAP_HEIGHT = 10000;

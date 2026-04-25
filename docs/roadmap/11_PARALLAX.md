@@ -81,8 +81,12 @@ layer.
 A scene is just an array of layers ordered far → near. A layer is one of:
 
 - **`sky`** — vertical 3-stop gradient, viewport-anchored. No tiling, no scroll.
-- **`concreteWall`** — solid base + mossy patches + rust streaks + cracks.
-  Tiled horizontally. Built for back-wall reads in confined-space scenes.
+- **`concreteWall`** — solid base + tinted patches + rust streaks + cracks.
+  Tiled horizontally. Generic enough for any wet-stone biome — choose
+  patch/rust colours per scene.
+- **`brickWall`** — running-bond brick pattern with per-brick tonal jitter,
+  mortar gaps, sparse stains, and grime streaks. Tiled horizontally. Used
+  for the sewer back wall.
 - **`silhouette`** — a soft wave silhouette generated from layered sine waves
   with deterministic seed. Tiled horizontally. Useful for canopies, ridges,
   organic skylines.

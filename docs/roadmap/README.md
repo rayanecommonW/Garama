@@ -48,6 +48,9 @@ This directory contains the architectural guidelines and implementation roadmap 
     - `sprite` and `spriteSheet` layer kinds
     - Asset folder layout, async load contract
     - When to prefer procedural vs sprite
+13. [Map Border & Beyond-Border Frame](./13_MAP_BORDER.md)
+    - Brick tile + cavalier shear for the area outside the world rect
+    - Inner-shadow + edge line frame on the visible world borders
 
 ## Usage
 

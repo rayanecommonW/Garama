@@ -47,6 +47,25 @@ export type ConcreteWallLayer = {
   seed: number;
 };
 
+export type BrickWallLayer = {
+  kind: 'brickWall';
+  id: string;
+  scroll: ScrollFactor;
+  worldFloorY: number;
+  height: number;
+  /** Average brick body color. Each brick gets ±tonalJitter applied. */
+  brickColor: string;
+  /** Mortar color (gaps between bricks). */
+  mortarColor: string;
+  /** Stain/grime color used for sparse weathering streaks. */
+  stainColor: string;
+  brickWidth: number;
+  brickHeight: number;
+  /** Per-channel jitter applied to each brick (0..255). */
+  tonalJitter: number;
+  seed: number;
+};
+
 export type ArchLayer = {
   kind: 'arch';
   id: string;
@@ -117,6 +136,7 @@ export type ParallaxLayer =
   | SkyLayer
   | SilhouetteLayer
   | ConcreteWallLayer
+  | BrickWallLayer
   | ArchLayer
   | GrateLayer
   | FogLayer
@@ -124,7 +144,14 @@ export type ParallaxLayer =
   | NoiseLayer;
 
 /** Any layer that has a tiled, world-anchored strip with a scroll factor. */
-type TiledLayer = SilhouetteLayer | ConcreteWallLayer | ArchLayer | GrateLayer | FogLayer | WaterLayer;
+type TiledLayer =
+  | SilhouetteLayer
+  | ConcreteWallLayer
+  | BrickWallLayer
+  | ArchLayer
+  | GrateLayer
+  | FogLayer
+  | WaterLayer;
 
 export type ParallaxScene = {
   id: string;
@@ -229,6 +256,8 @@ function bakeLayer(
       return [bakeSilhouette(layer, stripWidth)];
     case 'concreteWall':
       return [bakeConcreteWall(layer, stripWidth)];
+    case 'brickWall':
+      return [bakeBrickWall(layer, stripWidth)];
     case 'arch':
       return [bakeArch(layer, stripWidth)];
     case 'grate':
@@ -353,6 +382,80 @@ function bakeConcreteWall(layer: ConcreteWallLayer, stripWidth: number): HTMLCan
   return canvas;
 }
 
+function bakeBrickWall(layer: BrickWallLayer, stripWidth: number): HTMLCanvasElement {
+  const canvas = makeCanvas(stripWidth, layer.height);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+
+  const rng = mulberry32(layer.seed);
+  const bw = layer.brickWidth;
+  const bh = layer.brickHeight;
+
+  // Pick the row count to fit cleanly so vertical tiling has no half-row.
+  const rowCount = Math.max(1, Math.round(layer.height / bh));
+  const exactBh = layer.height / rowCount;
+
+  // Mortar fill — also visible through the gaps between bricks.
+  ctx.fillStyle = layer.mortarColor;
+  ctx.fillRect(0, 0, stripWidth, layer.height);
+
+  // Parse brickColor once so per-brick jitter is cheap.
+  const baseRGB = parseHex(layer.brickColor);
+  if (!baseRGB) return canvas;
+
+  for (let row = 0; row < rowCount; row++) {
+    const y = row * exactBh;
+    // Half-brick offset on alternating rows = running bond pattern.
+    const offset = (row % 2) * (bw / 2);
+    // Cover the strip with a couple extra columns so the row wraps cleanly.
+    for (let col = -1; col * bw - offset < stripWidth + bw; col++) {
+      const x = col * bw - offset;
+
+      const jitter = (rng() - 0.5) * 2 * layer.tonalJitter;
+      const r = clamp255(baseRGB.r + jitter);
+      const g = clamp255(baseRGB.g + jitter * 0.85);
+      const b = clamp255(baseRGB.b + jitter * 0.7);
+      ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+      ctx.fillRect(x + 1, y + 1, bw - 2, exactBh - 2);
+
+      // Subtle top highlight + bottom shadow inside each brick.
+      ctx.fillStyle = 'rgba(255, 230, 200, 0.05)';
+      ctx.fillRect(x + 1, y + 1, bw - 2, 1);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+      ctx.fillRect(x + 1, y + exactBh - 2, bw - 2, 1);
+
+      // Sparse stains.
+      if (rng() < 0.22) {
+        const sx = x + 2 + rng() * (bw - 6);
+        const sy = y + 2 + rng() * (exactBh - 5);
+        ctx.fillStyle = withAlpha(layer.stainColor, 0.35 + rng() * 0.3);
+        ctx.fillRect(sx, sy, 2 + rng() * 5, 1 + rng() * 2);
+      }
+    }
+  }
+
+  // A few longer vertical grime streaks running across rows.
+  const streakCount = Math.max(2, Math.floor(stripWidth / 280));
+  for (let i = 0; i < streakCount; i++) {
+    const x = rng() * stripWidth;
+    const startY = rng() * layer.height * 0.3;
+    const grad = ctx.createLinearGradient(x, startY, x, layer.height);
+    grad.addColorStop(0, withAlpha(layer.stainColor, 0));
+    grad.addColorStop(0.4, withAlpha(layer.stainColor, 0.45));
+    grad.addColorStop(1, withAlpha(layer.stainColor, 0.15));
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 1 + rng() * 2;
+    drawWrapped(ctx, stripWidth, x, (xx) => {
+      ctx.beginPath();
+      ctx.moveTo(xx, startY);
+      ctx.lineTo(xx + (rng() - 0.5) * 6, layer.height);
+      ctx.stroke();
+    });
+  }
+
+  return canvas;
+}
+
 function bakeArch(layer: ArchLayer, stripWidth: number): HTMLCanvasElement {
   const canvas = makeCanvas(stripWidth, layer.height);
   const ctx = canvas.getContext('2d');
@@ -375,8 +478,9 @@ function bakeArch(layer: ArchLayer, stripWidth: number): HTMLCanvasElement {
     ctx.beginPath();
     ctx.moveTo(cx - archHalfW, layer.height);
     ctx.lineTo(cx - archHalfW, archCapY);
-    // Anticlockwise arc from PI to 0 sweeps through the top (canvas Y-down).
-    ctx.arc(cx, archCapY, archHalfW, Math.PI, 0, true);
+    // Clockwise from PI (west) via 3PI/2 (north) to 2PI (east) sweeps the
+    // TOP half in canvas Y-down. Using (PI, 0, true) sweeps the bottom.
+    ctx.arc(cx, archCapY, archHalfW, Math.PI, 2 * Math.PI, false);
     ctx.lineTo(cx + archHalfW, layer.height);
     ctx.closePath();
     ctx.fill();
@@ -391,7 +495,7 @@ function bakeArch(layer: ArchLayer, stripWidth: number): HTMLCanvasElement {
     ctx.beginPath();
     ctx.moveTo(cx - archHalfW, layer.height);
     ctx.lineTo(cx - archHalfW, archCapY);
-    ctx.arc(cx, archCapY, archHalfW, Math.PI, 0, true);
+    ctx.arc(cx, archCapY, archHalfW, Math.PI, 2 * Math.PI, false);
     ctx.lineTo(cx + archHalfW, layer.height);
     ctx.stroke();
   }
@@ -586,13 +690,22 @@ function drawWrapped(
 }
 
 function withAlpha(color: string, alpha: number): string {
-  if (color.startsWith('#') && color.length === 7) {
-    const r = parseInt(color.slice(1, 3), 16);
-    const g = parseInt(color.slice(3, 5), 16);
-    const b = parseInt(color.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  }
-  return color;
+  const rgb = parseHex(color);
+  if (!rgb) return color;
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+}
+
+function parseHex(color: string): { r: number; g: number; b: number } | null {
+  if (!color.startsWith('#') || color.length !== 7) return null;
+  return {
+    r: parseInt(color.slice(1, 3), 16),
+    g: parseInt(color.slice(3, 5), 16),
+    b: parseInt(color.slice(5, 7), 16),
+  };
+}
+
+function clamp255(value: number): number {
+  return Math.max(0, Math.min(255, Math.round(value)));
 }
 
 /* -------------------------------------------------------------------------- */
