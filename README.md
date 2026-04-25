@@ -86,7 +86,7 @@ npm run build
 
 ## 📚 Documentation
 
-For detailed technical documentation and implementation roadmap, see the [Game Implementation Roadmap](./docs/roadmap/README.md).
+For detailed technical documentation and implementation roadmap, see the [Game Implementation Roadmap](./docs/roadmap/README.md). The parallax background system in particular is documented in [docs/roadmap/11_PARALLAX.md](./docs/roadmap/11_PARALLAX.md).
 
 ## 🎮 How to Play
 

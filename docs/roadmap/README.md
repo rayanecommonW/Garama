@@ -39,6 +39,10 @@ This directory contains the architectural guidelines and implementation roadmap 
     - Boss HFSM ("The Tell" Architecture)
     - Narrative Flags
     - Raycasting for Anti-Tunneling
+11. [Parallax Background](./11_PARALLAX.md)
+    - Multi-layer scroll-factor model
+    - Offscreen-canvas baking
+    - Safe modulo wrap & seeded PRNG
 
 ## Usage
 

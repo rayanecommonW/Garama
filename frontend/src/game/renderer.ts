@@ -2,9 +2,6 @@ import {
   CHARGED_HITBOX_SCALE,
   CHARGED_VFX_SCALE,
   CHARGE_HOLD_MS,
-  MAP_GRID_CELL_SIZE,
-  MAP_GRID_DOT_SIZE,
-  MAP_GRID_COLOR,
   MAP_BORDER_COLOR,
   MAP_BORDER_WIDTH,
   MAP_OUTSIDE_COLOR,
@@ -17,6 +14,8 @@ import {
 import { CHAT_BUBBLE_FLOAT_PX, CHAT_BUBBLE_HOLD_MS, CHAT_BUBBLE_LIFE_MS } from './chatBubbles';
 import { renderDashTrail } from './dashRenderer';
 import { renderDebugHitboxes, renderFreeCamIndicator, renderMouseCoordinates } from './debugRenderer';
+import { renderParallax } from './parallax';
+import { FOREST_PARALLAX_SCENE } from './parallaxScene';
 import { renderSlashVfx } from './slashRenderer';
 import { renderSprintDust } from './sprintDust';
 
@@ -66,7 +65,6 @@ export function renderFrame(canvas: HTMLCanvasElement, gameState: GameStateType)
 
   renderMapBackground(ctx, cameraLeft, cameraTop, effectiveWidth, effectiveHeight);
   renderMapBorders(ctx, cameraLeft, cameraTop, effectiveWidth, effectiveHeight);
-  renderGrid(ctx, cameraLeft, cameraTop, cameraRight, cameraBottom, effectiveWidth, effectiveHeight);
 
   const backgroundObjects = gameState.objects.filter((obj) => obj.zIndex < PLAYER_Z_INDEX);
   const foregroundObjects = gameState.objects.filter((obj) => obj.zIndex >= PLAYER_Z_INDEX);
@@ -106,20 +104,34 @@ function renderMapBackground(
   const worldRight = MAP_WIDTH - cameraLeft;
   const worldBottom = viewportHeight - (0 - cameraTop);
 
-  ctx.fillStyle = '#000000';
   const visibleWorldLeft = Math.max(0, worldLeft);
   const visibleWorldTop = Math.max(0, worldTop);
   const visibleWorldRight = Math.min(viewportWidth, worldRight);
   const visibleWorldBottom = Math.min(viewportHeight, worldBottom);
 
-  if (visibleWorldRight > visibleWorldLeft && visibleWorldBottom > visibleWorldTop) {
-    ctx.fillRect(
-      visibleWorldLeft,
-      visibleWorldTop,
-      visibleWorldRight - visibleWorldLeft,
-      visibleWorldBottom - visibleWorldTop
-    );
-  }
+  if (visibleWorldRight <= visibleWorldLeft || visibleWorldBottom <= visibleWorldTop) return;
+
+  ctx.save();
+  // Clip to the visible world rectangle so parallax (which draws using full
+  // viewport coordinates) doesn't bleed past the world borders. We don't
+  // translate — the parallax math is in canvas-space on purpose.
+  ctx.beginPath();
+  ctx.rect(
+    visibleWorldLeft,
+    visibleWorldTop,
+    visibleWorldRight - visibleWorldLeft,
+    visibleWorldBottom - visibleWorldTop
+  );
+  ctx.clip();
+
+  renderParallax(
+    ctx,
+    FOREST_PARALLAX_SCENE,
+    { left: cameraLeft, top: cameraTop },
+    { width: viewportWidth, height: viewportHeight }
+  );
+
+  ctx.restore();
 }
 
 function renderMapBorders(
@@ -178,36 +190,6 @@ function renderMapBorders(
       ctx.moveTo(visibleLeft, worldBottom);
       ctx.lineTo(visibleRight, worldBottom);
       ctx.stroke();
-    }
-  }
-}
-
-function renderGrid(
-  ctx: CanvasRenderingContext2D,
-  cameraLeft: number,
-  cameraTop: number,
-  cameraRight: number,
-  cameraBottom: number,
-  viewportWidth: number,
-  viewportHeight: number
-) {
-  ctx.fillStyle = MAP_GRID_COLOR;
-
-  const startGridX = Math.max(0, Math.floor(cameraLeft / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
-  const endGridX = Math.min(MAP_WIDTH, Math.ceil(cameraRight / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
-  const startGridY = Math.max(0, Math.floor(cameraTop / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
-  const endGridY = Math.min(MAP_HEIGHT, Math.ceil(cameraBottom / MAP_GRID_CELL_SIZE) * MAP_GRID_CELL_SIZE);
-
-  for (let x = startGridX; x <= endGridX; x += MAP_GRID_CELL_SIZE) {
-    for (let y = startGridY; y <= endGridY; y += MAP_GRID_CELL_SIZE) {
-      const screenX = x - cameraLeft;
-      const screenY = viewportHeight - (y - cameraTop);
-
-      if (screenX >= 0 && screenX <= viewportWidth && screenY >= 0 && screenY <= viewportHeight) {
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, MAP_GRID_DOT_SIZE / 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
     }
   }
 }
