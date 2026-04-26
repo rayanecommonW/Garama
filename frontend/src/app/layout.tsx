@@ -1,7 +1,7 @@
+import { Cinzel, Cormorant_Garamond } from 'next/font/google';
 import React from 'react';
 
 import type { Metadata } from 'next';
-import { Cinzel, Cormorant_Garamond } from 'next/font/google';
 import './globals.css';
 
 const cinzel = Cinzel({
