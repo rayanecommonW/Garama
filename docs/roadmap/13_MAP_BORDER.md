@@ -9,69 +9,82 @@
 The world is a 10000×10000 rect inside a much larger viewport (the canvas
 can show beyond the world edges by up to 25% per side, controlled by
 `BORDER_VISIBLE_FRACTION` in [camera.ts](../../frontend/src/game/camera.ts)).
-We need that beyond-area to read as "the wall the tunnel was carved out of",
-not as a flat black void.
+We need that beyond-area to read as **physical bedrock the tunnel was
+carved out of** — solid stone with cracks. No perspective tricks; the
+border is a simple opaque object that happens to be cracked.
 
 ## 2. Approach
 
-A single brick tile (256 × 192, baked once and cached in module scope) is
-filled into the canvas with two passes:
+Two seamless cracked-stone tiles, baked once and cached in module scope:
 
-1. **Beyond-border** — `renderBeyondBorder(ctx, worldRect, viewport)`.
-   Clip-out the world rect with even-odd fill rule, apply a cavalier shear
-   (`transform(1, 0, -SHEAR, 1, 0, 0)` with `SHEAR = 0.35`), then fill the
-   sheared brick pattern, a flat tint, and a radial vignette so the
-   beyond-area reads as deeper into the masonry.
+- **`stoneTile`** — darker base. Tiles across the entire beyond-border ring
+  via even-odd clip. No shear, no transform.
+- **`facingTile`** — brighter base, slightly more crack density. Tiles into
+  an `FACING_THICKNESS`-px strip hugging the OUTSIDE of every visible
+  world rect edge. Reads as the inner face of the masonry — the visible
+  edge of the wall, sitting one step closer to the viewer than the
+  beyond-border field.
 
-2. **Frame** — `renderMapBorderFrame(ctx, worldRect, viewport)`.
-   Inner shadow strip just inside each visible world rect edge, plus a
-   crisp 2-px line on the edge itself. Drawn *after* world objects and
-   players so the play area is clearly delimited regardless of what's
-   sitting on the boundary.
+A 2-px black line on the exact world rect edge gives the boundary a hard
+read regardless of which crack happens to land near it.
 
-Both functions live in [mapBorder.ts](../../frontend/src/game/mapBorder.ts).
+Both tiles live in [mapBorder.ts](../../frontend/src/game/mapBorder.ts).
 
-## 3. Why cavalier and not perspective
+## 3. Why no perspective
 
-Cavalier projection (parallel, no foreshortening) is enough to read as 3D
-in this context — full perspective would mean depth-keyed scaling and a
-vanishing point, which is overkill for a "frame around a hole" effect. The
-shear factor `0.35` is tuned by eye; lowering it makes the wall look thinner,
-raising it makes it look like a sharper-angled inset.
+An earlier iteration used a cavalier shear on the beyond-border so the
+masonry read as a 3D extrusion. Two problems with it: (a) the shear meant
+the beyond-border was a "still image" that didn't track camera movement
+naturally, (b) it competed visually with the parallax inside the world
+rect. The current flat-fill version is simpler, reads as solid ground, and
+stays out of the way.
 
-The cavalier direction (back-of-wall shifts upper-right) is consistent
-across all four sides — left and bottom regions don't get a strict
-back-of-cube projection, but the uniform shear plus vignette+tint reads as
-"masonry behind the level" rather than four mismatched walls.
+## 4. Cracks
 
-## 4. Performance
+The cracks are baked into the tiles, not drawn per-frame:
 
-- One `bakeBrickTile` call per session, ~3 ms on a desktop. Cached in module
-  scope, never invalidated.
-- Per-frame: one `createPattern` + one large `fillRect` (sheared) + one flat
-  tint `fillRect` + one radial-gradient `fillRect`. ~4 fills total. Plus
-  the frame: a few stroke calls only on visible edges.
+- 14 main cracks per stone tile, 18 per facing tile.
+- Each crack is a polyline of 6–13 segments, with a ~60% chance of a
+  side-branch.
+- Each crack is drawn at the tile origin **and at 8 wrap offsets**
+  (`±tileW × ±tileH` combinations). Anything crossing a tile edge appears
+  on the opposite edge — the tile is seamless in both axes.
+- Half the cracks have a faint highlight stroke offset 1 px to give the
+  cracks a bit of dimension.
+
+Cracks therefore appear naturally near every world border edge because
+they appear naturally everywhere — no need for an explicit "cracks
+emanating from the border" pass.
+
+## 5. Performance
+
+- Two `bakeCrackedStoneTile` calls per session, ~5 ms total. Cached in
+  module scope, never invalidated.
+- Per-frame: one `createPattern` + one `fillRect` for the beyond-border.
+  Frame: up to four `fillRect`s for the facing strips, plus one stroke for
+  the edge line. ~6 fills total.
 - When the camera is fully inside the world (no edges visible), the
-  even-odd clip degenerates to an empty region and all the fills become
-  no-ops. No special-casing needed.
+  even-odd clip is empty and the frame's visibility checks all fail. No
+  special-casing needed.
 
-## 5. Extending
+## 6. Extending
 
-- **Different beyond-border per biome.** Today the brick tile is a single
-  hard-coded palette. Easy extension: make `getBrickTile(biomeId)` keyed on
-  the active biome, baking once per biome and caching all of them. The
-  active biome tracks alongside the active parallax scene.
-- **Asset-backed beyond-border.** When sprite layers land
-  (see [12_PARALLAX_ASSETS.md](./12_PARALLAX_ASSETS.md)), the brick tile
-  becomes a hand-drawn PNG instead of a procedural bake. Same render path.
-- **Animated beyond-border** (e.g. flickering torchlight on the masonry).
-  Same recipe as `water` in the parallax engine: bake N frames, pick by
-  `performance.now() / frameDurationMs`.
+- **Different bedrock per biome.** Today both tiles are hard-coded.
+  Easy extension: make `getStoneTile(biomeId)` keyed on the active biome,
+  baking once per biome. Same for `getFacingTile`.
+- **Cracks emanating from impacts.** If gameplay ever wants to leave a
+  visible mark when, e.g., a charged attack lands on a wall, the
+  bake-once approach won't fly. Add a separate per-frame procedural pass
+  that draws an extra crack at the impact point (positions stored in
+  game state, world-locked).
+- **Asset-backed border.** When sprite layers land
+  (see [12_PARALLAX_ASSETS.md](./12_PARALLAX_ASSETS.md)), the procedural
+  bake becomes a hand-drawn PNG. Same render path.
 
-## 6. Out of scope
+## 7. Out of scope
 
-- Free-cam mode visuals at extreme zooms — the shear and vignette are tuned
-  for `zoom = 1`. Free cam still works; it just looks slightly off.
-- Animated borders (rats running along the floor, rust drips). Belongs in
-  parallax (low-Y, high-`sx` water-style layer) or sprite layers later, not
-  here.
+- Beyond-border interaction with the player (climbing into the wall, etc.).
+  The border is purely visual — collision is handled separately by the
+  world's static objects.
+- Animated beyond-border (rust drips, scuttling rats). Belongs in parallax
+  as a low-Y, high-`sx` layer or in a future sprite-layer pass.

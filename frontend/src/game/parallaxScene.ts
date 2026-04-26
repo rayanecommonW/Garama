@@ -101,17 +101,17 @@ export const SEWER_PARALLAX_SCENE: ParallaxScene = {
       seed: 0x5e4e04,
     },
 
-    // 6) Water — animated muddy stream at the bottom of the tunnel.
-    //    Brown base, ochre highlights, sy low so it stays visible during
-    //    jumps; sx high so walking flows the surface under the mouse.
+    // 6) Water — animated stagnant stream at the bottom of the tunnel.
+    //    Deep algae green: dark base, muted-green highlights. sy low so it
+    //    stays visible during jumps; sx high so walking flows the surface.
     {
       kind: 'water',
       id: 'sewer-water',
       scroll: { sx: 0.85, sy: 0.18 },
       worldFloorY: 60,
       height: 220,
-      baseColor: '#3a2a1a',
-      highlightColor: '#8c6a3e',
+      baseColor: '#0e1a12',
+      highlightColor: '#3a5a3f',
       rippleAmplitude: 7,
       frameCount: 8,
       frameDurationMs: 110,

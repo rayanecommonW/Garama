@@ -3,9 +3,12 @@ import { useState } from 'react';
 
 import { DEFAULT_KEY_BINDINGS, type KeyBindings } from '../game/input';
 
-type Props = { onStart: (name: string, keyMap: KeyBindings) => void };
+type Props = {
+  onStart: (name: string, keyMap: KeyBindings) => void;
+  onBack?: () => void;
+};
 
-export default function Home({ onStart }: Props) {
+export default function Home({ onStart, onBack }: Props) {
   const [name, setName] = useState('');
   const [focused, setFocused] = useState(false);
   const [keyBindings, setKeyBindings] = useState<KeyBindings>(DEFAULT_KEY_BINDINGS);
@@ -23,48 +26,100 @@ export default function Home({ onStart }: Props) {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#1a1a1a] font-sans">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-20">
-        <div className="absolute top-10 left-10 h-32 w-32 animate-pulse rounded-full bg-blue-500 blur-3xl" />
-        <div className="absolute right-20 bottom-20 h-48 w-48 animate-pulse rounded-full bg-purple-500 blur-3xl delay-1000" />
-        <div className="absolute top-1/2 left-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-500 blur-[100px]" />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black font-display text-slate-100 select-none">
+      {/* Atmospheric background */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse at 50% 30%, rgba(60,70,90,0.45) 0%, rgba(15,18,24,0.85) 45%, #000 80%)',
+        }}
+      />
+
+      {/* Subtle light beam */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className="hk-beam absolute top-0 left-1/2 h-full w-[40%] origin-top blur-2xl"
+          style={{
+            background:
+              'linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, rgba(200,215,255,0.12) 40%, rgba(255,255,255,0) 80%)',
+            transform: 'translateX(-50%)',
+          }}
+        />
       </div>
 
-      <div className="relative z-10 w-full max-w-md px-6">
-        <div className="mb-12 text-center">
-          <h1 className="mb-2 transform bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-6xl font-black tracking-tight text-transparent drop-shadow-lg transition-transform duration-300 hover:scale-105">
-            WORK IN PROGRESS
+      {/* Bottom fade */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black via-black/60 to-transparent" />
+
+      {/* Back button */}
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="absolute top-6 left-6 z-20 flex items-center gap-2 font-display text-xs tracking-[0.3em] text-white/55 transition-colors hover:text-white"
+        >
+          <span aria-hidden>←</span>
+          <span>BACK</span>
+        </button>
+      )}
+
+      <div className="relative z-10 hk-fade-in w-full max-w-lg px-6">
+        {/* Header */}
+        <div className="mb-10 text-center">
+          <div className="mb-3 flex items-center justify-center gap-3 text-white/50">
+            <Ornament direction="left" />
+            <span className="text-xs tracking-[0.4em]">PREPARE</span>
+            <Ornament direction="right" />
+          </div>
+          <h1
+            className="hk-title-glow font-display text-5xl font-semibold tracking-[0.2em] text-white sm:text-6xl"
+            style={{ letterSpacing: '0.18em' }}
+          >
+            ENTER THE ARENA
           </h1>
-          <p className="text-lg font-medium tracking-wide text-slate-400 uppercase">
-            Multiplayer Arena
+          <p className="mt-3 font-serif text-lg italic text-white/55">
+            Speak thy name, wanderer.
           </p>
         </div>
 
-        <div className="transform rounded-2xl border border-slate-700/50 bg-slate-900/50 p-8 shadow-2xl backdrop-blur-xl transition-all hover:border-slate-600/50">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="ml-1 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                Player Name
+        {/* Card */}
+        <div
+          className="relative rounded-sm border border-white/10 bg-white/[0.03] p-8 shadow-[0_0_60px_rgba(0,0,0,0.6)] backdrop-blur-sm"
+          style={{
+            backgroundImage:
+              'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0))',
+          }}
+        >
+          {/* Decorative corners */}
+          <Corner className="-top-px -left-px" />
+          <Corner className="-top-px -right-px rotate-90" />
+          <Corner className="-bottom-px -left-px -rotate-90" />
+          <Corner className="-right-px -bottom-px rotate-180" />
+
+          <form onSubmit={handleSubmit} className="space-y-7">
+            <div className="space-y-3">
+              <label className="block text-center font-display text-[11px] tracking-[0.4em] text-white/55">
+                — PLAYER NAME —
               </label>
               <div
-                className={`group relative transition-all duration-300 ${focused ? 'scale-[1.02] transform' : ''}`}
+                className={`group relative transition-all duration-300 ${focused ? 'scale-[1.01]' : ''}`}
               >
                 <input
-                  className="w-full rounded-xl border-2 border-slate-700 bg-slate-800/80 px-4 py-4 text-lg font-bold text-white shadow-inner transition-all placeholder:text-slate-600 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none"
+                  className="w-full border-y border-white/15 bg-transparent px-4 py-4 text-center font-serif text-2xl tracking-wider text-white placeholder:text-white/25 focus:border-white/50 focus:outline-none"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   onFocus={() => setFocused(true)}
                   onBlur={() => setFocused(false)}
-                  placeholder="Enter your nickname..."
+                  placeholder="…"
                   maxLength={15}
                   autoFocus
+                  style={{
+                    textShadow: name
+                      ? '0 0 14px rgba(255,255,255,0.4), 0 0 30px rgba(180,200,255,0.2)'
+                      : 'none',
+                  }}
                 />
-                <div className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2">
-                  <span
-                    className={`text-xs font-bold transition-colors ${name.length > 0 ? 'text-green-400' : 'text-slate-600'}`}
-                  >
-                    {name.length}/15
-                  </span>
+                <div className="mt-1 text-right font-display text-[10px] tracking-widest text-white/40">
+                  {name.length}/15
                 </div>
               </div>
             </div>
@@ -72,116 +127,155 @@ export default function Home({ onStart }: Props) {
             <button
               type="submit"
               disabled={!name.trim()}
-              className="group relative w-full transform overflow-hidden rounded-xl border border-white/10 bg-linear-to-r from-blue-600 to-indigo-600 py-4 text-xl font-black text-white shadow-lg shadow-blue-900/30 transition-all hover:from-blue-500 hover:to-indigo-500 hover:shadow-blue-900/50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              className="group relative mx-auto flex w-full items-center justify-center gap-3 py-3 font-display text-xl tracking-[0.3em] text-white/90 transition-all hover:text-white disabled:cursor-not-allowed disabled:text-white/20"
+              style={{
+                textShadow: name.trim()
+                  ? '0 0 14px rgba(255,255,255,0.35), 0 0 30px rgba(180,200,255,0.18)'
+                  : 'none',
+              }}
             >
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                PLAY NOW
-                <svg
-                  className="h-5 w-5 transform transition-transform group-hover:translate-x-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={3}
-                    d="M13 5l7 7-7 7M5 5l7 7-7 7"
-                  />
-                </svg>
+              <span
+                aria-hidden
+                className="text-sm opacity-0 transition-all group-enabled:group-hover:opacity-100"
+              >
+                ✦
               </span>
-              <div className="group-hover:animate-shimmer absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/20 to-transparent" />
+              <span>ENTER</span>
+              <span
+                aria-hidden
+                className="text-sm opacity-0 transition-all group-enabled:group-hover:opacity-100"
+              >
+                ✦
+              </span>
             </button>
           </form>
         </div>
 
-        <div className="mt-8 space-y-2 text-center">
-          <div className="relative mb-2 flex items-center justify-center gap-2">
+        {/* Controls */}
+        <div className="mt-10 space-y-4 text-center">
+          <div className="flex items-center justify-center gap-3 text-white/40">
+            <Ornament direction="left" small />
             <button
               onClick={() => setShowSettings(true)}
-              className="group flex items-center gap-2 rounded-lg border border-slate-700/50 bg-slate-800/50 px-3 py-1.5 text-xs font-bold tracking-widest text-slate-400 uppercase transition-all duration-200 hover:border-blue-500/30 hover:bg-slate-700 hover:text-blue-400"
-              title="Edit Controls"
+              className="font-display text-[11px] tracking-[0.4em] text-white/55 transition-colors hover:text-white"
             >
-              Controls
-              <svg
-                className="h-3 w-3 transform transition-transform duration-500 group-hover:rotate-90"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
+              CONTROLS
             </button>
+            <Ornament direction="right" small />
           </div>
 
-          <div className="flex flex-wrap justify-center gap-4 text-sm font-medium text-slate-400">
-            <span className="rounded-lg border border-slate-700/50 bg-slate-800/50 px-3 py-1">
-              {keyBindings.left.toUpperCase()}/{keyBindings.right.toUpperCase()} Move
-            </span>
-            <span className="rounded-lg border border-slate-700/50 bg-slate-800/50 px-3 py-1">
-              {keyBindings.jump === ' ' ? 'SPACE' : keyBindings.jump.toUpperCase()} Jump
-            </span>
-            <span className="rounded-lg border border-slate-700/50 bg-slate-800/50 px-3 py-1">
-              {keyBindings.dash.toUpperCase()} Dash
-            </span>
-            <span className="rounded-lg border border-slate-700/50 bg-slate-800/50 px-3 py-1">
-              {keyBindings.attack.toUpperCase()} Attack
-            </span>
-            <span className="rounded-lg border border-slate-700/50 bg-slate-800/50 px-3 py-1">
-              Enter Chat
-            </span>
+          <div className="flex flex-wrap justify-center gap-2 font-display text-[10px] tracking-[0.25em] text-white/55">
+            <KeyChip>{`${keyBindings.left.toUpperCase()}/${keyBindings.right.toUpperCase()} MOVE`}</KeyChip>
+            <KeyChip>
+              {`${keyBindings.jump === ' ' ? 'SPACE' : keyBindings.jump.toUpperCase()} JUMP`}
+            </KeyChip>
+            <KeyChip>{`${keyBindings.dash.toUpperCase()} DASH`}</KeyChip>
+            <KeyChip>{`${keyBindings.attack.toUpperCase()} ATTACK`}</KeyChip>
+            <KeyChip>ENTER CHAT</KeyChip>
           </div>
         </div>
       </div>
 
+      {/* Settings modal */}
       {showSettings && (
-        <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm duration-200">
-          <div className="relative w-full max-w-sm space-y-6 rounded-2xl border border-slate-700 bg-slate-900 p-8 shadow-2xl">
-            <h2 className="text-2xl font-bold text-white">Control Settings</h2>
+        <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm">
+          <div className="relative w-full max-w-sm border border-white/15 bg-black/80 p-8 shadow-[0_0_60px_rgba(0,0,0,0.8)]">
+            <Corner className="-top-px -left-px" />
+            <Corner className="-top-px -right-px rotate-90" />
+            <Corner className="-bottom-px -left-px -rotate-90" />
+            <Corner className="-right-px -bottom-px rotate-180" />
 
-            <div className="space-y-4">
+            <h2 className="mb-6 text-center font-display text-xl tracking-[0.3em] text-white/90">
+              CONTROLS
+            </h2>
+
+            <div className="space-y-3">
               {(['left', 'right', 'jump', 'dash', 'attack'] as const).map((action) => (
-                <div key={action} className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-slate-400 uppercase">{action}</label>
+                <div
+                  key={action}
+                  className="flex items-center justify-between border-b border-white/5 pb-2"
+                >
+                  <label className="font-display text-xs tracking-[0.3em] text-white/55 uppercase">
+                    {action}
+                  </label>
                   <input
                     type="text"
                     value={keyBindings[action]}
                     onChange={(e) => handleKeyChange(action, e)}
-                    className="w-20 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-center font-mono text-white uppercase focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                    className="w-16 border border-white/15 bg-transparent py-2 text-center font-display text-sm tracking-widest text-white uppercase focus:border-white/50 focus:outline-none"
                     maxLength={1}
                   />
                 </div>
               ))}
             </div>
 
-            <div className="flex gap-3 pt-4">
+            <div className="mt-8 flex gap-4">
               <button
                 onClick={() => setKeyBindings(DEFAULT_KEY_BINDINGS)}
-                className="flex-1 rounded-xl bg-slate-800 py-3 font-bold text-slate-300 transition-colors hover:bg-slate-700"
+                className="flex-1 border border-white/15 py-2 font-display text-xs tracking-[0.3em] text-white/60 transition-colors hover:border-white/40 hover:text-white"
               >
-                Reset
+                RESET
               </button>
               <button
                 onClick={() => setShowSettings(false)}
-                className="flex-1 rounded-xl bg-blue-600 py-3 font-bold text-white shadow-lg shadow-blue-900/30 transition-colors hover:bg-blue-500"
+                className="flex-1 border border-white/30 py-2 font-display text-xs tracking-[0.3em] text-white transition-colors hover:border-white hover:bg-white/5"
               >
-                Done
+                DONE
               </button>
             </div>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+function KeyChip({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="border border-white/10 bg-white/[0.03] px-3 py-1 backdrop-blur-sm">
+      {children}
+    </span>
+  );
+}
+
+function Corner({ className = '' }: { className?: string }) {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      className={`absolute text-white/40 ${className}`}
+    >
+      <path d="M0 0 L14 0 M0 0 L0 14" stroke="currentColor" strokeWidth="1.2" fill="none" />
+    </svg>
+  );
+}
+
+function Ornament({
+  direction,
+  small = false,
+}: {
+  direction: 'left' | 'right';
+  small?: boolean;
+}) {
+  const w = small ? 60 : 100;
+  const transform = direction === 'left' ? '' : 'scale(-1, 1)';
+  return (
+    <svg
+      width={w}
+      height="14"
+      viewBox={`0 0 ${w} 14`}
+      style={{ transform }}
+      className="text-white/40"
+    >
+      <path d={`M0 7 L${w - 30} 7`} stroke="currentColor" strokeWidth="0.8" fill="none" />
+      <path
+        d={`M${w - 30} 7 Q${w - 22} 2 ${w - 14} 7 Q${w - 6} 12 ${w - 2} 7`}
+        stroke="currentColor"
+        strokeWidth="0.8"
+        fill="none"
+      />
+      <circle cx={w - 30} cy="7" r="1.2" fill="currentColor" />
+    </svg>
   );
 }

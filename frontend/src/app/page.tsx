@@ -3,19 +3,28 @@ import { useState } from 'react';
 
 import GameSimple from '../components/GameSimple';
 import Home from '../components/Home';
+import TitleScreen from '../components/TitleScreen';
 import { type KeyBindings, DEFAULT_KEY_BINDINGS } from '../game/input';
 
+type Screen = 'title' | 'lobby' | 'game';
+
 export default function Page() {
+  const [screen, setScreen] = useState<Screen>('title');
   const [playerName, setPlayerName] = useState<string | null>(null);
   const [keyBindings, setKeyBindings] = useState<KeyBindings>(DEFAULT_KEY_BINDINGS);
 
-  const handleStart = (name: string, bindings: KeyBindings) => {
+  const handleStartGame = (name: string, bindings: KeyBindings) => {
     setPlayerName(name);
     setKeyBindings(bindings);
+    setScreen('game');
   };
 
-  if (!playerName) {
-    return <Home onStart={handleStart} />;
+  if (screen === 'title') {
+    return <TitleScreen onStart={() => setScreen('lobby')} />;
+  }
+
+  if (screen === 'lobby' || !playerName) {
+    return <Home onStart={handleStartGame} onBack={() => setScreen('title')} />;
   }
 
   return (
